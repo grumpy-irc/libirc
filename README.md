@@ -1,0 +1,2 @@
+# libirc
+C++ IRC library
