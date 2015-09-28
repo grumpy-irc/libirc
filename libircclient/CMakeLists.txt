@@ -9,8 +9,11 @@ else()
   find_package(Qt4 REQUIRED)
 endif()
 
+SET(CMAKE_AUTOMOC ON)
+
 file (GLOB src "*.cpp")
 file (GLOB resources "*.qrc")
+file (GLOB hx "*.h")
 
 if(QT5_BUILD)
     QT5_WRAP_CPP(ircclient_HEADERS_MOC ${ircclient_HEADERS})
@@ -27,5 +30,5 @@ endif()
 ADD_DEFINITIONS(${QT_DEFINITIONS})
 ADD_DEFINITIONS(-DLIBIRCCLIENT_LIBRARY -DQT_USE_QSTRINGBUILDER)
 
-ADD_LIBRARY(ircclient SHARED ${src})
+ADD_LIBRARY(ircclient SHARED ${src} ${hx})
 TARGET_LINK_LIBRARIES(ircclient irc ${QT_LIBRARIES})

@@ -14,7 +14,7 @@
 
 using namespace libirc;
 
-Network::Network()
+Network::Network(QString Name)
 {
-
+	this->name = Name;
 }

@@ -10,8 +10,8 @@
 
 // Copyright (c) Petr Bena 2015
 
-#ifndef CHANNEL_H
-#define CHANNEL_H
+#ifndef LIBIRCCHANNEL_H
+#define LIBIRCCHANNEL_H
 
 #include "libirc_global.h"
 #include <QString>

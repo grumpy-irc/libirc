@@ -9,6 +9,9 @@ else()
   find_package(Qt4 REQUIRED)
 endif()
 
+SET(CMAKE_AUTOMOC ON)
+
+file (GLOB hd "*.h")
 file (GLOB src "*.cpp")
 file (GLOB resources "*.qrc")
 
@@ -27,7 +30,7 @@ endif()
 ADD_DEFINITIONS(${QT_DEFINITIONS})
 ADD_DEFINITIONS(-DLIBIRC_LIBRARY -DQT_USE_QSTRINGBUILDER)
 
-ADD_LIBRARY(irc SHARED ${src})
+ADD_LIBRARY(irc SHARED ${src} ${hd})
 
 if (QT5_BUILD)
   qt5_use_modules(irc Core Network)

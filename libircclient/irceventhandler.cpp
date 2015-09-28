@@ -12,7 +12,7 @@
 
 #include "irceventhandler.h"
 
-using namespace libirc;
+using namespace libircclient;
 
 IRCEventHandler *IRCEventHandler::EventHandler = NULL;
 
@@ -22,7 +22,7 @@ IRCEventHandler::IRCEventHandler()
 }
 
 
-libirc::IRCEventHandler::~IRCEventHandler()
+IRCEventHandler::~IRCEventHandler()
 {
 
 }

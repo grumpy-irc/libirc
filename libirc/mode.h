@@ -10,8 +10,8 @@
 
 // Copyright (c) Petr Bena 2015
 
-#ifndef MODE_H
-#define MODE_H
+#ifndef LIBMODE_H
+#define LIBMODE_H
 
 #include "libirc_global.h"
 #include <QString>

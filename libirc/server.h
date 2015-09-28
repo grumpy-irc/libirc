@@ -10,8 +10,8 @@
 
 // Copyright (c) Petr Bena 2015
 
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef LIBIRCSERVER_H
+#define LIBIRCSERVER_H
 
 #include "libirc_global.h"
 #include <QString>

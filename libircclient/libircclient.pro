@@ -14,11 +14,21 @@ TEMPLATE = lib
 DEFINES += LIBIRCCLIENT_LIBRARY
 
 SOURCES += user.cpp \
-    irceventhandler.cpp
+    irceventhandler.cpp \
+    channel.cpp \
+    mode.cpp \
+    server.cpp \
+    network.cpp \
+    networkthread.cpp
 
 HEADERS += user.h\
         libircclient_global.h \
-    irceventhandler.h
+    irceventhandler.h \
+    channel.h \
+    mode.h \
+    server.h \
+    network.h \
+    networkthread.h
 
 unix {
     target.path = /usr/lib

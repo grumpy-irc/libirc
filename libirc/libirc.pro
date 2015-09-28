@@ -24,7 +24,8 @@ HEADERS += network.h\
     user.h \
     server.h \
     mode.h \
-    channel.h
+    channel.h \
+    error_code.h
 
 unix {
     target.path = /usr/lib

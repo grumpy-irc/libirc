@@ -10,18 +10,24 @@
 
 // Copyright (c) Petr Bena 2015
 
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef LIBIRCNETWORK_H
+#define LIBIRCNETWORK_H
 
 #include "libirc_global.h"
+#include <QObject>
 #include <QString>
 
 namespace libirc
 {
-    class LIBIRCSHARED_EXPORT Network
+    class LIBIRCSHARED_EXPORT Network : public QObject
     {
+		Q_OBJECT
+
         public:
-            Network();
+            Network(QString Name);
+			virtual ~Network() {}
+		protected:
+			QString name;
     };
 }
 

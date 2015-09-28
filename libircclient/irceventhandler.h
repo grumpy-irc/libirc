@@ -15,7 +15,7 @@
 
 #include "libircclient_global.h"
 
-namespace libirc
+namespace libircclient
 {
     class LIBIRCCLIENTSHARED_EXPORT IRCEventHandler
     {
