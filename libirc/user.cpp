@@ -19,6 +19,24 @@ User::User()
 
 }
 
+User::User(QString source)
+{
+    QString temp = source;
+    if (source.contains("!"))
+    {
+        this->_nick = temp.mid(0, temp.indexOf("!"));
+        temp = temp.mid(temp.indexOf("!") + 1);
+    } else
+    {
+        return;
+    }
+    if (temp.contains("@"))
+    {
+        this->_ident = temp.mid(0, temp.indexOf("@"));
+        this->_host = temp.mid(temp.indexOf("@") + 1);
+    }
+}
+
 QString User::GetHost() const
 {
     return this->_host;
@@ -37,5 +55,15 @@ void User::SetIdent(QString ident)
 void User::SetHost(const QString &host)
 {
     this->_host = host;
+}
+
+QString User::GetNick() const
+{
+    return this->_nick;
+}
+
+void User::SetNick(const QString &nick)
+{
+    this->_nick = nick;
 }
 

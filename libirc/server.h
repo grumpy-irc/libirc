@@ -13,12 +13,11 @@
 #ifndef LIBIRCSERVER_H
 #define LIBIRCSERVER_H
 
-#include "libirc_global.h"
-#include <QString>
+#include "serializableitem.h"
 
 namespace libirc
 {
-    class LIBIRCSHARED_EXPORT Server
+    class LIBIRCSHARED_EXPORT Server : public SerializableItem
     {
         public:
             Server();

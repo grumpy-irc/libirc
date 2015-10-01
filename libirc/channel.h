@@ -13,12 +13,11 @@
 #ifndef LIBIRCCHANNEL_H
 #define LIBIRCCHANNEL_H
 
-#include "libirc_global.h"
-#include <QString>
+#include "serializableitem.h"
 
 namespace libirc
 {
-    class LIBIRCSHARED_EXPORT Channel
+    class LIBIRCSHARED_EXPORT Channel : public SerializableItem
     {
         public:
             Channel(QString name);

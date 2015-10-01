@@ -19,10 +19,14 @@
 
 namespace libircclient
 {
+    class Network;
     class LIBIRCCLIENTSHARED_EXPORT Channel : public libirc::Channel
     {
         public:
-            Channel(QString name);
+            Channel(QString name, Network *network = NULL);
+            void SendMessage(QString text);
+        protected:
+            Network *_net;
     };
 }
 

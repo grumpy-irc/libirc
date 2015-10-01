@@ -17,3 +17,7 @@ using namespace libircclient;
 User::User()
 {
 }
+
+User::User(QString user) : libirc::User(user)
+{
+}

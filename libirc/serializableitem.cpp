@@ -10,22 +10,28 @@
 
 // Copyright (c) Petr Bena 2015
 
-#ifndef LIBIRCNETWORK_H
-#define LIBIRCNETWORK_H
-
 #include "serializableitem.h"
 
-namespace libirc
+using namespace libirc;
+
+SerializableItem::SerializableItem()
 {
-    class LIBIRCSHARED_EXPORT Network : public QObject, public SerializableItem
-    {
-		Q_OBJECT
-        public:
-            Network(QString Name);
-			virtual ~Network() {}
-		protected:
-			QString name;
-    };
+
 }
 
-#endif // NETWORK_H
+libirc::SerializableItem::~SerializableItem()
+{
+
+}
+
+QHash<QString, QVariant> libirc::SerializableItem::ToHash()
+{
+    QHash<QString, QVariant> list;
+    list.insert("ObjectName", "libirc::SerializableItem");
+    return list;
+}
+
+void SerializableItem::LoadHash(QHash<QString, QVariant> hash)
+{
+
+}

@@ -16,11 +16,19 @@
 #include "../libirc/network.h"
 #include <QList>
 #include <QString>
+#include <QDateTime>
+#include <QAbstractSocket>
 #include <QTcpSocket>
+#include <QTimer>
 #include "libircclient_global.h"
-#include "networkthread.h"
+#include "../libirc/irc_standards.h"
 
 class QTcpSocket;
+
+namespace libirc
+{
+    class ServerAddress;
+}
 
 namespace libircclient
 {
@@ -38,23 +46,38 @@ namespace libircclient
 		Q_OBJECT
 
         public:
-            Network(QString Name, QString Hostname, QString Nickname = "", bool SSL = false, QString Password = "", unsigned int Port = 6667);
+            Network(libirc::ServerAddress &server, QString name);
             virtual ~Network();
 			void Connect();
 			void Reconnect();
-			void Disconnect();
+			void Disconnect(QString reason = "");
 			bool IsConnected();
             QString GetNick() { return this->currentNick; }
             QString GetHost() { return this->hostname; }
+            QString GetIdent() { return this->currentIdent; }
+            void SetPassword(QString Password);
             void TransferRaw(QString raw);
             int SendMessage(QString text, Channel *channel);
             int SendMessage(QString text, User *user);
+            int SendMessage(QString text, QString target);
+            int GetTimeout() const;
+            void Identify(QString Nickname = "", QString Password = "");
 
         signals:
-            void RawOutgoing(QByteArray data);
-            void RawIncoming(QByteArray data);
-            void Connected();
-            void Disconnected();
+            void Event_RawOutgoing(QByteArray data);
+            void Event_RawIncoming(QByteArray data);
+            void Event_Invalid(QByteArray data);
+            void Event_ConnectionFailure(QAbstractSocket::SocketError reason);
+            void Event_Timeout();
+            void Event_Connected();
+            void Event_Disconnected();
+
+        private slots:
+            void OnPing();
+            void OnPingSend();
+            void OnError(QAbstractSocket::SocketError er);
+            void OnReceive();
+            void OnConnected();
 
         protected:
             bool usingSSL;
@@ -64,12 +87,21 @@ namespace libircclient
             QTcpSocket *socket;
             QString hostname;
             unsigned int port;
+            int pingTimeout;
+            int pingRate;
+            QString defaultQuit;
+            bool autoRejoin;
+            bool autoIdentify;
+            QString identifyString;
+            QString password;
        private:
             void processIncomingRawData(QByteArray data);
+            void deleteTimers();
             QList<User> users;
             QList<Channel> channels;
-            friend class NetworkThread;
-            NetworkThread *network_thread;
+            QDateTime lastPing;
+            QTimer *timerPingTimeout;
+            QTimer *timerPingSend;
     };
 }
 

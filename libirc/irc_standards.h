@@ -10,26 +10,12 @@
 
 // Copyright (c) Petr Bena 2015
 
-#ifndef NETWORKTHREAD_H
-#define NETWORKTHREAD_H
+#ifndef IRC_STANDARDS
+#define IRC_STANDARDS
 
-#include <QObject>
-#include "libircclient_global.h"
-#include <QThread>
-
-namespace libircclient
-{
-    class Network;
-    class NetworkThread : public QThread
-    {
-        public:
-            NetworkThread(Network *owner);
+#define IRC_STANDARD_PORT        6667
+#define IRC_STANDARD_PORT_SSL    6697
 
 
-        protected:
-            void run();
-            Network *netw;
-    };
-}
+#endif // IRC_STANDARDS
 
-#endif // NETWORKTHREAD_H

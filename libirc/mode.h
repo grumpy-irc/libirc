@@ -13,12 +13,11 @@
 #ifndef LIBMODE_H
 #define LIBMODE_H
 
-#include "libirc_global.h"
-#include <QString>
+#include "serializableitem.h"
 
 namespace libirc
 {
-    class LIBIRCSHARED_EXPORT Mode
+    class LIBIRCSHARED_EXPORT Mode : SerializableItem
     {
         public:
             Mode();

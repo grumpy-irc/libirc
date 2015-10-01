@@ -11,11 +11,19 @@
 // Copyright (c) Petr Bena 2015
 
 #include "channel.h"
+#include "network.h"
 
 using namespace libircclient;
 
-Channel::Channel(QString name) : libirc::Channel(name)
+Channel::Channel(QString name, Network *network) : libirc::Channel(name)
 {
+    this->_net = network;
+}
 
+void Channel::SendMessage(QString text)
+{
+    if (!this->_net)
+        return;
+    this->_net->SendMessage(text, this);
 }
 

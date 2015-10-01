@@ -17,7 +17,9 @@ SOURCES += network.cpp \
     user.cpp \
     server.cpp \
     mode.cpp \
-    channel.cpp
+    channel.cpp \
+    serializableitem.cpp \
+    serveraddress.cpp
 
 HEADERS += network.h\
         libirc_global.h \
@@ -25,7 +27,10 @@ HEADERS += network.h\
     server.h \
     mode.h \
     channel.h \
-    error_code.h
+    error_code.h \
+    serializableitem.h \
+    serveraddress.h \
+    irc_standards.h
 
 unix {
     target.path = /usr/lib

@@ -13,18 +13,20 @@
 #ifndef LIBIRCUSER_H
 #define LIBIRCUSER_H
 
-#include "libirc_global.h"
-#include <QString>
+#include "serializableitem.h"
 
 namespace libirc
 {
-    class LIBIRCSHARED_EXPORT User
+    class LIBIRCSHARED_EXPORT User : public SerializableItem
     {
         public:
             User();
+            User(QString source);
             virtual ~User() {}
             virtual QString GetHost() const;
             virtual void SetHost(const QString &host);
+            virtual QString GetNick() const;
+            virtual void SetNick(const QString &nick);
             virtual QString GetIdent() const;
             virtual void SetIdent(QString ident);
 

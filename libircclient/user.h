@@ -22,6 +22,7 @@ namespace libircclient
     {
         public:
             User();
+            User(QString user);
     };
 }
 

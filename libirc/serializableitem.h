@@ -10,17 +10,24 @@
 
 // Copyright (c) Petr Bena 2015
 
-#include "networkthread.h"
+#ifndef SERIALIZABLEITEM_H
+#define SERIALIZABLEITEM_H
 
-using namespace libircclient;
+#include <QVariant>
+#include <QHash>
+#include <QString>
+#include "libirc_global.h"
 
-NetworkThread::NetworkThread(Network *owner)
+namespace libirc
 {
-    this->netw = owner;
+    class LIBIRCSHARED_EXPORT SerializableItem
+    {
+        public:
+            SerializableItem();
+            virtual ~SerializableItem();
+            virtual QHash<QString, QVariant> ToHash();
+            virtual void LoadHash(QHash<QString, QVariant> hash);
+    };
 }
 
-void NetworkThread::run()
-{
-
-}
-
+#endif // SERIALIZABLEITEM_H
