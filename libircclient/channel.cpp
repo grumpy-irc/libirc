@@ -27,3 +27,9 @@ void Channel::SendMessage(QString text)
     this->_net->SendMessage(text, this);
 }
 
+void Channel::Part()
+{
+    if (this->_net)
+        this->_net->Part(this);
+}
+

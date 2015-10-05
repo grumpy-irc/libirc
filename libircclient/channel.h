@@ -25,6 +25,7 @@ namespace libircclient
         public:
             Channel(QString name, Network *network = NULL);
             void SendMessage(QString text);
+            void Part();
         protected:
             Network *_net;
     };

@@ -11,6 +11,7 @@
 // Copyright (c) Petr Bena 2015
 
 #include <QtNetwork>
+#include <QDebug>
 #include "network.h"
 #include "server.h"
 #include "channel.h"
@@ -40,12 +41,16 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
     this->defaultQuit = "Grumpy IRC";
     this->autoRejoin = false;
     this->identifyString = "PRIVMSG NickServ identify $nickname $password";
+    this->server = new Server();
 }
 
 Network::~Network()
 {
+    delete this->server;
     this->deleteTimers();
     delete this->socket;
+    qDeleteAll(this->channels);
+    qDeleteAll(this->users);
 }
 
 void Network::Connect()
@@ -120,6 +125,16 @@ int Network::SendMessage(QString text, User *user)
     return this->SendMessage(text, user->GetNick());
 }
 
+void Network::Part(QString channel_name)
+{
+    this->TransferRaw("PART " + channel_name);
+}
+
+void Network::Part(Channel *channel)
+{
+    this->TransferRaw("PART " + channel->GetName());
+}
+
 void Network::Identify(QString Nickname, QString Password)
 {
     if (Nickname.isEmpty())
@@ -138,7 +153,12 @@ int Network::GetTimeout() const
 
 void Network::OnPing()
 {
-
+    // Check ping timeout
+    if (QDateTime::currentDateTime() > this->lastPing.addSecs(this->pingTimeout))
+    {
+        emit this->Event_Timeout();
+        this->Disconnect();
+    }
 }
 
 void Network::SetPassword(QString Password)
@@ -148,7 +168,7 @@ void Network::SetPassword(QString Password)
 
 void Network::OnPingSend()
 {
-    this->TransferRaw("PING");
+    this->TransferRaw("PING :" + this->GetHost());
 }
 
 void Network::OnError(QAbstractSocket::SocketError er)
@@ -173,6 +193,24 @@ void Network::OnReceive()
     }
 }
 
+Channel *Network::GetChannel(QString channel_name)
+{
+    channel_name = channel_name.toLower();
+    foreach(Channel *channel, this->channels)
+    {
+        if (channel->GetName().toLower() == channel_name)
+        {
+            return channel;
+        }
+    }
+    return NULL;
+}
+
+bool Network::ContainsChannel(QString channel_name)
+{
+    return this->GetChannel(channel_name) != NULL;
+}
+
 void Network::OnConnected()
 {
     // We just connected to an IRC network
@@ -190,6 +228,7 @@ void Network::OnConnected()
 
 void Network::processIncomingRawData(QByteArray data)
 {
+    this->lastPing = QDateTime::currentDateTime();
     QString l(data);
     // let's try to parse this IRC command
     Parser parser(l);
@@ -198,15 +237,53 @@ void Network::processIncomingRawData(QByteArray data)
         emit this->Event_Invalid(data);
         return;
     }
+    bool known = false;
     switch (parser.GetNumeric())
     {
         case IRC_NUMERIC_PING_CHECK:
+            known = true;
             if (parser.GetParameters().count() == 0)
                 this->TransferRaw("PONG");
             else
                 this->TransferRaw("PONG :" + parser.GetParameters()[0]);
             break;
+        case IRC_NUMERIC_MYINFO:
+            known = true;
+            // Process the information about network
+            if (parser.GetParameters().count() < 4)
+                break;
+            this->server->SetName(parser.GetParameters()[0]);
+            this->server->SetVersion(parser.GetParameters()[1]);
+            break;
+
+        case IRC_NUMERIC_JOIN:
+            known = true;
+            emit this->Event_Join(&parser);
+            if (parser.GetParameters().count() < 1)
+            {
+                // broken
+                break;
+            }
+            // Check if the person who joined the channel isn't us
+            if (parser.GetSourceUserInfo()->GetNick().toLower() == this->GetNick().toLower())
+            {
+                // Yes, we joined a new channel
+                QString channel = parser.GetParameters()[0];
+                if (this->ContainsChannel(channel))
+                {
+                    // what the fuck?? we joined the channel which we are already in
+                    qDebug() << "Server told us we just joined a channel we are already in: " + channel + " network: " + this->GetHost();
+                    break;
+                }
+                Channel *channel_p = new Channel(channel, this);
+                this->channels.append(channel_p);
+                emit this->Event_SelfJoin(channel_p);
+            }
+            break;
     }
+    if (!known)
+        emit this->Event_Unknown(&parser);
+    emit this->Event_Parse(&parser);
 }
 
 void Network::deleteTimers()

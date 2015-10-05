@@ -19,25 +19,39 @@
 #include "libircclient_global.h"
 #include "user.h"
 
-#define IRC_NUMERIC_UNKNOWN    -200
-#define IRC_NUMERIC_PING_CHECK -1
-#define IRC_NUMERIC_PRIVMSG    -2
-#define IRC_NUMERIC_NOTICE     -3
-#define IRC_NUMERIC_KICK       -4
-#define IRC_NUMERIC_QUIT       -5
-#define IRC_NUMERIC_PART       -6
-#define IRC_NUMERIC_JOIN       -7
-#define IRC_NUMERIC_WELCOME    1
-#define IRC_NUMERIC_YOURHOST   2
-#define IRC_NUMERIC_CREATED    3
-#define IRC_NUMERIC_MYINFO     4
-#define IRC_NUMERIC_BOUNCE     5
-#define IRC_NUMERIC_ISUPPORT   5
-#ifndef LIBIRC_STRICT
-#define IRC_NUMERIC_MAP        6 // Unreal specific
-#define IRC_NUMERIC_MAPEND     7 // Unreal specific
-#endif
-
+#define IRC_NUMERIC_UNKNOWN      -200
+#define IRC_NUMERIC_PING_CHECK   -1
+#define IRC_NUMERIC_PRIVMSG      -2
+#define IRC_NUMERIC_NOTICE       -3
+#define IRC_NUMERIC_KICK         -4
+#define IRC_NUMERIC_QUIT         -5
+#define IRC_NUMERIC_PART         -6
+#define IRC_NUMERIC_JOIN         -7
+#define IRC_NUMERIC_WELCOME      1
+#define IRC_NUMERIC_YOURHOST     2
+#define IRC_NUMERIC_CREATED      3
+#define IRC_NUMERIC_MYINFO       4
+#define IRC_NUMERIC_BOUNCE       5
+#define IRC_NUMERIC_ISUPPORT     5
+#define IRC_NUMERIC_MAP          6
+#define IRC_NUMERIC_MAPEND       7
+#define IRC_NUMERIC_SNOMASK      8
+#define IRC_NUMERIC_STATMEMTOT   9
+//#define IRC_NUMERIC_BOUNCE       10
+#define IRC_NUMERIC_YOURCOOKIE   14
+#define IRC_NUMERIC_YOURID       42
+#define IRC_NUMERIC_SAVENICK     43
+#define IRC_NUMERIC_TRACELINK    200
+#define IRC_NUMERIC_STATS        210
+#define IRC_NUMERIC_AWAY         301
+#define IRC_NUMERIC_LISTSTART    321
+#define IRC_NUMERIC_LIST         322
+#define IRC_NUMERIC_LISTEND      323
+#define IRC_NUMERIC_NOTOPIC      331
+#define IRC_NUMERIC_TOPIC        332
+#define IRC_NUMERIC_TOPICWHOTIME 333
+#define IRC_NUMERIC_BADCHANPASS  339
+#define IRC_NUMERIC_YOUREOPER    381
 
 namespace libircclient
 {

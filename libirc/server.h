@@ -22,10 +22,15 @@ namespace libirc
         public:
             Server();
             virtual ~Server() {}
+            QString GetName() const;
+            void SetVersion(QString version);
+            void SetName(QString name);
+            QString GetVersion() const;
 
         protected:
             QString _name;
             QString _host;
+            QString _version;
             unsigned int _port;
             bool _ssl;
     };

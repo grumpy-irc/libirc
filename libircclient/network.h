@@ -40,6 +40,7 @@ namespace libircclient
     class User;
     class Server;
     class Channel;
+    class Parser;
 
     class LIBIRCCLIENTSHARED_EXPORT Network : public libirc::Network
     {
@@ -61,13 +62,22 @@ namespace libircclient
             int SendMessage(QString text, User *user);
             int SendMessage(QString text, QString target);
             int GetTimeout() const;
+            void Part(QString channel_name);
+            void Part(Channel *channel);
             void Identify(QString Nickname = "", QString Password = "");
+            bool ContainsChannel(QString channel_name);
+            Channel *GetChannel(QString channel_name);
 
         signals:
             void Event_RawOutgoing(QByteArray data);
             void Event_RawIncoming(QByteArray data);
             void Event_Invalid(QByteArray data);
             void Event_ConnectionFailure(QAbstractSocket::SocketError reason);
+            void Event_Parse(Parser *parser);
+            void Event_SelfJoin(Channel *chan);
+            void Event_Join(Parser *parser);
+            //! Server gave us some unknown command
+            void Event_Unknown(Parser *parser);
             void Event_Timeout();
             void Event_Connected();
             void Event_Disconnected();
@@ -97,8 +107,9 @@ namespace libircclient
        private:
             void processIncomingRawData(QByteArray data);
             void deleteTimers();
-            QList<User> users;
-            QList<Channel> channels;
+            Server *server;
+            QList<User*> users;
+            QList<Channel*> channels;
             QDateTime lastPing;
             QTimer *timerPingTimeout;
             QTimer *timerPingSend;

@@ -17,5 +17,25 @@ using namespace libirc;
 Server::Server()
 {
     this->_ssl = false;
+    this->_version = "unknown version";
 }
 
+QString Server::GetVersion() const
+{
+    return this->_version;
+}
+
+QString Server::GetName() const
+{
+    return this->_name;
+}
+
+void Server::SetName(QString name)
+{
+    this->_name = name;
+}
+
+void Server::SetVersion(QString version)
+{
+    this->_version = version;
+}
