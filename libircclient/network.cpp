@@ -26,12 +26,12 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
 {
     this->socket = NULL;
     this->hostname = server.GetHost();
-    this->currentIdent = "grumpy";
+    this->localUser.SetIdent("grumpy");
     if (server.GetNick().isEmpty())
-        this->currentNick = "GrumpyUser";
+        this->localUser.SetNick("GrumpyUser");
     else
-        this->currentNick = server.GetNick();
-    this->realname = "GrumpyIRC";
+        this->localUser.SetNick(server.GetNick());
+    this->localUser.SetRealname("GrumpyIRC");
     this->usingSSL = server.UsingSSL();
     this->pingTimeout = 60;
     this->port = server.GetPort();
@@ -39,6 +39,7 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
     this->timerPingSend = NULL;
     this->pingRate = 20000;
     this->defaultQuit = "Grumpy IRC";
+    this->channelPrefix = '#';
     this->autoRejoin = false;
     this->identifyString = "PRIVMSG NickServ identify $nickname $password";
     this->server = new Server();
@@ -95,6 +96,21 @@ bool Network::IsConnected()
     return this->socket->isOpen();
 }
 
+QString Network::GetNick()
+{
+    return this->localUser.GetNick();
+}
+
+QString Network::GetHost()
+{
+    return this->localUser.GetHost();
+}
+
+QString Network::GetIdent()
+{
+    return this->localUser.GetIdent();
+}
+
 void Network::TransferRaw(QString raw)
 {
     if (!this->IsConnected())
@@ -138,12 +154,17 @@ void Network::Part(Channel *channel)
 void Network::Identify(QString Nickname, QString Password)
 {
     if (Nickname.isEmpty())
-        Nickname = this->currentNick;
+        Nickname = this->localUser.GetNick();
     if (Password.isEmpty())
         Password = this->password;
     QString ident_line = this->identifyString;
     ident_line.replace("$nickname", Nickname).replace("$password", Password);
     this->TransferRaw(ident_line);
+}
+
+QString Network::GetServerAddress()
+{
+    return this->hostname;
 }
 
 int Network::GetTimeout() const
@@ -193,6 +214,11 @@ void Network::OnReceive()
     }
 }
 
+User *Network::GetLocalUserInfo()
+{
+    return &this->localUser;
+}
+
 Channel *Network::GetChannel(QString channel_name)
 {
     channel_name = channel_name.toLower();
@@ -206,6 +232,11 @@ Channel *Network::GetChannel(QString channel_name)
     return NULL;
 }
 
+QList<Channel *> Network::GetChannels()
+{
+    return this->channels;
+}
+
 bool Network::ContainsChannel(QString channel_name)
 {
     return this->GetChannel(channel_name) != NULL;
@@ -214,8 +245,8 @@ bool Network::ContainsChannel(QString channel_name)
 void Network::OnConnected()
 {
     // We just connected to an IRC network
-    this->TransferRaw("USER " + this->currentIdent + " 8 * :" + this->realname);
-    this->TransferRaw("NICK " + this->currentNick);
+    this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
+    this->TransferRaw("NICK " + this->localUser.GetNick());
     this->lastPing = QDateTime::currentDateTime();
     this->deleteTimers();
     this->timerPingSend = new QTimer(this);
@@ -237,6 +268,13 @@ void Network::processIncomingRawData(QByteArray data)
         emit this->Event_Invalid(data);
         return;
     }
+    bool self_command = false;
+    if (parser.GetSourceUserInfo() != NULL)
+        self_command = parser.GetSourceUserInfo()->GetNick().toLower() == this->GetNick().toLower();
+    // This is a fixup for our own hostname as seen by the server, it may actually change runtime
+    // based on cloak mechanisms used by a server, so when it happens we need to update it
+    if (self_command && !parser.GetSourceUserInfo()->GetHost().isEmpty() && parser.GetSourceUserInfo()->GetHost() != this->localUser.GetHost())
+        this->localUser.SetHost(parser.GetSourceUserInfo()->GetHost());
     bool known = false;
     switch (parser.GetNumeric())
     {
@@ -257,15 +295,17 @@ void Network::processIncomingRawData(QByteArray data)
             break;
 
         case IRC_NUMERIC_JOIN:
+        {
             known = true;
-            emit this->Event_Join(&parser);
+            Channel *channel_p = NULL;
             if (parser.GetParameters().count() < 1)
             {
                 // broken
+                qDebug() << "IRC PARSER: Malformed JOIN " + parser.GetRaw();
                 break;
             }
             // Check if the person who joined the channel isn't us
-            if (parser.GetSourceUserInfo()->GetNick().toLower() == this->GetNick().toLower())
+            if (self_command)
             {
                 // Yes, we joined a new channel
                 QString channel = parser.GetParameters()[0];
@@ -273,12 +313,122 @@ void Network::processIncomingRawData(QByteArray data)
                 {
                     // what the fuck?? we joined the channel which we are already in
                     qDebug() << "Server told us we just joined a channel we are already in: " + channel + " network: " + this->GetHost();
-                    break;
+                    goto join_emit;
                 }
-                Channel *channel_p = new Channel(channel, this);
+                channel_p = new Channel(channel, this);
                 this->channels.append(channel_p);
                 emit this->Event_SelfJoin(channel_p);
             }
+        join_emit:
+            if (!channel_p)
+                channel_p = this->GetChannel(parser.GetParameters()[0]);
+            if (!channel_p)
+            {
+                qDebug() << "Server told us that user " + parser.GetSourceUserInfo()->ToString() + " joined channel " + parser.GetParameters()[0] + " which we are not in";
+                break;
+            }
+            // Insert this user to a channel
+            User *user = channel_p->InsertUser(parser.GetSourceUserInfo());
+            emit this->Event_Join(&parser, user, this->GetChannel(parser.GetParameters()[0]));
+        }   break;
+        case IRC_NUMERIC_PRIVMSG:
+            known = true;
+            emit this->Event_PRIVMSG(&parser);
+            break;
+
+        case IRC_NUMERIC_NOTICE:
+            known = true;
+            emit this->Event_NOTICE(&parser);
+            break;
+
+        case IRC_NUMERIC_NICK:
+        {
+            known = true;
+            if (parser.GetParameters().count() < 1)
+            {
+                // wrong amount of parameters
+                qDebug() << "IRC PARSER: Malformed NICK: " + parser.GetRaw();
+                break;
+            }
+            // Precache the nicks to save hundreds of function calls
+            QString old_nick = parser.GetSourceUserInfo()->GetNick();
+            QString new_nick = parser.GetParameters()[0];
+            if (self_command)
+            {
+                // our own nick was changed
+                this->localUser.SetNick(new_nick);
+                emit this->Event_SelfNICK(&parser, old_nick, new_nick);
+            }
+            // Change the nicks in every channel this user is in
+            foreach (Channel *channel, this->channels)
+                channel->ChangeNick(old_nick, new_nick);
+            emit this->Event_NICK(&parser, old_nick, new_nick);
+        }   break;
+        case IRC_NUMERIC_QUIT:
+        {
+            known = true;
+            // Remove the user from all channels
+            foreach (Channel *channel, this->channels)
+            {
+                if (channel->ContainsUser(parser.GetSourceUserInfo()->GetNick()))
+                {
+                    channel->RemoveUser(parser.GetSourceUserInfo()->GetNick());
+                    emit this->Event_PerChannelQuit(&parser, channel);
+                }
+            }
+            emit this->Event_Quit(&parser);
+        }   break;
+        case IRC_NUMERIC_PART:
+        {
+            known = true;
+            if (parser.GetParameters().count() < 1)
+            {
+                qDebug() << "IRC PARSER: Invalid PART: " + parser.GetRaw();
+                break;
+            }
+            Channel *channel = this->GetChannel(parser.GetParameters()[0]);
+            if (channel)
+                channel->RemoveUser(parser.GetSourceUserInfo()->GetNick());
+            emit this->Event_Part(&parser, channel);
+        }   break;
+        case IRC_NUMERIC_KICK:
+        {
+            known = true;
+            if (parser.GetParameters().count() < 2)
+            {
+                qDebug() << "IRC PARSER: Invalid KICK: " + parser.GetRaw();
+                break;
+            }
+            Channel *channel = this->GetChannel(parser.GetParameters()[0]);
+            if (channel)
+                channel->RemoveUser(parser.GetParameters()[1]);
+            emit this->Event_Kick(&parser, channel);
+        }   break;
+        case IRC_NUMERIC_PONG:
+            known = true;
+            break;
+        case IRC_NUMERIC_MODE:
+        {
+            known = true;
+            if (parser.GetParameters().count() < 1)
+            {
+                qDebug() << "IRC PARSER: Invalid MODE: " + parser.GetRaw();
+                break;
+            }
+            QString entity = parser.GetParameters()[0];
+            if (entity.toLower() == this->localUser.GetNick().toLower())
+            {
+                // Someone changed our own UMode
+                this->localUserMode.SetMode(parser.GetText());
+            } else if (entity.startsWith(this->channelPrefix))
+            {
+                // Someone changed a channel mode
+            } else
+            {
+                // Someone changed UMode of another user, this is not supported on majority of servers, unless you are services
+            }
+            emit this->Event_Mode(&parser);
+        }
             break;
     }
     if (!known)

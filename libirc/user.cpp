@@ -19,6 +19,14 @@ User::User()
 
 }
 
+User::User(User *user)
+{
+    this->_host = user->_host;
+    this->_ident = user->_ident;
+    this->_nick = user->_nick;
+    this->_username = user->_username;
+}
+
 User::User(QString source)
 {
     QString temp = source;
@@ -67,3 +75,22 @@ void User::SetNick(const QString &nick)
     this->_nick = nick;
 }
 
+QString libirc::User::ToString() const
+{
+    return this->_nick + "!" + this->_ident + "@" + this->_host;
+}
+
+void User::SetRealname(QString user)
+{
+    this->_username = user;
+}
+
+QString User::GetRealname() const
+{
+    return this->_username;
+}
+
+bool User::IsNull()
+{
+    return this->_nick.isNull();
+}

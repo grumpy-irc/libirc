@@ -16,6 +16,10 @@ using namespace libircclient;
 
 Parser::Parser(QString incoming_text)
 {
+    // remove all garbage from incoming text
+    incoming_text.replace("\r", "");
+    incoming_text.replace("\n", "");
+    this->text = incoming_text;
     this->_valid = false;
     this->user = NULL;
     // the incoming text must be prefixed with colon, otherwise it's not from a server and we don't relay client messages
@@ -41,6 +45,7 @@ Parser::Parser(QString incoming_text)
     if (temp.contains(" :"))
     {
         this->parameterLine = temp.mid(temp.indexOf(" :") + 2);
+        this->message_text = this->parameterLine;
         this->command = temp.mid(0, temp.indexOf(" "));
     }
     else if (temp.contains(" "))
@@ -87,6 +92,12 @@ void Parser::obtainNumeric()
         this->_numeric = IRC_NUMERIC_PING_CHECK;
     else if (this->command == "JOIN")
         this->_numeric = IRC_NUMERIC_JOIN;
+    else if (this->command == "NICK")
+        this->_numeric = IRC_NUMERIC_NICK;
+    else if (this->command == "PONG")
+        this->_numeric = IRC_NUMERIC_PONG;
+    else if (this->command == "MODE")
+        this->_numeric = IRC_NUMERIC_MODE;
     else if (this->command == "PRIVMSG")
         this->_numeric = IRC_NUMERIC_PRIVMSG;
     else if (this->command == "KICK")
@@ -105,6 +116,16 @@ bool Parser::IsValid()
 QString Parser::GetParameterLine()
 {
     return this->parameterLine;
+}
+
+QString Parser::GetRaw()
+{
+    return this->text;
+}
+
+QString Parser::GetText()
+{
+    return this->message_text;
 }
 
 QList<QString> Parser::GetParameters()

@@ -15,16 +15,62 @@
 
 #include "libircclient_global.h"
 #include <QString>
+#include <QDateTime>
+#include <QChar>
 #include "../libirc/mode.h"
 
 namespace libircclient
 {
+    class User;
+
 	class LIBIRCCLIENTSHARED_EXPORT Mode : public libirc::Mode
     {
         public:
             Mode();
+            Mode(QString mode) : libirc::Mode(mode) {}
+    };
 
+    class LIBIRCCLIENTSHARED_EXPORT UMode : public Mode
+    {
+        public:
+            UMode();
+            UMode(QString mode_string) : Mode(mode_string) {}
+    };
 
+    class LIBIRCCLIENTSHARED_EXPORT CMode : public Mode
+    {
+        public:
+            CMode();
+            CMode(QString mode_string);
+    };
+
+    class LIBIRCCLIENTSHARED_EXPORT ChannelPMode
+    {
+        public:
+            ChannelPMode();
+            virtual ~ChannelPMode();
+            char Symbol;
+            QString Parameter;
+            QDateTime SetOn;
+            User *SetBy;
+    };
+
+    class LIBIRCCLIENTSHARED_EXPORT ChannelBan : public ChannelPMode
+    {
+        public:
+            ChannelBan();
+    };
+
+    class LIBIRCCLIENTSHARED_EXPORT ChannelInvite : public ChannelPMode
+    {
+        public:
+            ChannelInvite();
+    };
+
+    class LIBIRCCLIENTSHARED_EXPORT ChannelException : public ChannelPMode
+    {
+        public:
+            ChannelException();
     };
 }
 

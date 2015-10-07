@@ -21,6 +21,7 @@ namespace libirc
     {
         public:
             User();
+            User(User *user);
             User(QString source);
             virtual ~User() {}
             virtual QString GetHost() const;
@@ -29,6 +30,13 @@ namespace libirc
             virtual void SetNick(const QString &nick);
             virtual QString GetIdent() const;
             virtual void SetIdent(QString ident);
+            virtual QString ToString() const;
+            virtual void SetRealname(QString user);
+            virtual QString GetRealname() const;
+            //! Returns whether User object is null, this can be verified for functions that
+            //! return a copy of object instead of pointer (pass by value), where it's not
+            //! possible to return NULL literally.
+            bool IsNull();
 
         protected:
             QString _host;

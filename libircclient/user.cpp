@@ -14,10 +14,6 @@
 
 using namespace libircclient;
 
-User::User()
-{
-}
-
-User::User(QString user) : libirc::User(user)
-{
-}
+User::User() {}
+User::User(QString user) : libirc::User(user) {}
+User::User(User *user) : libirc::User(user) {}

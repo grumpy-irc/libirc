@@ -15,12 +15,32 @@
 
 #include "serializableitem.h"
 
+#define MODE_INCLUDE '+'
+#define MODE_EXCLUDE '-'
+
 namespace libirc
 {
     class LIBIRCSHARED_EXPORT Mode : SerializableItem
     {
         public:
             Mode();
+            Mode(QString mode_string);
+            virtual ~Mode();
+            /*!
+             * \brief SetMode Take a string for a mode (like +xt) and try to apply it over the existing mode
+             * \param mode_string String that represent some IRC mode
+             * \param reset If true the modes after MODE_EXCLUDE sign will be reset, instead of append to exluding modes
+             */
+            void SetMode(QString mode_string, bool reset = false);
+            bool Includes(char mode);
+            bool Excludes(char mode);
+            void IncludeMode(char mode);
+            void ExcludeMode(char mode);
+            void ResetMode(char mode);
+            QString ToString();
+        protected:
+            QList<char> included_modes;
+            QList<char> excluded_modes;
     };
 }
 

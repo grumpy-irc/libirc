@@ -19,3 +19,90 @@ Mode::Mode()
 
 }
 
+Mode::Mode(QString mode_string)
+{
+    this->SetMode(mode_string);
+}
+
+Mode::~Mode()
+{
+
+}
+
+void Mode::SetMode(QString mode_string, bool reset)
+{
+    int position = 0;
+    bool including = true;
+    while (position < mode_string.size())
+    {
+        char sx = mode_string.at(position).toLatin1();
+        if (sx == MODE_EXCLUDE)
+            including = false;
+        else if (sx == MODE_INCLUDE)
+            including = true;
+        else if (including)
+            this->IncludeMode(sx);
+        else if (!including)
+        {
+            if (reset)
+            {
+                this->ResetMode(sx);
+            } else
+                this->ExcludeMode(sx);
+        }
+    }
+}
+
+bool Mode::Includes(char mode)
+{
+    return this->included_modes.contains(mode);
+}
+
+bool Mode::Excludes(char mode)
+{
+    return this->excluded_modes.contains(mode);
+}
+
+void Mode::IncludeMode(char mode)
+{
+    if (this->included_modes.contains(mode))
+        return;
+    if (this->excluded_modes.contains(mode))
+        this->excluded_modes.removeAll(mode);
+    this->included_modes.append(mode);
+}
+
+void Mode::ExcludeMode(char mode)
+{
+    if (this->excluded_modes.contains(mode))
+        return;
+    if (this->included_modes.contains(mode))
+        this->included_modes.removeAll(mode);
+    this->excluded_modes.append(mode);
+}
+
+void Mode::ResetMode(char mode)
+{
+    if (this->included_modes.contains(mode))
+        this->included_modes.removeOne(mode);
+    if (this->excluded_modes.contains(mode))
+        this->excluded_modes.removeOne(mode);
+}
+
+QString Mode::ToString()
+{
+    QString mode;
+    if (!this->included_modes.isEmpty())
+    {
+        mode += MODE_INCLUDE;
+        foreach (char sx, this->included_modes)
+            mode += sx;
+    }
+    if (!this->excluded_modes.isEmpty())
+    {
+        mode += MODE_EXCLUDE;
+        foreach (char sx, this->excluded_modes)
+            mode += sx;
+    }
+    return mode;
+}

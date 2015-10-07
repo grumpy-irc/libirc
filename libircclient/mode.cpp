@@ -11,6 +11,7 @@
 // Copyright (c) Petr Bena 2015
 
 #include "mode.h"
+#include "user.h"
 
 using namespace libircclient;
 
@@ -19,3 +20,32 @@ Mode::Mode()
 
 }
 
+UMode::UMode()
+{
+
+}
+
+CMode::CMode()
+{
+
+}
+
+CMode::CMode(QString mode_string)
+{
+
+}
+
+ChannelPMode::ChannelPMode()
+{
+    this->SetBy = NULL;
+}
+
+ChannelPMode::~ChannelPMode()
+{
+    delete this->SetBy;
+}
+
+ChannelException::ChannelException()
+{
+
+}

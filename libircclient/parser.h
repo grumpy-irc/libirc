@@ -27,6 +27,9 @@
 #define IRC_NUMERIC_QUIT         -5
 #define IRC_NUMERIC_PART         -6
 #define IRC_NUMERIC_JOIN         -7
+#define IRC_NUMERIC_NICK         -8
+#define IRC_NUMERIC_MODE         -9
+#define IRC_NUMERIC_PONG         0
 #define IRC_NUMERIC_WELCOME      1
 #define IRC_NUMERIC_YOURHOST     2
 #define IRC_NUMERIC_CREATED      3
@@ -65,12 +68,16 @@ namespace libircclient
             User *GetSourceUserInfo();
             QString GetSourceInfo();
             QString GetParameterLine();
+            QString GetRaw();
+            QString GetText();
             QList<QString> GetParameters();
 
         private:
             void obtainNumeric();
             User *user;
             QString source;
+            QString text;
+            QString message_text;
             bool _valid;
             int _numeric;
             QList<QString> parameters;
