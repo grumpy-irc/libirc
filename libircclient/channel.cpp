@@ -28,10 +28,19 @@ Channel::~Channel()
 
 User *Channel::InsertUser(User *user)
 {
+    User *ux;
+
     if (this->ContainsUser(user->GetNick()))
-        return this->GetUser(user->GetNick());
-    User *ux = new User(user);
-    this->users.append(ux);
+    {
+        ux = this->GetUser(user->GetNick());
+    }
+    else
+    {
+        ux = new User(user);
+        this->users.append(ux);
+    }
+
+    //emit this->Event_UserInserted(ux);
     return ux;
 }
 
@@ -45,6 +54,7 @@ void Channel::RemoveUser(QString user)
         {
             delete this->users[i];
             this->users.removeAt(i);
+            //emit this->Event_UserRemoved(user);
             return;
         }
         i++;
@@ -57,6 +67,7 @@ void Channel::ChangeNick(QString old_nick, QString new_nick)
     if (!user)
         return;
 
+    //emit this->Event_NickChanged(old_nick, new_nick);
     user->SetNick(new_nick);
 }
 
@@ -76,6 +87,17 @@ void Channel::SendMessage(QString text)
     if (!this->_net)
         return;
     this->_net->SendMessage(text, this);
+}
+
+void Channel::ClearUsers()
+{
+    qDeleteAll(this->users);
+    this->users.clear();
+}
+
+QList<User *> Channel::GetUsers() const
+{
+    return this->users;
 }
 
 User *Channel::GetUser(QString user)

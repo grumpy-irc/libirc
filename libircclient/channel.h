@@ -28,15 +28,26 @@ namespace libircclient
         public:
             Channel(QString name, Network *network = NULL);
             ~Channel();
+            /*!
+             * \brief InsertUser Use this to insert a new user to channel
+             * \param user Pointer to user object, this function creates a copy, so the object passed here can be temporary
+             * \return Pointer to newly created user or existing user in case there is already this user in a channel
+             */
             User *InsertUser(User *user);
             void RemoveUser(QString user);
             void ChangeNick(QString old_nick, QString new_nick);
             bool ContainsUser(QString user);
             void SendMessage(QString text);
+            void ClearUsers();
+            QList<User *> GetUsers() const;
             User *GetUser(QString user);
             CMode GetMode();
             void SetMode(QString mode);
             void Part();
+        /*signals:
+            void Event_UserInserted(User *user);
+            void Event_UserRemoved(QString user);
+            void Event_NickChanged(QString old_nick, QString new_nick); */
         protected:
             CMode localMode;
             QList<User*> users;

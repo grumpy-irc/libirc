@@ -42,7 +42,14 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
     this->channelPrefix = '#';
     this->autoRejoin = false;
     this->identifyString = "PRIVMSG NickServ identify $nickname $password";
+    this->alternateNickNumber = 0;
     this->server = new Server();
+    // This is overriden for every server that is following IRC standards
+    this->channelUserPrefixes << '@' << '+';
+    this->CUModes << 'o' << 'v';
+    this->CModes << 'i' << 'm';
+    this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
+    this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
 }
 
 Network::~Network()
@@ -219,6 +226,25 @@ User *Network::GetLocalUserInfo()
     return &this->localUser;
 }
 
+char Network::StartsWithCUPrefix(QString user_name)
+{
+    if (user_name.isEmpty())
+        return 0;
+    char first_symbol = user_name[0].toLatin1();
+    if (this->channelUserPrefixes.contains(first_symbol))
+        return this->CUModes[this->channelUserPrefixes.indexOf(first_symbol)];
+    return 0;
+}
+
+int Network::PositionOfUCPrefix(char prefix)
+{
+    // Check if there is such a prefix
+    if (!this->channelUserPrefixes.contains(prefix))
+        return -1;
+
+    return this->channelUserPrefixes.indexOf(prefix);
+}
+
 Channel *Network::GetChannel(QString channel_name)
 {
     channel_name = channel_name.toLower();
@@ -235,6 +261,11 @@ Channel *Network::GetChannel(QString channel_name)
 QList<Channel *> Network::GetChannels()
 {
     return this->channels;
+}
+
+QList<char> Network::GetCUModes()
+{
+    return this->CUModes;
 }
 
 bool Network::ContainsChannel(QString channel_name)
@@ -255,6 +286,11 @@ void Network::OnConnected()
     this->timerPingSend->start(this->pingRate);
     connect(this->timerPingTimeout, SIGNAL(timeout()), this, SLOT(OnPing()));
     this->timerPingTimeout->start(2000);
+}
+
+static void DebugInvalid(QString message, Parser *parser)
+{
+    qDebug() << "IRC PARSER: " + message + ": " + parser->GetRaw();
 }
 
 void Network::processIncomingRawData(QByteArray data)
@@ -298,38 +334,46 @@ void Network::processIncomingRawData(QByteArray data)
         {
             known = true;
             Channel *channel_p = NULL;
-            if (parser.GetParameters().count() < 1)
+            if (parser.GetParameters().count() < 1 && parser.GetText().isEmpty())
             {
                 // broken
-                qDebug() << "IRC PARSER: Malformed JOIN " + parser.GetRaw();
+                DebugInvalid("Malformed JOIN", &parser);
+                break;
+            }
+            // On some servers channel is passed as text and on some as parameter
+            QString channel_name = parser.GetText();
+            if (parser.GetParameters().count() > 0)
+                channel_name = parser.GetParameters()[0];
+            if (!channel_name.startsWith(this->channelPrefix))
+            {
+                DebugInvalid("Malformed JOIN", &parser);
                 break;
             }
             // Check if the person who joined the channel isn't us
             if (self_command)
             {
                 // Yes, we joined a new channel
-                QString channel = parser.GetParameters()[0];
-                if (this->ContainsChannel(channel))
+                if (this->ContainsChannel(channel_name))
                 {
                     // what the fuck?? we joined the channel which we are already in
-                    qDebug() << "Server told us we just joined a channel we are already in: " + channel + " network: " + this->GetHost();
+                    qDebug() << "Server told us we just joined a channel we are already in: " + channel_name + " network: " + this->GetHost();
                     goto join_emit;
                 }
-                channel_p = new Channel(channel, this);
+                channel_p = new Channel(channel_name, this);
                 this->channels.append(channel_p);
                 emit this->Event_SelfJoin(channel_p);
             }
         join_emit:
             if (!channel_p)
-                channel_p = this->GetChannel(parser.GetParameters()[0]);
+                channel_p = this->GetChannel(channel_name);
             if (!channel_p)
             {
-                qDebug() << "Server told us that user " + parser.GetSourceUserInfo()->ToString() + " joined channel " + parser.GetParameters()[0] + " which we are not in";
+                qDebug() << "Server told us that user " + parser.GetSourceUserInfo()->ToString() + " joined channel " + channel_name + " which we are not in";
                 break;
             }
             // Insert this user to a channel
             User *user = channel_p->InsertUser(parser.GetSourceUserInfo());
-            emit this->Event_Join(&parser, user, this->GetChannel(parser.GetParameters()[0]));
+            emit this->Event_Join(&parser, user, channel_p);
         }   break;
         case IRC_NUMERIC_PRIVMSG:
             known = true;
@@ -344,15 +388,27 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_NICK:
         {
             known = true;
+            QString new_nick;
             if (parser.GetParameters().count() < 1)
             {
-                // wrong amount of parameters
-                qDebug() << "IRC PARSER: Malformed NICK: " + parser.GetRaw();
-                break;
+                if (parser.GetText().isEmpty())
+                {
+                    // wrong amount of parameters
+                    qDebug() << "IRC PARSER: Malformed NICK: " + parser.GetRaw();
+                    break;
+                }
+                else
+                {
+                    new_nick = parser.GetText();
+                }
+            }
+            else
+            {
+                new_nick = parser.GetParameters()[0];
             }
             // Precache the nicks to save hundreds of function calls
             QString old_nick = parser.GetSourceUserInfo()->GetNick();
-            QString new_nick = parser.GetParameters()[0];
+            
             if (self_command)
             {
                 // our own nick was changed
@@ -387,8 +443,25 @@ void Network::processIncomingRawData(QByteArray data)
                 break;
             }
             Channel *channel = this->GetChannel(parser.GetParameters()[0]);
-            if (channel)
+            if (self_command)
+            {
+                if (!channel)
+                {
+                    DebugInvalid("Channel struct not in memory", &parser);
+                }
+                else
+                {
+                    emit this->Event_SelfPart(&parser, channel);
+                    this->channels.removeOne(channel);
+                    emit this->Event_Part(&parser, channel);
+                    delete channel;
+                    break;
+                }
+            }
+            else if (channel)
+            {
                 channel->RemoveUser(parser.GetSourceUserInfo()->GetNick());
+            }
             emit this->Event_Part(&parser, channel);
         }   break;
         case IRC_NUMERIC_KICK:
@@ -400,8 +473,25 @@ void Network::processIncomingRawData(QByteArray data)
                 break;
             }
             Channel *channel = this->GetChannel(parser.GetParameters()[0]);
-            if (channel)
+            if (self_command)
+            {
+                if (!channel)
+                {
+                    DebugInvalid("Channel struct not in memory", &parser);
+                }
+                else
+                {
+                    emit this->Event_SelfKick(&parser, channel);
+                    this->channels.removeOne(channel);
+                    emit this->Event_Kick(&parser, channel);
+                    delete channel;
+                    break;
+                }
+            }
+            else if (channel)
+            {
                 channel->RemoveUser(parser.GetParameters()[1]);
+            }
             emit this->Event_Kick(&parser, channel);
         }   break;
         case IRC_NUMERIC_PONG:
@@ -430,10 +520,135 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_Mode(&parser);
         }
             break;
+        case IRC_NUMERIC_ISUPPORT:
+            known = true;
+            this->processInfo(&parser);
+            emit this->Event_INFO(&parser);
+            break;
+        case IRC_NUMERIC_NAMREPLY:
+            known = true;
+            this->processNamrpl(&parser);
+            break;
+        case IRC_NUMERIC_ENDOFNAMES:
+            known = true;
+            emit this->Event_EndOfNames(&parser);
+            break;
+        case IRC_NUMERIC_TOPIC:
+        {
+            known = true;
+            if (parser.GetParameters().count() < 1)
+            {
+                qDebug() << "IRC PARSER: Invalid TOPIC: " + parser.GetRaw();
+                break;
+            }
+            Channel *channel = this->GetChannel(parser.GetParameters()[0]);
+            if (!channel)
+            {
+                DebugInvalid("Channel struct not in memory", &parser);
+                break;
+            }
+            QString topic = channel->GetTopic();
+            channel->SetTopic(parser.GetText());
+            emit this->Event_TOPIC(&parser, channel, topic);
+        }
+            break;
+        case IRC_NUMERIC_TOPICINFO:
+        {
+            known = true;
+            if (parser.GetParameters().count() < 2)
+            {
+                qDebug() << "IRC PARSER: Invalid TOPICINFO: " + parser.GetRaw();
+                break;
+            }
+            Channel *channel = this->GetChannel(parser.GetParameters()[1]);
+            if (!channel)
+            {
+                DebugInvalid("Channel struct not in memory", &parser);
+                break;
+            }
+            channel->SetTopic(parser.GetText());
+            emit this->Event_TOPICInfo(&parser, channel);
+        }
+            break;
     }
     if (!known)
         emit this->Event_Unknown(&parser);
     emit this->Event_Parse(&parser);
+}
+
+void Network::processNamrpl(Parser *parser)
+{
+    // 353 GrumpyUser = #support :GrumpyUser petan|home @petan %wm-bot &OperBot
+    // Server sent us an initial list of users that are in the channel
+    if (parser->GetParameters().size() < 3)
+    {
+        DebugInvalid("Malformed NAMRPL", parser);
+        return;
+    }
+
+    Channel *channel = this->GetChannel(parser->GetParameters()[2]);
+    if (channel == NULL)
+    {
+        DebugInvalid("Unknown channel", parser);
+        return;
+    }
+
+    // Now insert new users one by one
+
+    foreach (QString user, parser->GetText().split(" "))
+    {
+        if (user.isEmpty())
+            continue;
+        char cumode = this->StartsWithCUPrefix(user);
+        char prefix = 0;
+        if (cumode != 0)
+        {
+            prefix = user[0].toLatin1();
+            user = user.mid(1);
+        }
+        User ux;
+        ux.SetNick(user);
+        ux.CUMode = cumode;
+        ux.ChannelPrefix = prefix;
+        channel->InsertUser(&ux);
+    }
+}
+
+void Network::processInfo(Parser *parser)
+{
+    // WATCHOPTS=A SILENCE=15 MODES=12 CHANTYPES=# PREFIX=(qaohv)~&@%+ CHANMODES=beI,kfL,lj,psmntirRcOAQKVCuzNSMTGZ NETWORK=tm-irc CASEMAPPING=ascii EXTBAN=~,qjncrRa ELIST=MNUCT STATUSMSG=~&@%+
+    foreach (QString info, parser->GetParameters())
+    {
+        if (info.startsWith("PREFIX"))
+        {
+            QString cu, prefix;
+            if (info.length() < 8 || !info.contains("("))
+                goto broken_prefix;
+            prefix = info.mid(8);
+            if (prefix.contains("(") || !prefix.contains(")"))
+                goto broken_prefix;
+            cu = prefix.mid(0, prefix.indexOf(")"));
+            prefix = prefix.mid(prefix.indexOf(")") + 1);
+            if (cu.length() != prefix.length())
+                goto broken_prefix;
+            this->channelUserPrefixes.clear();
+            this->CUModes.clear();
+            foreach (QChar CUMode, cu)
+                this->CUModes.append(CUMode.toLatin1());
+            foreach (QChar pr, prefix)
+                this->channelUserPrefixes.append(pr.toLatin1());
+
+            continue;
+            broken_prefix:
+                qDebug() << "IRC PARSER: broken prefix: " + parser->GetRaw();
+                break;
+        }
+        else if (info.startsWith("NETWORK="))
+        {
+            this->networkName = info.mid(8);
+            continue;
+        }
+    }
 }
 
 void Network::deleteTimers()

@@ -70,7 +70,22 @@ namespace libircclient
             bool ContainsChannel(QString channel_name);
             Channel *GetChannel(QString channel_name);
             QList<Channel *> GetChannels();
+            QList<char> GetCUModes();
             User *GetLocalUserInfo();
+            /*!
+             * \brief StartsWithCUPrefix checks the user name whether it starts with a CUMode prefix (such as @)
+             * \param user_name Name of user including the prefix (@channel_op)
+             * \return 0 in case there is no prefix, otherwise it returns the respective CUMode (o in case of @)
+             */
+            char StartsWithCUPrefix(QString user_name);
+            /*!
+             * \brief PositionOfChannelPrefix returns a position of UCP or negative number in case it's not in there
+             * \param prefix
+             * \return
+             */
+            int PositionOfUCPrefix(char prefix);
+            QHash<char, QString> ChannelModeHelp;
+            QHash<char, QString> UserModeHelp;
 
         signals:
             void Event_RawOutgoing(QByteArray data);
@@ -88,17 +103,26 @@ namespace libircclient
              */
             void Event_PerChannelQuit(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_Quit(libircclient::Parser *parser);
+            //! Emitted before the channel is removed from memory on part of a channel you were in
+            void Event_SelfPart(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_Part(libircclient::Parser *parser, libircclient::Channel *chan);
+            void Event_SelfKick(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_Kick(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_ServerMode(libircclient::Parser *parser);
             void Event_ChannelMode(libircclient::Parser *parser);
             void Event_MOTD(libircclient::Parser *parser);
             void Event_Mode(libircclient::Parser *parser);
             void Event_WhoisInfo(libircclient::Parser *parser);
+            void Event_INFO(libircclient::Parser *parser);
             void Event_PRIVMSG(libircclient::Parser *parser);
+            void Event_EndOfNames(libircclient::Parser *parser);
             void Event_NOTICE(libircclient::Parser *parser);
             void Event_NICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
             void Event_SelfNICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
+            //! Emitted when someone changes the topic
+            void Event_TOPIC(libircclient::Parser *parser, libircclient::Channel * chan, QString old_topic);
+            //! Retrieved after channel is joined as part of info
+            void Event_TOPICInfo(libircclient::Parser *parser, libircclient::Channel *chan);
             //! Server gave us some unknown command
             void Event_Unknown(libircclient::Parser *parser);
             void Event_Timeout();
@@ -124,11 +148,24 @@ namespace libircclient
             bool autoIdentify;
             QString identifyString;
             QString password;
+
         private:
-            UMode localUserMode;
-            char channelPrefix;
             void processIncomingRawData(QByteArray data);
+            void processNamrpl(Parser *parser);
+            void processInfo(Parser *parser);
             void deleteTimers();
+            //! List of symbols that are used to prefix users
+            QList<char> channelUserPrefixes;
+            QList<char> CModes;
+            QList<char> CPModes;
+            QList<char> CRModes;
+            QList<char> CUModes;
+            QList<char> CCModes;
+            UMode localUserMode;
+            QString alternateNick;
+            int alternateNickNumber;
+            QString networkName;
+            char channelPrefix;
             Server *server;
             QList<User*> users;
             QList<Channel*> channels;

@@ -42,22 +42,25 @@ Parser::Parser(QString incoming_text)
         return;
     this->source = temp.mid(0, temp.indexOf(" "));
     temp = temp.mid(temp.indexOf(" ") + 1);
+    // first of all, extract the text if there is some
     if (temp.contains(" :"))
     {
-        this->parameterLine = temp.mid(temp.indexOf(" :") + 2);
-        this->message_text = this->parameterLine;
-        this->command = temp.mid(0, temp.indexOf(" "));
+        this->message_text = temp.mid(temp.indexOf(" :") + 2);
+        temp = temp.mid(0, temp.indexOf(" :"));
     }
-    else if (temp.contains(" "))
+    // extract the command, it's a first standalone word
+    if (temp.contains(" "))
     {
-        this->parameterLine = temp.mid(temp.indexOf(" ") + 1);
         this->command = temp.mid(0, temp.indexOf(" "));
+        temp = temp.mid(temp.indexOf(" ") + 1);
     }
     else
     {
         this->command = temp;
+        temp = "";
     }
-    this->parameters = this->parameterLine.split(" ");
+    this->parameterLine = temp;
+    this->parameters = this->parameterLine.split(" ", QString::SplitBehavior::SkipEmptyParts);
     this->_valid = true;
     this->obtainNumeric();
     if (this->source.contains("@"))
@@ -96,14 +99,20 @@ void Parser::obtainNumeric()
         this->_numeric = IRC_NUMERIC_NICK;
     else if (this->command == "PONG")
         this->_numeric = IRC_NUMERIC_PONG;
+    else if (this->command == "NOTICE")
+        this->_numeric = IRC_NUMERIC_NOTICE;
     else if (this->command == "MODE")
         this->_numeric = IRC_NUMERIC_MODE;
     else if (this->command == "PRIVMSG")
         this->_numeric = IRC_NUMERIC_PRIVMSG;
     else if (this->command == "KICK")
         this->_numeric = IRC_NUMERIC_KICK;
+    else if (this->command == "TOPIC")
+        this->_numeric = IRC_NUMERIC_TOPIC;
     else if (this->command == "PART")
         this->_numeric = IRC_NUMERIC_PART;
+    else if (this->command == "CTCP")
+        this->_numeric = IRC_NUMERIC_CTCP;
     else if (this->command == "QUIT")
         this->_numeric = IRC_NUMERIC_QUIT;
 }

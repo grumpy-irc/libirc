@@ -50,6 +50,7 @@ void Mode::SetMode(QString mode_string, bool reset)
             } else
                 this->ExcludeMode(sx);
         }
+        position++;
     }
 }
 

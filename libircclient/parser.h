@@ -29,6 +29,8 @@
 #define IRC_NUMERIC_JOIN         -7
 #define IRC_NUMERIC_NICK         -8
 #define IRC_NUMERIC_MODE         -9
+#define IRC_NUMERIC_TOPIC        -10
+#define IRC_NUMERIC_CTCP         -11
 #define IRC_NUMERIC_PONG         0
 #define IRC_NUMERIC_WELCOME      1
 #define IRC_NUMERIC_YOURHOST     2
@@ -51,10 +53,17 @@
 #define IRC_NUMERIC_LIST         322
 #define IRC_NUMERIC_LISTEND      323
 #define IRC_NUMERIC_NOTOPIC      331
-#define IRC_NUMERIC_TOPIC        332
+#define IRC_NUMERIC_TOPICINFO    332
 #define IRC_NUMERIC_TOPICWHOTIME 333
 #define IRC_NUMERIC_BADCHANPASS  339
+#define IRC_NUMERIC_WHOREPLY     352
+#define IRC_NUMERIC_NAMREPLY     353
+#define IRC_NUMERIC_WHOSPCRPL    354
+#define IRC_NUMERIC_ENDOFNAMES   366
 #define IRC_NUMERIC_YOUREOPER    381
+#define IRC_NUMERIC_NICKUSED     433
+
+// 353 GrumpyUser = #support :GrumpyUser petan|home @petan %wm-bot &OperBot
 
 namespace libircclient
 {

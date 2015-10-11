@@ -24,6 +24,12 @@ namespace libircclient
             User();
             User(QString user);
             User(User *user);
+            QString GetPrefixedNick();
+            char ChannelPrefix;
+            char CUMode;
+
+        private:
+
     };
 }
 
