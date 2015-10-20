@@ -26,6 +26,8 @@ namespace libirc
             void SetVersion(QString version);
             void SetName(QString name);
             QString GetVersion() const;
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
 
         protected:
             QString _name;

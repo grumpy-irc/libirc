@@ -86,6 +86,8 @@ namespace libircclient
             int PositionOfUCPrefix(char prefix);
             QHash<char, QString> ChannelModeHelp;
             QHash<char, QString> UserModeHelp;
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
 
         signals:
             void Event_RawOutgoing(QByteArray data);
@@ -164,7 +166,6 @@ namespace libircclient
             UMode localUserMode;
             QString alternateNick;
             int alternateNickNumber;
-            QString networkName;
             char channelPrefix;
             Server *server;
             QList<User*> users;

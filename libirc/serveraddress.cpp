@@ -104,6 +104,34 @@ unsigned int ServerAddress::GetPort()
     return this->port;
 }
 
+void ServerAddress::LoadHash(QHash<QString, QVariant> hash)
+{
+    UNSERIALIZE_UINT(port);
+    UNSERIALIZE_STRING(password);
+    UNSERIALIZE_STRING(nick);
+    UNSERIALIZE_STRING(host);
+    UNSERIALIZE_STRING(suffix);
+    UNSERIALIZE_BOOL(ssl);
+    UNSERIALIZE_BOOL(valid);
+    UNSERIALIZE_BOOL(ipv6);
+    UNSERIALIZE_STRING(original);
+}
+
+QHash<QString, QVariant> ServerAddress::ToHash()
+{
+    QHash<QString, QVariant> hash;
+    SERIALIZE(port);
+    SERIALIZE(password);
+    SERIALIZE(nick);
+    SERIALIZE(host);
+    SERIALIZE(suffix);
+    SERIALIZE(ssl);
+    SERIALIZE(valid);
+    SERIALIZE(ipv6);
+    SERIALIZE(original);
+    return hash;
+}
+
 QString ServerAddress::GetOriginal()
 {
     return this->original;

@@ -38,6 +38,9 @@ namespace libirc
             void ExcludeMode(char mode);
             void ResetMode(char mode);
             QString ToString();
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
+
         protected:
             QList<char> included_modes;
             QList<char> excluded_modes;

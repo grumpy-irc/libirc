@@ -25,6 +25,24 @@ QString Server::GetVersion() const
     return this->_version;
 }
 
+void Server::LoadHash(QHash<QString, QVariant> hash)
+{
+    UNSERIALIZE_BOOL(_ssl);
+    UNSERIALIZE_STRING(_version);
+    UNSERIALIZE_STRING(_host);
+    UNSERIALIZE_STRING(_name);
+}
+
+QHash<QString, QVariant> Server::ToHash()
+{
+    QHash<QString, QVariant> hash;
+    SERIALIZE(_ssl);
+    SERIALIZE(_version);
+    SERIALIZE(_host);
+    SERIALIZE(_name);
+    return hash;
+}
+
 QString Server::GetName() const
 {
     return this->_name;

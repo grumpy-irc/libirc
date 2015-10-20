@@ -37,6 +37,8 @@ namespace libirc
             //! return a copy of object instead of pointer (pass by value), where it's not
             //! possible to return NULL literally.
             bool IsNull();
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
 
         protected:
             QString _host;

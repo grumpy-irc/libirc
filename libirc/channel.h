@@ -26,6 +26,8 @@ namespace libirc
             virtual void SetName(QString name);
             virtual void SetTopic(QString topic);
             virtual QString GetTopic() const;
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
 
         protected:
             QString _name;

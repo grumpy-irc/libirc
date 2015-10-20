@@ -107,3 +107,27 @@ QString Mode::ToString()
     }
     return mode;
 }
+
+void Mode::LoadHash(QHash<QString, QVariant> hash)
+{
+    if (hash.contains("included_modes"))
+    {
+        foreach (QVariant mx, hash["included_modes"].toList())
+            this->included_modes.append(mx.toChar().toLatin1());
+        foreach (QVariant mx, hash["excluded_modes"].toList())
+            this->excluded_modes.append(mx.toChar().toLatin1());
+    }
+}
+
+QHash<QString, QVariant> Mode::ToHash()
+{
+    QHash<QString, QVariant> hash;
+    QList<QVariant> included, excluded;
+    foreach (char m, this->included_modes)
+        included.append(QVariant(m));
+    foreach (char m, this->excluded_modes)
+        excluded.append(QVariant(m));
+    hash.insert("included_modes", QVariant(included));
+    hash.insert("excluded_modes", QVariant(excluded));
+    return hash;
+}

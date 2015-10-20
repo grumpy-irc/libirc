@@ -24,14 +24,3 @@ libirc::SerializableItem::~SerializableItem()
 
 }
 
-QHash<QString, QVariant> libirc::SerializableItem::ToHash()
-{
-    QHash<QString, QVariant> list;
-    list.insert("ObjectName", "libirc::SerializableItem");
-    return list;
-}
-
-void SerializableItem::LoadHash(QHash<QString, QVariant> hash)
-{
-
-}

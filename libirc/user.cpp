@@ -94,3 +94,21 @@ bool User::IsNull()
 {
     return this->_nick.isNull();
 }
+
+void User::LoadHash(QHash<QString, QVariant> hash)
+{
+    UNSERIALIZE_STRING(_username);
+    UNSERIALIZE_STRING(_host);
+    UNSERIALIZE_STRING(_nick);
+    UNSERIALIZE_STRING(_ident);
+}
+
+QHash<QString, QVariant> User::ToHash()
+{
+    QHash<QString, QVariant> hash;
+    SERIALIZE(_username);
+    SERIALIZE(_nick);
+    SERIALIZE(_ident);
+    SERIALIZE(_host);
+    return hash;
+}

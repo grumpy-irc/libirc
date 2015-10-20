@@ -34,6 +34,19 @@ QString Channel::GetTopic() const
     return this->_topic;
 }
 
+void Channel::LoadHash(QHash<QString, QVariant> hash)
+{
+
+}
+
+QHash<QString, QVariant> Channel::ToHash()
+{
+    QHash<QString, QVariant> hash;
+    SERIALIZE(_topic);
+    SERIALIZE(_name);
+    return hash;
+}
+
 void Channel::SetName(QString name)
 {
     this->_name = name;

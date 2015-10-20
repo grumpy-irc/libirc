@@ -245,6 +245,19 @@ int Network::PositionOfUCPrefix(char prefix)
     return this->channelUserPrefixes.indexOf(prefix);
 }
 
+void Network::LoadHash(QHash<QString, QVariant> hash)
+{
+    libirc::Network::LoadHash(hash);
+}
+
+QHash<QString, QVariant> Network::ToHash()
+{
+    QHash<QString, QVariant> hash = libirc::Network::ToHash();
+    SERIALIZE(alternateNick);
+    //SERIALIZE()
+    return hash;
+}
+
 Channel *Network::GetChannel(QString channel_name)
 {
     channel_name = channel_name.toLower();

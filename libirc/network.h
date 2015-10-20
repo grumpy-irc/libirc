@@ -23,8 +23,10 @@ namespace libirc
         public:
             Network(QString Name);
 			virtual ~Network() {}
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
 		protected:
-			QString name;
+            QString networkName;
     };
 }
 

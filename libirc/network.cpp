@@ -16,5 +16,17 @@ using namespace libirc;
 
 Network::Network(QString Name)
 {
-	this->name = Name;
+    this->networkName = Name;
+}
+
+void Network::LoadHash(QHash<QString, QVariant> hash)
+{
+    UNSERIALIZE_STRING(networkName);
+}
+
+QHash<QString, QVariant> Network::ToHash()
+{
+    QHash<QString, QVariant> hash;
+    SERIALIZE(networkName);
+    return hash;
 }

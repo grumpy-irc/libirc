@@ -13,12 +13,13 @@
 #ifndef SERVERADDRESS_H
 #define SERVERADDRESS_H
 
+#include "serializableitem.h"
 #include "libirc_global.h"
 #include <QString>
 
 namespace libirc
 {
-    class LIBIRCSHARED_EXPORT ServerAddress
+    class LIBIRCSHARED_EXPORT ServerAddress : public SerializableItem
     {
         public:
             ServerAddress(QString url);
@@ -35,6 +36,8 @@ namespace libirc
             QString GetSuffix();
             bool IsIPv6();
             unsigned int GetPort();
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
         private:
             unsigned int port;
             QString password;
