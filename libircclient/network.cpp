@@ -52,6 +52,15 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
     this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
 }
 
+Network::Network(QHash<QString, QVariant> hash) : libirc::Network("")
+{
+    this->socket = NULL;
+    this->port = 0;
+    this->usingSSL = false;
+    this->pingTimeout = 0;
+    this->LoadHash(hash);
+}
+
 Network::~Network()
 {
     delete this->server;
@@ -101,6 +110,24 @@ bool Network::IsConnected()
         return false;
 
     return this->socket->isOpen();
+}
+
+void Network::SetDefaultNick(QString nick)
+{
+    if (!this->IsConnected())
+        this->localUser.SetNick(nick);
+}
+
+void Network::SetDefaultIdent(QString ident)
+{
+    if (!this->IsConnected())
+        this->localUser.SetIdent(ident);
+}
+
+void Network::SetDefaultUsername(QString realname)
+{
+    if (!this->IsConnected())
+        this->localUser.SetRealname(realname);
 }
 
 QString Network::GetNick()
@@ -248,13 +275,57 @@ int Network::PositionOfUCPrefix(char prefix)
 void Network::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::Network::LoadHash(hash);
+    UNSERIALIZE_STRING(hostname);
+    UNSERIALIZE_UINT(port);
+    UNSERIALIZE_INT(pingTimeout);
+    UNSERIALIZE_INT(pingRate);
+    UNSERIALIZE_STRING(defaultQuit);
+    UNSERIALIZE_BOOL(autoRejoin);
+    UNSERIALIZE_BOOL(autoIdentify);
+    UNSERIALIZE_STRING(identifyString);
+    UNSERIALIZE_STRING(password);
+    UNSERIALIZE_STRING(alternateNick);
+    if (hash.contains("users"))
+    {
+        foreach (QVariant user, hash["user"].toList())
+            this->users.append(new User(user.toHash()));
+    }
+    if (hash.contains("channels"))
+    {
+        foreach (QVariant channel, hash["channels"].toList())
+            this->channels.append(new Channel(channel.toHash()));
+    }
+    if (hash.contains("localUserMode"))
+        this->localUserMode = UMode(hash["localUserMode"].toHash());
+    if (hash.contains("localUser"))
+        this->localUser = User(hash["localUser"].toHash());
 }
 
 QHash<QString, QVariant> Network::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::Network::ToHash();
+    SERIALIZE(hostname);
+    SERIALIZE(port);
+    SERIALIZE(pingTimeout);
+    SERIALIZE(pingRate);
+    SERIALIZE(defaultQuit);
+    SERIALIZE(autoRejoin);
+    SERIALIZE(autoIdentify);
+    SERIALIZE(identifyString);
+    SERIALIZE(password);
     SERIALIZE(alternateNick);
-    //SERIALIZE()
+    hash.insert("localUserMode", this->localUserMode.ToHash());
+    SERIALIZE(channelPrefix);
+    hash.insert("server", this->server->ToHash());
+    hash.insert("localUser", this->localUser.ToHash());
+    SERIALIZE(lastPing);
+    QList<QVariant> users_x, channels_x;
+    foreach (Channel *ch, this->channels)
+        channels_x.append(QVariant(ch->ToHash()));
+    hash.insert("channels", QVariant(channels_x));
+    foreach (User *user, this->users)
+        users_x.append(QVariant(user->ToHash()));
+    hash.insert("users", QVariant(users_x));
     return hash;
 }
 

@@ -16,14 +16,21 @@ using namespace libircclient;
 
 User::User()
 {
-    this->ChannelPrefix = NULL;
-    this->CUMode = NULL;
+    this->ChannelPrefix = 0;
+    this->CUMode = 0;
+}
+
+User::User(QHash<QString, QVariant> hash)
+{
+    this->ChannelPrefix = 0;
+    this->CUMode = 0;
+    this->LoadHash(hash);
 }
 
 User::User(QString user) : libirc::User(user)
 {
-    this->ChannelPrefix = NULL;
-    this->CUMode = NULL;
+    this->ChannelPrefix = 0;
+    this->CUMode = 0;
 }
 
 User::User(User *user) : libirc::User(user)
@@ -35,7 +42,7 @@ User::User(User *user) : libirc::User(user)
 QString User::GetPrefixedNick()
 {
     QString nick = this->GetNick();
-    if (this->ChannelPrefix != NULL)
+    if (this->ChannelPrefix != 0)
         nick = QChar(this->ChannelPrefix) + nick;
 
     return nick;

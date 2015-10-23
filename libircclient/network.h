@@ -49,11 +49,17 @@ namespace libircclient
 
         public:
             Network(libirc::ServerAddress &server, QString name);
+            Network(QHash<QString, QVariant> hash);
             virtual ~Network();
             void Connect();
             void Reconnect();
             void Disconnect(QString reason = "");
             bool IsConnected();
+            //! This function can be used to change the default nickname that will be requested upon connection to server
+            //! subsequent calls of this function while on active IRC connection will be ignored.
+            void SetDefaultNick(QString nick);
+            void SetDefaultIdent(QString ident);
+            void SetDefaultUsername(QString realname);
             QString GetNick();
             QString GetHost();
             QString GetIdent();

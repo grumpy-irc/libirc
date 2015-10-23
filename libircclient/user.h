@@ -22,6 +22,7 @@ namespace libircclient
     {
         public:
             User();
+            User(QHash<QString, QVariant> hash);
             User(QString user);
             User(User *user);
             QString GetPrefixedNick();

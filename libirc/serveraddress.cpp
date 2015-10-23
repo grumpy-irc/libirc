@@ -79,6 +79,12 @@ ServerAddress::ServerAddress(QString Host, bool SSL, unsigned int Port, QString 
     this->nick = Nick;
 }
 
+ServerAddress::ServerAddress(QHash<QString, QVariant> hash)
+{
+    this->valid = false;
+    this->LoadHash(hash);
+}
+
 ServerAddress::~ServerAddress()
 {
 

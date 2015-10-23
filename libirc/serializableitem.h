@@ -19,11 +19,13 @@
 #include "libirc_global.h"
 
 #define SERIALIZE(variable_name) hash.insert(#variable_name, QVariant(variable_name))
-#define UNSERIALIZE_BOOL(variable_name)     if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toBool(); }
-#define UNSERIALIZE_INT(variable_name)      if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].Int(); }
-#define UNSERIALIZE_UINT(variable_name)     if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toUInt(); }
-#define UNSERIALIZE_STRING(variable_name)   if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toString(); }
-#define UNSERIALIZE_LIST(variable_name)     if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toList(); }
+#define UNSERIALIZE_BOOL(variable_name)       if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toBool(); }
+#define UNSERIALIZE_INT(variable_name)        if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toInt(); }
+#define UNSERIALIZE_UINT(variable_name)       if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toUInt(); }
+#define UNSERIALIZE_STRING(variable_name)     if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toString(); }
+#define UNSERIALIZE_LIST(variable_name)       if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toList(); }
+#define UNSERIALIZE_DATETIME(variable_name)   if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toDateTime(); }
+#define UNSERIALIZE_ULONGLONG(variable_name)  if (hash.contains(#variable_name)) { this->variable_name = hash[#variable_name].toULongLong(); }
 
 namespace libirc
 {

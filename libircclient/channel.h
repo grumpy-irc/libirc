@@ -26,6 +26,7 @@ namespace libircclient
     class LIBIRCCLIENTSHARED_EXPORT Channel : public libirc::Channel
     {
         public:
+            Channel(QHash<QString, QVariant> hash);
             Channel(QString name, Network *network = NULL);
             ~Channel();
             /*!
@@ -38,6 +39,7 @@ namespace libircclient
             void ChangeNick(QString old_nick, QString new_nick);
             bool ContainsUser(QString user);
             void SendMessage(QString text);
+            void SetNetwork(Network *network);
             void ClearUsers();
             QList<User *> GetUsers() const;
             User *GetUser(QString user);

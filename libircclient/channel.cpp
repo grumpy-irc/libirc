@@ -16,6 +16,12 @@
 
 using namespace libircclient;
 
+Channel::Channel(QHash<QString, QVariant> hash) : libirc::Channel("")
+{
+    this->_net = NULL;
+    this->LoadHash(hash);
+}
+
 Channel::Channel(QString name, Network *network) : libirc::Channel(name)
 {
     this->_net = network;
@@ -87,6 +93,11 @@ void Channel::SendMessage(QString text)
     if (!this->_net)
         return;
     this->_net->SendMessage(text, this);
+}
+
+void Channel::SetNetwork(Network *network)
+{
+    this->_net = network;
 }
 
 void Channel::ClearUsers()

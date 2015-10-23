@@ -24,6 +24,7 @@ namespace libirc
         public:
             ServerAddress(QString url);
             ServerAddress(QString Host, bool SSL, unsigned int Port, QString Nick = "", QString Password = "");
+            ServerAddress(QHash<QString, QVariant> hash);
             virtual ~ServerAddress();
             bool IsValid();
             bool UsingSSL();

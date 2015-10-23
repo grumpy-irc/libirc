@@ -20,14 +20,29 @@ Mode::Mode()
 
 }
 
+Mode::Mode(QHash<QString, QVariant> hash)
+{
+    this->LoadHash(hash);
+}
+
 UMode::UMode()
 {
 
 }
 
+UMode::UMode(QHash<QString, QVariant> hash)
+{
+    this->LoadHash(hash);
+}
+
 CMode::CMode()
 {
 
+}
+
+CMode::CMode(QHash<QString, QVariant> hash)
+{
+    this->LoadHash(hash);
 }
 
 CMode::CMode(QString mode_string)

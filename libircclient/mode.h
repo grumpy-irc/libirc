@@ -27,6 +27,7 @@ namespace libircclient
     {
         public:
             Mode();
+            Mode(QHash<QString, QVariant> hash);
             Mode(QString mode) : libirc::Mode(mode) {}
     };
 
@@ -34,6 +35,7 @@ namespace libircclient
     {
         public:
             UMode();
+            UMode(QHash<QString, QVariant> hash);
             UMode(QString mode_string) : Mode(mode_string) {}
     };
 
@@ -41,6 +43,7 @@ namespace libircclient
     {
         public:
             CMode();
+            CMode(QHash<QString, QVariant> hash);
             CMode(QString mode_string);
     };
 
