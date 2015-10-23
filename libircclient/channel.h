@@ -28,6 +28,8 @@ namespace libircclient
         public:
             Channel(QHash<QString, QVariant> hash);
             Channel(QString name, Network *network = NULL);
+            Channel(Channel *channel);
+            Channel(const Channel &channel);
             ~Channel();
             /*!
              * \brief InsertUser Use this to insert a new user to channel
@@ -38,6 +40,8 @@ namespace libircclient
             void RemoveUser(QString user);
             void ChangeNick(QString old_nick, QString new_nick);
             bool ContainsUser(QString user);
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
             void SendMessage(QString text);
             void SetNetwork(Network *network);
             void ClearUsers();
@@ -51,9 +55,11 @@ namespace libircclient
             void Event_UserRemoved(QString user);
             void Event_NickChanged(QString old_nick, QString new_nick); */
         protected:
-            CMode localMode;
-            QList<User*> users;
+            CMode _localMode;
+            QList<User*> _users;
             Network *_net;
+        private:
+            void deepCopy(const Channel *source);
     };
 }
 

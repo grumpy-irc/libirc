@@ -36,7 +36,8 @@ QString Channel::GetTopic() const
 
 void Channel::LoadHash(QHash<QString, QVariant> hash)
 {
-
+    UNSERIALIZE_STRING(_topic);
+    UNSERIALIZE_STRING(_name);
 }
 
 QHash<QString, QVariant> Channel::ToHash()

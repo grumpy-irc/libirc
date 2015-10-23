@@ -74,6 +74,12 @@ namespace libircclient
             void Part(Channel *channel);
             void Identify(QString Nickname = "", QString Password = "");
             bool ContainsChannel(QString channel_name);
+            /*!
+             * \brief InsertChannel Inserts a deep copy of provided channel to local list of channels
+             * \param channel Source which is copied, can be safely deleted
+             * \return The copy of input object which was inserted to local vector of channels same as result of GetChannel
+             */
+            Channel *InsertChannel(libircclient::Channel *channel);
             Channel *GetChannel(QString channel_name);
             QList<Channel *> GetChannels();
             QList<char> GetCUModes();

@@ -357,6 +357,14 @@ bool Network::ContainsChannel(QString channel_name)
     return this->GetChannel(channel_name) != NULL;
 }
 
+Channel *Network::InsertChannel(Channel *channel)
+{
+    Channel *cx = new Channel(channel);
+    cx->SetNetwork(this);
+    this->channels.append(cx);
+    return cx;
+}
+
 void Network::OnConnected()
 {
     // We just connected to an IRC network

@@ -27,9 +27,19 @@ Channel::Channel(QString name, Network *network) : libirc::Channel(name)
     this->_net = network;
 }
 
+Channel::Channel(Channel *channel) : libirc::Channel(channel->_name)
+{
+    this->deepCopy(channel);
+}
+
+Channel::Channel(const Channel &channel) : libirc::Channel(channel._name)
+{
+    this->deepCopy(&channel);
+}
+
 Channel::~Channel()
 {
-    qDeleteAll(this->users);
+    qDeleteAll(this->_users);
 }
 
 User *Channel::InsertUser(User *user)
@@ -43,7 +53,7 @@ User *Channel::InsertUser(User *user)
     else
     {
         ux = new User(user);
-        this->users.append(ux);
+        this->_users.append(ux);
     }
 
     //emit this->Event_UserInserted(ux);
@@ -54,12 +64,12 @@ void Channel::RemoveUser(QString user)
 {
     user = user.toLower();
     int i = 0;
-    while (i < this->users.count())
+    while (i < this->_users.count())
     {
-        if (this->users[i]->GetNick().toLower() == user)
+        if (this->_users[i]->GetNick().toLower() == user)
         {
-            delete this->users[i];
-            this->users.removeAt(i);
+            delete this->_users[i];
+            this->_users.removeAt(i);
             //emit this->Event_UserRemoved(user);
             return;
         }
@@ -80,12 +90,36 @@ void Channel::ChangeNick(QString old_nick, QString new_nick)
 bool Channel::ContainsUser(QString user)
 {
     user = user.toLower();
-    foreach (User *ux, this->users)
+    foreach (User *ux, this->_users)
     {
         if (ux->GetNick().toLower() == user)
             return true;
     }
     return false;
+}
+
+void Channel::LoadHash(QHash<QString, QVariant> hash)
+{
+    libirc::Channel::LoadHash(hash);
+    if (hash.contains("localMode"))
+        this->_localMode = CMode(hash["localMode"].toHash());
+    if (hash.contains("users"))
+    {
+        QList<QVariant> users_x = hash["users"].toList();
+        foreach (QVariant user, users_x)
+            this->_users.append(new User(user.toHash()));
+    }
+}
+
+QHash<QString, QVariant> Channel::ToHash()
+{
+    QHash<QString, QVariant> hash = libirc::Channel::ToHash();
+    hash.insert("localMode", QVariant(this->_localMode.ToHash()));
+    QList<QVariant> users_l;
+    foreach (User *user, this->_users)
+        users_l.append(user->ToHash());
+    hash.insert("users", QVariant(users_l));
+    return hash;
 }
 
 void Channel::SendMessage(QString text)
@@ -102,19 +136,19 @@ void Channel::SetNetwork(Network *network)
 
 void Channel::ClearUsers()
 {
-    qDeleteAll(this->users);
-    this->users.clear();
+    qDeleteAll(this->_users);
+    this->_users.clear();
 }
 
 QList<User *> Channel::GetUsers() const
 {
-    return this->users;
+    return this->_users;
 }
 
 User *Channel::GetUser(QString user)
 {
     user = user.toLower();
-    foreach (User *xx, this->users)
+    foreach (User *xx, this->_users)
     {
         if (xx->GetNick().toLower() == user)
             return xx;
@@ -124,17 +158,27 @@ User *Channel::GetUser(QString user)
 
 CMode Channel::GetMode()
 {
-    return this->localMode;
+    return this->_localMode;
 }
 
 void Channel::SetMode(QString mode)
 {
-    this->localMode.SetMode(mode);
+    this->_localMode.SetMode(mode);
 }
 
 void Channel::Part()
 {
     if (this->_net)
         this->_net->Part(this);
+}
+
+void Channel::deepCopy(const Channel *source)
+{
+    this->_net = source->_net;
+    this->_name = source->_name;
+    this->_topic = source->_topic;
+    this->_localMode = source->_localMode;
+    foreach (User *user, source->_users)
+        this->_users.append(new User(user));
 }
 
