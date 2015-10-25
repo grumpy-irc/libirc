@@ -272,6 +272,25 @@ int Network::PositionOfUCPrefix(char prefix)
     return this->channelUserPrefixes.indexOf(prefix);
 }
 
+#define UNSERIALIZE_CHARLIST(list) if (hash.contains(#list)) { list = deserializeList(hash[#list]); }
+
+static QList<char> deserializeList(QVariant hash)
+{
+    QList<char> list;
+    foreach (QVariant x, hash.toList())
+        list.append(x.toChar().toLatin1());
+    // here we go
+    return list;
+}
+
+static QVariant serializeList(QList<char> data)
+{
+    QList<QVariant> result;
+    foreach (char x, data)
+        result.append(QVariant(QChar(x)));
+    return QVariant(result);
+}
+
 void Network::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::Network::LoadHash(hash);
@@ -283,6 +302,12 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
     UNSERIALIZE_BOOL(autoRejoin);
     UNSERIALIZE_BOOL(autoIdentify);
     UNSERIALIZE_STRING(identifyString);
+    UNSERIALIZE_CHARLIST(CModes);
+    UNSERIALIZE_CHARLIST(CCModes);
+    UNSERIALIZE_CHARLIST(CUModes);
+    UNSERIALIZE_CHARLIST(CPModes);
+    UNSERIALIZE_CHARLIST(CRModes);
+    UNSERIALIZE_CHARLIST(channelUserPrefixes);
     UNSERIALIZE_STRING(password);
     UNSERIALIZE_STRING(alternateNick);
     if (hash.contains("users"))
@@ -314,6 +339,12 @@ QHash<QString, QVariant> Network::ToHash()
     SERIALIZE(identifyString);
     SERIALIZE(password);
     SERIALIZE(alternateNick);
+    hash.insert("CCModes", serializeList(this->CCModes));
+    hash.insert("CModes", serializeList(this->CModes));
+    hash.insert("CPModes", serializeList(this->CPModes));
+    hash.insert("CUModes", serializeList(this->CUModes));
+    hash.insert("channelUserPrefixes", serializeList(this->channelUserPrefixes));
+    hash.insert("CRModes", serializeList(this->CRModes));
     hash.insert("localUserMode", this->localUserMode.ToHash());
     SERIALIZE(channelPrefix);
     hash.insert("server", this->server->ToHash());

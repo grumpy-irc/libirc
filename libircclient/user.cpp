@@ -48,4 +48,19 @@ QString User::GetPrefixedNick()
     return nick;
 }
 
+void User::LoadHash(QHash<QString, QVariant> hash)
+{
+    libirc::User::LoadHash(hash);
+    UNSERIALIZE_CCHAR(ChannelPrefix);
+    UNSERIALIZE_CCHAR(CUMode);
+}
+
+QHash<QString, QVariant> User::ToHash()
+{
+    QHash<QString, QVariant> hash = libirc::User::ToHash();
+    SERIALIZE_CCHAR(ChannelPrefix);
+    SERIALIZE_CCHAR(CUMode);
+    return hash;
+}
+
 
