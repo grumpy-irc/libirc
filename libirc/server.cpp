@@ -57,3 +57,10 @@ void Server::SetVersion(QString version)
 {
     this->_version = version;
 }
+
+libirc::Server::Server(QHash<QString, QVariant> hash)
+{
+    this->_ssl = false;
+    this->_version = "unknown version";
+    this->LoadHash(hash);
+}

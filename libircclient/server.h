@@ -23,7 +23,7 @@ namespace libircclient
     {
         public:
             Server();
-
+            Server(QHash<QString, QVariant> hash);
     };
 }
 

@@ -56,6 +56,9 @@ Network::Network(QHash<QString, QVariant> hash) : libirc::Network("")
 {
     this->socket = NULL;
     this->port = 0;
+    this->server = NULL;
+    this->timerPingSend = NULL;
+    this->timerPingTimeout = NULL;
     this->usingSSL = false;
     this->pingTimeout = 0;
     this->LoadHash(hash);
@@ -201,6 +204,11 @@ QString Network::GetServerAddress()
     return this->hostname;
 }
 
+void Network::SetNick(QString nick)
+{
+    this->localUser.SetNick(nick);
+}
+
 int Network::GetTimeout() const
 {
     return this->pingTimeout;
@@ -272,6 +280,61 @@ int Network::PositionOfUCPrefix(char prefix)
     return this->channelUserPrefixes.indexOf(prefix);
 }
 
+void Network::SetChannelUserPrefixes(QList<char> data)
+{
+    this->channelUserPrefixes = data;
+}
+
+void Network::SetCModes(QList<char> data)
+{
+    this->CModes = data;
+}
+
+QList<char> Network::GetChannelUserPrefixes()
+{
+    return this->channelUserPrefixes;
+}
+
+QList<char> Network::GetCModes()
+{
+    return this->CModes;
+}
+
+QList<char> Network::GetCPModes()
+{
+    return this->CPModes;
+}
+
+void Network::SetCPModes(QList<char> data)
+{
+    this->CPModes = data;
+}
+
+void Network::SetCRModes(QList<char> data)
+{
+    this->CRModes = data;
+}
+
+QList<char> Network::GetCRModes()
+{
+    return this->CRModes;
+}
+
+void Network::SetCUModes(QList<char> data)
+{
+    this->CUModes = data;
+}
+
+void Network::SetCCModes(QList<char> data)
+{
+    this->CCModes = data;
+}
+
+QList<char> Network::GetCCModes()
+{
+    return this->CCModes;
+}
+
 #define UNSERIALIZE_CHARLIST(list) if (hash.contains(#list)) { list = deserializeList(hash[#list]); }
 
 static QList<char> deserializeList(QVariant hash)
@@ -310,6 +373,8 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
     UNSERIALIZE_CHARLIST(channelUserPrefixes);
     UNSERIALIZE_STRING(password);
     UNSERIALIZE_STRING(alternateNick);
+    if (hash.contains("server"))
+        this->server = new Server(hash["server"].toHash());
     if (hash.contains("users"))
     {
         foreach (QVariant user, hash["user"].toList())
@@ -772,6 +837,7 @@ void Network::processInfo(Parser *parser)
             continue;
         }
     }
+    emit this->Event_MyInfo(parser);
 }
 
 void Network::deleteTimers()

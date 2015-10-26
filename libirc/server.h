@@ -20,6 +20,8 @@ namespace libirc
     class LIBIRCSHARED_EXPORT Server : public SerializableItem
     {
         public:
+            Server(QHash<QString, QVariant> hash);
+            // Default ct
             Server();
             virtual ~Server() {}
             QString GetName() const;

@@ -19,3 +19,8 @@ Server::Server()
 
 }
 
+Server::Server(QHash<QString, QVariant> hash) : libirc::Server(hash)
+{
+
+}
+

@@ -64,6 +64,9 @@ namespace libircclient
             QString GetHost();
             QString GetIdent();
             QString GetServerAddress();
+            //! This will update the nick in operating memory, it will not request it from server and may cause troubles
+            //! if not properly called. This is only used for resynchronization.
+            void SetNick(QString nick);
             void SetPassword(QString Password);
             void TransferRaw(QString raw);
             int SendMessage(QString text, Channel *channel);
@@ -82,7 +85,6 @@ namespace libircclient
             Channel *InsertChannel(libircclient::Channel *channel);
             Channel *GetChannel(QString channel_name);
             QList<Channel *> GetChannels();
-            QList<char> GetCUModes();
             User *GetLocalUserInfo();
             /*!
              * \brief StartsWithCUPrefix checks the user name whether it starts with a CUMode prefix (such as @)
@@ -96,10 +98,22 @@ namespace libircclient
              * \return
              */
             int PositionOfUCPrefix(char prefix);
-            QHash<char, QString> ChannelModeHelp;
-            QHash<char, QString> UserModeHelp;
+            void SetChannelUserPrefixes(QList<char> data);
+            void SetCModes(QList<char> data);
+            QList<char> GetChannelUserPrefixes();
+            QList<char> GetCModes();
+            QList<char> GetCPModes();
+            void SetCPModes(QList<char> data);
+            void SetCRModes(QList<char> data);
+            QList<char> GetCCModes();
+            QList<char> GetCRModes();
+            void SetCUModes(QList<char> data);
+            QList<char> GetCUModes();
+            void SetCCModes(QList<char> data);
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
+            QHash<char, QString> ChannelModeHelp;
+            QHash<char, QString> UserModeHelp;
 
         signals:
             void Event_RawOutgoing(QByteArray data);
@@ -133,6 +147,8 @@ namespace libircclient
             void Event_NOTICE(libircclient::Parser *parser);
             void Event_NICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
             void Event_SelfNICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
+            //! IRC_NUMERIC_MYINFO
+            void Event_MyInfo(libircclient::Parser *parser);
             //! Emitted when someone changes the topic
             void Event_TOPIC(libircclient::Parser *parser, libircclient::Channel * chan, QString old_topic);
             //! Retrieved after channel is joined as part of info
