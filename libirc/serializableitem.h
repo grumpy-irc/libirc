@@ -21,6 +21,7 @@
 #define SERIALIZE(variable_name)          hash.insert(#variable_name, QVariant(variable_name))
 #define SERIALIZE_CCHAR(variable_name)    hash.insert(#variable_name, QVariant(QChar(variable_name)))
 #define UNSERIALIZE_BOOL(variable_name)       if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toBool(); }
+#define UNSERIALIZE_HASH(variable_name)       if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toHash(); }
 #define UNSERIALIZE_INT(variable_name)        if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toInt(); }
 #define UNSERIALIZE_UINT(variable_name)       if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toUInt(); }
 #define UNSERIALIZE_STRING(variable_name)     if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toString(); }

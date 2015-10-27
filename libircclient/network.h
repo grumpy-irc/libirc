@@ -73,16 +73,23 @@ namespace libircclient
             int SendMessage(QString text, User *user);
             int SendMessage(QString text, QString target);
             int GetTimeout() const;
-            void Part(QString channel_name);
-            void Part(Channel *channel);
+            void RequestPart(QString channel_name);
+            void RequestPart(Channel *channel);
             void Identify(QString Nickname = "", QString Password = "");
             bool ContainsChannel(QString channel_name);
+            //////////////////////////////////////////////////////////////////////////////////////////
+            // Synchronization tools
+            //! This will delete all internal memory structures related to channels this user is in.
+            //! Use only for synchronization purposes, while implementing something like grumpyd
+            //! calling this function on live IRC network connection will have unpredictable result
+            void _st_ClearChannels();
             /*!
              * \brief InsertChannel Inserts a deep copy of provided channel to local list of channels
              * \param channel Source which is copied, can be safely deleted
              * \return The copy of input object which was inserted to local vector of channels same as result of GetChannel
              */
-            Channel *InsertChannel(libircclient::Channel *channel);
+            Channel *_st_InsertChannel(libircclient::Channel *channel);
+            //////////////////////////////////////////////////////////////////////////////////////////
             Channel *GetChannel(QString channel_name);
             QList<Channel *> GetChannels();
             User *GetLocalUserInfo();

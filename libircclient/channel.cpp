@@ -169,7 +169,7 @@ void Channel::SetMode(QString mode)
 void Channel::Part()
 {
     if (this->_net)
-        this->_net->Part(this);
+        this->_net->RequestPart(this);
 }
 
 void Channel::deepCopy(const Channel *source)

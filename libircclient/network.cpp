@@ -178,12 +178,12 @@ int Network::SendMessage(QString text, User *user)
     return this->SendMessage(text, user->GetNick());
 }
 
-void Network::Part(QString channel_name)
+void Network::RequestPart(QString channel_name)
 {
     this->TransferRaw("PART " + channel_name);
 }
 
-void Network::Part(Channel *channel)
+void Network::RequestPart(Channel *channel)
 {
     this->TransferRaw("PART " + channel->GetName());
 }
@@ -453,7 +453,13 @@ bool Network::ContainsChannel(QString channel_name)
     return this->GetChannel(channel_name) != NULL;
 }
 
-Channel *Network::InsertChannel(Channel *channel)
+void Network::_st_ClearChannels()
+{
+    qDeleteAll(this->channels);
+    this->channels.clear();
+}
+
+Channel *Network::_st_InsertChannel(Channel *channel)
 {
     Channel *cx = new Channel(channel);
     cx->SetNetwork(this);
