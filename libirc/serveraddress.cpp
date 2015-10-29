@@ -21,6 +21,7 @@ ServerAddress::ServerAddress(QString url)
     this->_original = url;
     this->_port = IRC_STANDARD_PORT;
     this->_ssl = false;
+    this->_ipv6 = false;
     this->_valid = false;
     QString temp = url.toLower();
     temp = temp.trimmed();
@@ -76,6 +77,7 @@ ServerAddress::ServerAddress(QString Host, bool SSL, unsigned int Port, QString 
     this->_valid = true;
     this->_port = Port;
     this->_password = Password;
+    this->_ipv6 = false;
     this->_nick = Nick;
 }
 

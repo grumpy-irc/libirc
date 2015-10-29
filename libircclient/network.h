@@ -75,6 +75,7 @@ namespace libircclient
             int GetTimeout() const;
             void RequestPart(QString channel_name);
             void RequestPart(Channel *channel);
+            void RequestNick(QString nick);
             void Identify(QString Nickname = "", QString Password = "");
             bool ContainsChannel(QString channel_name);
             //////////////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +120,7 @@ namespace libircclient
             void SetCCModes(QList<char> data);
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
+            bool ResolveOnNickConflicts;
             QHash<char, QString> ChannelModeHelp;
             QHash<char, QString> UserModeHelp;
 
@@ -147,6 +149,7 @@ namespace libircclient
             void Event_ChannelMode(libircclient::Parser *parser);
             void Event_MOTD(libircclient::Parser *parser);
             void Event_Mode(libircclient::Parser *parser);
+            void Event_NickCollision(libircclient::Parser *parser);
             void Event_WhoisInfo(libircclient::Parser *parser);
             void Event_INFO(libircclient::Parser *parser);
             void Event_PRIVMSG(libircclient::Parser *parser);
@@ -189,6 +192,7 @@ namespace libircclient
         private:
             void processIncomingRawData(QByteArray data);
             void processNamrpl(Parser *parser);
+            void process433(Parser *parser);
             void processInfo(Parser *parser);
             void deleteTimers();
             //! List of symbols that are used to prefix users
@@ -198,6 +202,7 @@ namespace libircclient
             QList<char> CRModes;
             QList<char> CUModes;
             QList<char> CCModes;
+            QString originalNick;
             UMode localUserMode;
             QString alternateNick;
             int alternateNickNumber;

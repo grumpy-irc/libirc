@@ -48,6 +48,7 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
     this->channelUserPrefixes << '@' << '+';
     this->CUModes << 'o' << 'v';
     this->CModes << 'i' << 'm';
+    this->ResolveOnNickConflicts = true;
     this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
     this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
 }
@@ -59,6 +60,7 @@ Network::Network(QHash<QString, QVariant> hash) : libirc::Network("")
     this->server = NULL;
     this->timerPingSend = NULL;
     this->timerPingTimeout = NULL;
+    this->ResolveOnNickConflicts = true;
     this->usingSSL = false;
     this->pingTimeout = 0;
     this->LoadHash(hash);
@@ -186,6 +188,11 @@ void Network::RequestPart(QString channel_name)
 void Network::RequestPart(Channel *channel)
 {
     this->TransferRaw("PART " + channel->GetName());
+}
+
+void Network::RequestNick(QString nick)
+{
+    this->TransferRaw("NICK " + nick);
 }
 
 void Network::Identify(QString Nickname, QString Password)
@@ -764,6 +771,10 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_TOPICInfo(&parser, channel);
         }
             break;
+        case IRC_NUMERIC_NICKUSED:
+            known = true;
+            this->process433(&parser);
+            break;
     }
     if (!known)
         emit this->Event_Unknown(&parser);
@@ -844,6 +855,30 @@ void Network::processInfo(Parser *parser)
         }
     }
     emit this->Event_MyInfo(parser);
+}
+
+void Network::process433(Parser *parser)
+{
+    // Try to get some alternative nick
+    bool no_alternative = this->alternateNick.isEmpty();
+    if (this->originalNick == this->alternateNick || this->GetNick() == this->alternateNick)
+        no_alternative = true;
+    if (no_alternative)
+    {
+        // We need to request original nick with a suffix number
+        this->alternateNickNumber++;
+        if (this->originalNick.isEmpty())
+            this->originalNick = this->GetNick();
+        QString nick = this->originalNick + QString::number(this->alternateNickNumber);
+        this->localUser.SetNick(nick);
+        this->RequestNick(nick);
+    }
+    else
+    {
+        this->RequestNick(this->alternateNick);
+        this->localUser.SetNick(this->alternateNick);
+    }
+    emit this->Event_NickCollision(parser);
 }
 
 void Network::deleteTimers()

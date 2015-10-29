@@ -35,7 +35,6 @@ namespace libirc
             QString GetPassword();
             //! Usually a list of channels to join after connect
             QString GetSuffix();
-            bool IsIPv6();
             unsigned int GetPort();
             void SetHost(QString host);
             void SetPassword(QString pw);
@@ -44,6 +43,7 @@ namespace libirc
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
         private:
+            bool IsIPv6();
             unsigned int _port;
             QString _password;
             QString _nick;
