@@ -1,4 +1,7 @@
 PROJECT(ircclient)
+SET(CMAKE_AUTOMOC ON)
+SET(QT_USE_QTCORE TRUE)
+SET(QT_USE_QTNETWORK TRUE)
 
 if(QT5_BUILD)
   find_package(Qt5Core REQUIRED)
@@ -8,8 +11,6 @@ if(QT5_BUILD)
 else()
   find_package(Qt4 REQUIRED)
 endif()
-
-SET(CMAKE_AUTOMOC ON)
 
 file (GLOB src "*.cpp")
 file (GLOB resources "*.qrc")

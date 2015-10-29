@@ -11,6 +11,7 @@
 // Copyright (c) Petr Bena 2015
 
 #include "parser.h"
+#include <QStringList>
 
 using namespace libircclient;
 
