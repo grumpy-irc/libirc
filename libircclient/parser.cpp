@@ -14,6 +14,15 @@
 
 using namespace libircclient;
 
+static QStringList Trim(QStringList list)
+{
+    QStringList result;
+    foreach (QString item, list)
+        if (!item.isEmpty())
+            result << item;
+    return result;
+}
+
 Parser::Parser(QString incoming_text)
 {
     // remove all garbage from incoming text
@@ -60,7 +69,7 @@ Parser::Parser(QString incoming_text)
         temp = "";
     }
     this->parameterLine = temp;
-    this->parameters = this->parameterLine.split(" ", QString::SplitBehavior::SkipEmptyParts);
+    this->parameters = Trim(this->parameterLine.split(" "));
     this->_valid = true;
     this->obtainNumeric();
     if (this->source.contains("@"))
