@@ -17,11 +17,11 @@ using namespace libirc;
 
 ServerAddress::ServerAddress(QString url)
 {
-    this->host = "";
-    this->original = url;
-    this->port = IRC_STANDARD_PORT;
-    this->ssl = false;
-    this->valid = false;
+    this->_host = "";
+    this->_original = url;
+    this->_port = IRC_STANDARD_PORT;
+    this->_ssl = false;
+    this->_valid = false;
     QString temp = url.toLower();
     temp = temp.trimmed();
     if (temp.contains(" "))
@@ -32,56 +32,56 @@ ServerAddress::ServerAddress(QString url)
     } else if (temp.startsWith("ircs://"))
     {
         temp = temp.mid(7);
-        this->ssl = true;
+        this->_ssl = true;
     }
     // get the suffix
     if (temp.contains("/"))
     {
-        this->suffix = temp.mid(temp.indexOf("/") + 1);
+        this->_suffix = temp.mid(temp.indexOf("/") + 1);
         temp = temp.mid(0, temp.indexOf("/"));
     }
     // IPv6 support, must be processed before port because that one uses colons as well
     if (temp.startsWith("["))
     {
-        this->ipv6 = true;
+        this->_ipv6 = true;
         temp = temp.mid(1);
         if (!temp.contains("]"))
             return;
-        this->host = temp.mid(0, temp.indexOf("]"));
+        this->_host = temp.mid(0, temp.indexOf("]"));
         temp = temp.mid(temp.indexOf("]") + 1);
         if (temp.contains(":"))
         {
             temp = temp.mid(temp.indexOf(":") + 1);
-            this->port = temp.toUInt();
+            this->_port = temp.toUInt();
         }
     } else
     {
         if (!temp.contains(":"))
         {
             // we are done here
-            this->host = temp;
+            this->_host = temp;
         } else
         {
-            this->host = temp.mid(0, temp.indexOf(":"));
-            this->port = temp.mid(temp.indexOf(":") + 1).toUInt();
+            this->_host = temp.mid(0, temp.indexOf(":"));
+            this->_port = temp.mid(temp.indexOf(":") + 1).toUInt();
         }
     }
-    this->valid = true;
+    this->_valid = true;
 }
 
 ServerAddress::ServerAddress(QString Host, bool SSL, unsigned int Port, QString Nick, QString Password)
 {
-    this->host = Host;
-    this->ssl = SSL;
-    this->valid = true;
-    this->port = Port;
-    this->password = Password;
-    this->nick = Nick;
+    this->_host = Host;
+    this->_ssl = SSL;
+    this->_valid = true;
+    this->_port = Port;
+    this->_password = Password;
+    this->_nick = Nick;
 }
 
 ServerAddress::ServerAddress(QHash<QString, QVariant> hash)
 {
-    this->valid = false;
+    this->_valid = false;
     this->LoadHash(hash);
 }
 
@@ -92,79 +92,100 @@ ServerAddress::~ServerAddress()
 
 bool ServerAddress::IsValid()
 {
-    return this->valid;
+    return this->_valid;
 }
 
 QString ServerAddress::GetHost()
 {
-    return this->host;
+    return this->_host;
 }
 
 bool ServerAddress::UsingSSL()
 {
-    return this->ssl;
+    return this->_ssl;
 }
 
 unsigned int ServerAddress::GetPort()
 {
-    return this->port;
+    return this->_port;
+}
+
+void ServerAddress::SetHost(QString host)
+{
+    this->_host = host;
+    this->_valid = true;
+}
+
+void ServerAddress::SetPassword(QString pw)
+{
+    this->_password = pw;
+}
+
+void ServerAddress::SetPort(unsigned int port)
+{
+    this->_port = port;
+}
+
+void ServerAddress::SetSSL(bool ssl)
+{
+    this->_ssl = ssl;
 }
 
 void ServerAddress::LoadHash(QHash<QString, QVariant> hash)
 {
-    UNSERIALIZE_UINT(port);
-    UNSERIALIZE_STRING(password);
-    UNSERIALIZE_STRING(nick);
-    UNSERIALIZE_STRING(host);
-    UNSERIALIZE_STRING(suffix);
-    UNSERIALIZE_BOOL(ssl);
-    UNSERIALIZE_BOOL(valid);
-    UNSERIALIZE_BOOL(ipv6);
-    UNSERIALIZE_STRING(original);
+    UNSERIALIZE_UINT(_port);
+    UNSERIALIZE_STRING(_password);
+    UNSERIALIZE_STRING(_nick);
+    UNSERIALIZE_STRING(_host);
+    UNSERIALIZE_STRING(_suffix);
+    UNSERIALIZE_BOOL(_ssl);
+    UNSERIALIZE_BOOL(_valid);
+    UNSERIALIZE_BOOL(_ipv6);
+    UNSERIALIZE_STRING(_original);
 }
 
 QHash<QString, QVariant> ServerAddress::ToHash()
 {
     QHash<QString, QVariant> hash;
-    SERIALIZE(port);
-    SERIALIZE(password);
-    SERIALIZE(nick);
-    SERIALIZE(host);
-    SERIALIZE(suffix);
-    SERIALIZE(ssl);
-    SERIALIZE(valid);
-    SERIALIZE(ipv6);
-    SERIALIZE(original);
+    SERIALIZE(_port);
+    SERIALIZE(_password);
+    SERIALIZE(_nick);
+    SERIALIZE(_host);
+    SERIALIZE(_suffix);
+    SERIALIZE(_ssl);
+    SERIALIZE(_valid);
+    SERIALIZE(_ipv6);
+    SERIALIZE(_original);
     return hash;
 }
 
 QString ServerAddress::GetOriginal()
 {
-    return this->original;
+    return this->_original;
 }
 
-void ServerAddress::SetNick(QString Nick)
+void ServerAddress::SetNick(QString nick)
 {
-    this->nick = Nick;
+    this->_nick = nick;
 }
 
 QString ServerAddress::GetNick()
 {
-    return this->nick;
+    return this->_nick;
 }
 
 QString ServerAddress::GetPassword()
 {
-    return this->password;
+    return this->_password;
 }
 
 QString ServerAddress::GetSuffix()
 {
-    return this->suffix;
+    return this->_suffix;
 }
 
 bool ServerAddress::IsIPv6()
 {
-    return this->ipv6;
+    return this->_ipv6;
 }
 

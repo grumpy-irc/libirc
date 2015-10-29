@@ -30,25 +30,29 @@ namespace libirc
             bool UsingSSL();
             QString GetHost();
             QString GetOriginal();
-            void SetNick(QString Nick);
+            void SetNick(QString nick);
             QString GetNick();
             QString GetPassword();
             //! Usually a list of channels to join after connect
             QString GetSuffix();
             bool IsIPv6();
             unsigned int GetPort();
+            void SetHost(QString host);
+            void SetPassword(QString pw);
+            void SetPort(unsigned int port);
+            void SetSSL(bool ssl);
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
         private:
-            unsigned int port;
-            QString password;
-            QString nick;
-            QString host;
-            QString suffix;
-            bool ssl;
-            bool valid;
-            bool ipv6;
-            QString original;
+            unsigned int _port;
+            QString _password;
+            QString _nick;
+            QString _host;
+            QString _suffix;
+            bool _ssl;
+            bool _valid;
+            bool _ipv6;
+            QString _original;
     };
 }
 
