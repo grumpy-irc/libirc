@@ -49,6 +49,8 @@ User *Channel::InsertUser(User *user)
     if (this->ContainsUser(user->GetNick()))
     {
         ux = this->GetUser(user->GetNick());
+        ux->ChannelPrefix = user->ChannelPrefix;
+        ux->CUMode = user->CUMode;
     }
     else
     {

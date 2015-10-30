@@ -194,6 +194,7 @@ namespace libircclient
             void processNamrpl(Parser *parser);
             void process433(Parser *parser);
             void processInfo(Parser *parser);
+            void processNick(Parser *parser, bool self_command);
             void deleteTimers();
             //! List of symbols that are used to prefix users
             QList<char> channelUserPrefixes;

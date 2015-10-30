@@ -238,7 +238,7 @@ void Network::SetPassword(QString Password)
 
 void Network::OnPingSend()
 {
-    this->TransferRaw("PING :" + this->GetHost());
+    this->TransferRaw("PING :" + this->GetServerAddress());
 }
 
 void Network::OnError(QAbstractSocket::SocketError er)
@@ -587,40 +587,9 @@ void Network::processIncomingRawData(QByteArray data)
             break;
 
         case IRC_NUMERIC_NICK:
-        {
             known = true;
-            QString new_nick;
-            if (parser.GetParameters().count() < 1)
-            {
-                if (parser.GetText().isEmpty())
-                {
-                    // wrong amount of parameters
-                    qDebug() << "IRC PARSER: Malformed NICK: " + parser.GetRaw();
-                    break;
-                }
-                else
-                {
-                    new_nick = parser.GetText();
-                }
-            }
-            else
-            {
-                new_nick = parser.GetParameters()[0];
-            }
-            // Precache the nicks to save hundreds of function calls
-            QString old_nick = parser.GetSourceUserInfo()->GetNick();
-            
-            if (self_command)
-            {
-                // our own nick was changed
-                this->localUser.SetNick(new_nick);
-                emit this->Event_SelfNICK(&parser, old_nick, new_nick);
-            }
-            // Change the nicks in every channel this user is in
-            foreach (Channel *channel, this->channels)
-                channel->ChangeNick(old_nick, new_nick);
-            emit this->Event_NICK(&parser, old_nick, new_nick);
-        }   break;
+            this->processNick(&parser, self_command);
+            break;
         case IRC_NUMERIC_QUIT:
         {
             known = true;
@@ -855,6 +824,41 @@ void Network::processInfo(Parser *parser)
         }
     }
     emit this->Event_MyInfo(parser);
+}
+
+void Network::processNick(Parser *parser, bool self_command)
+{
+    QString new_nick;
+    if (parser->GetParameters().count() < 1)
+    {
+        if (parser->GetText().isEmpty())
+        {
+            // wrong amount of parameters
+            qDebug() << "IRC PARSER: Malformed NICK: " + parser->GetRaw();
+            return;
+        }
+        else
+        {
+            new_nick = parser->GetText();
+        }
+    }
+    else
+    {
+        new_nick = parser->GetParameters()[0];
+    }
+    // Precache the nicks to save hundreds of function calls
+    QString old_nick = parser->GetSourceUserInfo()->GetNick();
+
+    if (self_command)
+    {
+        // our own nick was changed
+        this->localUser.SetNick(new_nick);
+        emit this->Event_SelfNICK(parser, old_nick, new_nick);
+    }
+    // Change the nicks in every channel this user is in
+    foreach (Channel *channel, this->channels)
+        channel->ChangeNick(old_nick, new_nick);
+    emit this->Event_NICK(parser, old_nick, new_nick);
 }
 
 void Network::process433(Parser *parser)
