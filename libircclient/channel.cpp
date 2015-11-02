@@ -177,8 +177,10 @@ void Channel::Part()
 void Channel::deepCopy(const Channel *source)
 {
     this->_net = source->_net;
+    this->_topicTime = source->_topicTime;
     this->_name = source->_name;
     this->_topic = source->_topic;
+    this->_topicUser = source->_topicUser;
     this->_localMode = source->_localMode;
     foreach (User *user, source->_users)
         this->_users.append(new User(user));

@@ -34,16 +34,35 @@ QString Channel::GetTopic() const
     return this->_topic;
 }
 
+void Channel::SetTopicTime(QDateTime time)
+{
+    this->_topicTime = time;
+}
+
+QString Channel::GetTopicUser() const
+{
+    return this->_topicUser;
+}
+
+void Channel::SetTopicUser(QString user)
+{
+    this->_topicUser = user;
+}
+
 void Channel::LoadHash(QHash<QString, QVariant> hash)
 {
     UNSERIALIZE_STRING(_topic);
     UNSERIALIZE_STRING(_name);
+    UNSERIALIZE_DATETIME(_topicTime);
+    UNSERIALIZE_STRING(_topicUser);
 }
 
 QHash<QString, QVariant> Channel::ToHash()
 {
     QHash<QString, QVariant> hash;
     SERIALIZE(_topic);
+    SERIALIZE(_topicTime);
+    SERIALIZE(_topicUser);
     SERIALIZE(_name);
     return hash;
 }

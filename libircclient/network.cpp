@@ -740,6 +740,24 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_TOPICInfo(&parser, channel);
         }
             break;
+        case IRC_NUMERIC_TOPICWHOTIME:
+        {
+            known = true;
+            if (parser.GetParameters().count() < 2)
+            {
+                qDebug() << "IRC PARSER: Invalid TOPICWHOTIME: " + parser.GetRaw();
+                break;
+            }
+            Channel *channel = this->GetChannel(parser.GetParameters()[1]);
+            if (!channel)
+            {
+                DebugInvalid("Channel struct not in memory", &parser);
+                break;
+            }
+            channel->SetTopicTime(QDateTime::fromTime_t(parser.GetText().toUInt()));
+            emit this->Event_TOPICWhoTime(&parser, channel);
+        }
+            break;
         case IRC_NUMERIC_NICKUSED:
             known = true;
             this->process433(&parser);

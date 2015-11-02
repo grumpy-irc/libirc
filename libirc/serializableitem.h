@@ -16,6 +16,7 @@
 #include <QVariant>
 #include <QHash>
 #include <QString>
+#include <QMutex>
 #include "libirc_global.h"
 
 #define SERIALIZE(variable_name)          hash.insert(#variable_name, QVariant(variable_name))
@@ -35,10 +36,21 @@ namespace libirc
     class LIBIRCSHARED_EXPORT SerializableItem
     {
         public:
+            static const unsigned long long LIBIRC_UNKNOWN_RPC_ID;
+
             SerializableItem();
             virtual ~SerializableItem();
-            virtual QHash<QString, QVariant> ToHash()=0;
-            virtual void LoadHash(QHash<QString, QVariant> hash)=0;
+            virtual QHash<QString, QVariant> ToHash();
+            virtual void LoadHash(QHash<QString, QVariant> hash);
+            virtual void RPC(int function, QList<QVariant> parameters);
+            virtual bool SupportsRPC() { return false; }
+            virtual unsigned long long __rpc_GetID();
+        protected:
+            static QHash<unsigned long long, SerializableItem*> __rpc_cache;
+            static QMutex __rpc_lock;
+
+            static unsigned long long __rpc_currentID;
+            unsigned long long __rpc_id;
     };
 }
 

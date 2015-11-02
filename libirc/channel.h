@@ -13,6 +13,7 @@
 #ifndef LIBIRCCHANNEL_H
 #define LIBIRCCHANNEL_H
 
+#include <QDateTime>
 #include "serializableitem.h"
 
 namespace libirc
@@ -26,13 +27,17 @@ namespace libirc
             virtual void SetName(QString name);
             virtual void SetTopic(QString topic);
             virtual QString GetTopic() const;
+            virtual void SetTopicTime(QDateTime time);
+            virtual QString GetTopicUser() const;
+            virtual void SetTopicUser(QString user);
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
 
         protected:
             QString _name;
             QString _topic;
-
+            QDateTime _topicTime;
+            QString _topicUser;
     };
 }
 

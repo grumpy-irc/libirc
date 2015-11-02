@@ -163,6 +163,7 @@ namespace libircclient
             void Event_TOPIC(libircclient::Parser *parser, libircclient::Channel * chan, QString old_topic);
             //! Retrieved after channel is joined as part of info
             void Event_TOPICInfo(libircclient::Parser *parser, libircclient::Channel *chan);
+            void Event_TOPICWhoTime(libircclient::Parser *parser, libircclient::Channel *chan);
             //! Server gave us some unknown command
             void Event_Unknown(libircclient::Parser *parser);
             void Event_Timeout();
