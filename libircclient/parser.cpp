@@ -75,6 +75,8 @@ Parser::Parser(QString incoming_text)
     this->obtainNumeric();
     if (this->source.contains("@"))
         this->user = new User(this->source);
+    else
+        this->user = new User(this->source + "!@");
 }
 
 Parser::~Parser()
