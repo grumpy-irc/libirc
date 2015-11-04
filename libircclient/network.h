@@ -147,6 +147,8 @@ namespace libircclient
             void Event_Kick(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_ServerMode(libircclient::Parser *parser);
             void Event_ChannelMode(libircclient::Parser *parser);
+            void Event_MOTDEnd(libircclient::Parser *parser);
+            void Event_MOTDBegin(libircclient::Parser *parser);
             void Event_MOTD(libircclient::Parser *parser);
             void Event_Mode(libircclient::Parser *parser);
             void Event_NickCollision(libircclient::Parser *parser);

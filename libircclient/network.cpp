@@ -762,6 +762,18 @@ void Network::processIncomingRawData(QByteArray data)
             known = true;
             this->process433(&parser);
             break;
+        case IRC_NUMERIC_MOTD:
+            emit this->Event_MOTD(&parser);
+            known = true;
+            break;
+        case IRC_NUMERIC_MOTDBEGIN:
+            emit this->Event_MOTDBegin(&parser);
+            known = true;
+            break;
+        case IRC_NUMERIC_MOTDEND:
+            emit this->Event_MOTDEnd(&parser);
+            known = true;
+            break;
     }
     if (!known)
         emit this->Event_Unknown(&parser);
