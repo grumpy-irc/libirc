@@ -19,6 +19,7 @@
 #include <QList>
 #include <QString>
 #include <QDateTime>
+#include <QSslSocket>
 #include <QAbstractSocket>
 #include <QTcpSocket>
 #include <QTimer>
@@ -26,6 +27,8 @@
 #include "../libirc/irc_standards.h"
 
 class QTcpSocket;
+
+#define EHANDSHAKE 20
 
 namespace libirc
 {
@@ -51,33 +54,34 @@ namespace libircclient
             Network(libirc::ServerAddress &server, QString name);
             Network(QHash<QString, QVariant> hash);
             virtual ~Network();
-            void Connect();
-            void Reconnect();
-            void Disconnect(QString reason = "");
-            bool IsConnected();
+            virtual void Connect();
+            virtual void Reconnect();
+            virtual void Disconnect(QString reason = "");
+            virtual bool IsConnected();
             //! This function can be used to change the default nickname that will be requested upon connection to server
             //! subsequent calls of this function while on active IRC connection will be ignored.
-            void SetDefaultNick(QString nick);
-            void SetDefaultIdent(QString ident);
-            void SetDefaultUsername(QString realname);
+            virtual void SetDefaultNick(QString nick);
+            virtual void SetDefaultIdent(QString ident);
+            virtual void SetDefaultUsername(QString realname);
+            virtual bool IsSSL();
             QString GetNick();
             QString GetHost();
             QString GetIdent();
             QString GetServerAddress();
             //! This will update the nick in operating memory, it will not request it from server and may cause troubles
             //! if not properly called. This is only used for resynchronization.
-            void SetNick(QString nick);
-            void SetPassword(QString Password);
-            void TransferRaw(QString raw);
-            int SendMessage(QString text, Channel *channel);
-            int SendMessage(QString text, User *user);
-            int SendMessage(QString text, QString target);
-            int GetTimeout() const;
-            void RequestPart(QString channel_name);
-            void RequestPart(Channel *channel);
-            void RequestNick(QString nick);
-            void Identify(QString Nickname = "", QString Password = "");
-            bool ContainsChannel(QString channel_name);
+            virtual void SetNick(QString nick);
+            virtual void SetPassword(QString Password);
+            virtual void TransferRaw(QString raw);
+            virtual int SendMessage(QString text, Channel *channel);
+            virtual int SendMessage(QString text, User *user);
+            virtual int SendMessage(QString text, QString target);
+            virtual int GetTimeout() const;
+            virtual void RequestPart(QString channel_name);
+            virtual void RequestPart(Channel *channel);
+            virtual void RequestNick(QString nick);
+            virtual void Identify(QString Nickname = "", QString Password = "");
+            virtual bool ContainsChannel(QString channel_name);
             //////////////////////////////////////////////////////////////////////////////////////////
             // Synchronization tools
             //! This will delete all internal memory structures related to channels this user is in.
@@ -91,33 +95,33 @@ namespace libircclient
              */
             Channel *_st_InsertChannel(libircclient::Channel *channel);
             //////////////////////////////////////////////////////////////////////////////////////////
-            Channel *GetChannel(QString channel_name);
-            QList<Channel *> GetChannels();
-            User *GetLocalUserInfo();
+            virtual Channel *GetChannel(QString channel_name);
+            virtual QList<Channel *> GetChannels();
+            virtual User *GetLocalUserInfo();
             /*!
              * \brief StartsWithCUPrefix checks the user name whether it starts with a CUMode prefix (such as @)
              * \param user_name Name of user including the prefix (@channel_op)
              * \return 0 in case there is no prefix, otherwise it returns the respective CUMode (o in case of @)
              */
-            char StartsWithCUPrefix(QString user_name);
+            virtual char StartsWithCUPrefix(QString user_name);
             /*!
              * \brief PositionOfChannelPrefix returns a position of UCP or negative number in case it's not in there
              * \param prefix
              * \return
              */
-            int PositionOfUCPrefix(char prefix);
-            void SetChannelUserPrefixes(QList<char> data);
-            void SetCModes(QList<char> data);
-            QList<char> GetChannelUserPrefixes();
-            QList<char> GetCModes();
-            QList<char> GetCPModes();
-            void SetCPModes(QList<char> data);
-            void SetCRModes(QList<char> data);
-            QList<char> GetCCModes();
-            QList<char> GetCRModes();
-            void SetCUModes(QList<char> data);
-            QList<char> GetCUModes();
-            void SetCCModes(QList<char> data);
+            virtual int PositionOfUCPrefix(char prefix);
+            virtual void SetChannelUserPrefixes(QList<char> data);
+            virtual void SetCModes(QList<char> data);
+            virtual QList<char> GetChannelUserPrefixes();
+            virtual QList<char> GetCModes();
+            virtual QList<char> GetCPModes();
+            virtual void SetCPModes(QList<char> data);
+            virtual void SetCRModes(QList<char> data);
+            virtual QList<char> GetCCModes();
+            virtual QList<char> GetCRModes();
+            virtual void SetCUModes(QList<char> data);
+            virtual QList<char> GetCUModes();
+            virtual void SetCCModes(QList<char> data);
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
             bool ResolveOnNickConflicts;
@@ -129,6 +133,7 @@ namespace libircclient
             void Event_RawIncoming(QByteArray data);
             void Event_Invalid(QByteArray data);
             void Event_ConnectionFailure(QAbstractSocket::SocketError reason);
+            void Event_ConnectionError(QString error, int code);
             void Event_Parse(libircclient::Parser *parser);
             void Event_SelfJoin(libircclient::Channel *chan);
             void Event_Join(libircclient::Parser *parser, libircclient::User *user, libircclient::Channel *chan);
@@ -166,20 +171,23 @@ namespace libircclient
             //! Retrieved after channel is joined as part of info
             void Event_TOPICInfo(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_TOPICWhoTime(libircclient::Parser *parser, libircclient::Channel *chan);
+            void Event_SSLFailure(QList<QSslError> error_l, bool *fail);
             //! Server gave us some unknown command
             void Event_Unknown(libircclient::Parser *parser);
             void Event_Timeout();
             void Event_Connected();
             void Event_Disconnected();
 
-        private slots:
-            void OnPing();
-            void OnPingSend();
-            void OnError(QAbstractSocket::SocketError er);
+        protected slots:
+            virtual void OnSslHandshakeFailure(QList<QSslError> errors);
+            virtual void OnError(QAbstractSocket::SocketError er);
             void OnReceive();
             void OnConnected();
+            void OnPing();
+            void OnPingSend();
 
         protected:
+            virtual void closeError(QString error, int code);
             bool usingSSL;
             QTcpSocket *socket;
             QString hostname;

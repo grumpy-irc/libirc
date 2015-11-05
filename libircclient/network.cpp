@@ -82,11 +82,52 @@ void Network::Connect()
     //delete this->network_thread;
     delete this->socket;
     //this->network_thread = new NetworkThread(this);
-    this->socket = new QTcpSocket();
+    if (!this->IsSSL())
+        this->socket = new QTcpSocket();
+    else
+        this->socket = new QSslSocket();
+
+    /*
+    if (!this->SSL)
+    {
+        connect(this->socket, SIGNAL(connected()), this, SLOT(OnConnected()));
+        this->socket->connectToHost(this->hostname, this->port);
+    }
+    else
+    {
+        // We don't care about self signed certificates
+        connect(((QSslSocket*)this->socket), SIGNAL(encrypted()), this, SLOT(OnConnected()));
+        //QList<QSslError> errors;
+        //errors << QSslError(QSslError::SelfSignedCertificate);
+        //errors << QSslError(QSslError::HostNameMismatch);
+        ((QSslSocket*)this->socket)->ignoreSslErrors();
+        connect(((QSslSocket*)this->socket), SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(OnSslHandshakeFailure(QList<QSslError>)));
+        ((QSslSocket*)this->socket)->connectToHostEncrypted(this->hostname, this->port);
+        if (!((QSslSocket*)this->socket)->waitForEncrypted())
+        {
+            this->closeError("SSL handshake failed: " + this->socket->errorString());
+        }
+    }
+     */
+
     connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(OnError(QAbstractSocket::SocketError)));
     connect(this->socket, SIGNAL(readyRead()), this, SLOT(OnReceive()));
-    connect(this->socket, SIGNAL(connected()), this, SLOT(OnConnected()));
-    this->socket->connectToHost(this->hostname, this->port);
+
+    if (!this->IsSSL())
+    {
+        connect(this->socket, SIGNAL(connected()), this, SLOT(OnConnected()));
+        this->socket->connectToHost(this->hostname, this->port);
+    } else
+    {
+        ((QSslSocket*)this->socket)->ignoreSslErrors();
+        connect(((QSslSocket*)this->socket), SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(OnSslHandshakeFailure(QList<QSslError>)));
+        connect(((QSslSocket*)this->socket), SIGNAL(encrypted()), this, SLOT(OnConnected()));
+        ((QSslSocket*)this->socket)->connectToHostEncrypted(this->hostname, this->port);
+        if (this->socket && !((QSslSocket*)this->socket)->waitForEncrypted())
+        {
+            this->closeError("SSL handshake failed: " + this->socket->errorString(), EHANDSHAKE);
+        }
+    }
 }
 
 void Network::Reconnect()
@@ -133,6 +174,11 @@ void Network::SetDefaultUsername(QString realname)
 {
     if (!this->IsConnected())
         this->localUser.SetRealname(realname);
+}
+
+bool Network::IsSSL()
+{
+    return this->usingSSL;
 }
 
 QString Network::GetNick()
@@ -241,10 +287,28 @@ void Network::OnPingSend()
     this->TransferRaw("PING :" + this->GetServerAddress());
 }
 
+void Network::closeError(QString error, int code)
+{
+    // Delete the socket first to prevent neverending loop
+    // for some reason when you call the destructor Qt emits
+    // some errors again causing program to hang
+    if (this->socket == NULL)
+        return;
+    QTcpSocket *temp = this->socket;
+    this->socket = NULL;
+    temp->close();
+    delete temp;
+    this->deleteTimers();
+}
+
 void Network::OnError(QAbstractSocket::SocketError er)
 {
+    if (this->socket == NULL)
+        return;
     emit this->Event_ConnectionFailure(er);
-    this->Disconnect();
+    //! \todo Improve this
+    // Write the proper error here
+    this->closeError("Error", 1);
 }
 
 void Network::OnReceive()
@@ -430,6 +494,16 @@ QHash<QString, QVariant> Network::ToHash()
         users_x.append(QVariant(user->ToHash()));
     hash.insert("users", QVariant(users_x));
     return hash;
+}
+
+void Network::OnSslHandshakeFailure(QList<QSslError> errors)
+{
+    bool temp = false;
+    emit this->Event_SSLFailure(errors, &temp);
+    if (!temp)
+        ((QSslSocket*)this->socket)->ignoreSslErrors();
+    else
+        this->closeError("Requested by hook", EHANDSHAKE);
 }
 
 Channel *Network::GetChannel(QString channel_name)

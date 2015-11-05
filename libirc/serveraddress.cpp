@@ -32,6 +32,7 @@ ServerAddress::ServerAddress(QString url)
         temp = temp.mid(6);
     } else if (temp.startsWith("ircs://"))
     {
+        this->_port = IRC_STANDARD_PORT_SSL;
         temp = temp.mid(7);
         this->_ssl = true;
     }
