@@ -39,23 +39,26 @@ Channel::Channel(const Channel &channel) : libirc::Channel(channel._name)
 
 Channel::~Channel()
 {
-    qDeleteAll(this->_users);
+    qDeleteAll(this->_users.values());
+    this->_users.clear();
 }
 
 User *Channel::InsertUser(User *user)
 {
     User *ux;
 
-    if (this->ContainsUser(user->GetNick()))
+    QString luser = user->GetNick().toLower();
+
+    if (this->_users.contains(luser))
     {
-        ux = this->GetUser(user->GetNick());
+        ux = this->_users[luser];
         ux->ChannelPrefix = user->ChannelPrefix;
         ux->CUMode = user->CUMode;
     }
     else
     {
         ux = new User(user);
-        this->_users.append(ux);
+        this->_users.insert(luser, ux);
     }
 
     //emit this->Event_UserInserted(ux);
@@ -65,18 +68,10 @@ User *Channel::InsertUser(User *user)
 void Channel::RemoveUser(QString user)
 {
     user = user.toLower();
-    int i = 0;
-    while (i < this->_users.count())
-    {
-        if (this->_users[i]->GetNick().toLower() == user)
-        {
-            delete this->_users[i];
-            this->_users.removeAt(i);
-            //emit this->Event_UserRemoved(user);
-            return;
-        }
-        i++;
-    }
+    if (!this->_users.contains(user))
+        return;
+    delete this->_users[user];
+    this->_users.remove(user);
 }
 
 void Channel::ChangeNick(QString old_nick, QString new_nick)
@@ -87,17 +82,13 @@ void Channel::ChangeNick(QString old_nick, QString new_nick)
 
     //emit this->Event_NickChanged(old_nick, new_nick);
     user->SetNick(new_nick);
+    this->_users.remove(old_nick.toLower());
+    this->_users.insert(new_nick.toLower(), user);
 }
 
 bool Channel::ContainsUser(QString user)
 {
-    user = user.toLower();
-    foreach (User *ux, this->_users)
-    {
-        if (ux->GetNick().toLower() == user)
-            return true;
-    }
-    return false;
+    return this->_users.contains(user.toLower());
 }
 
 void Channel::LoadHash(QHash<QString, QVariant> hash)
@@ -107,9 +98,9 @@ void Channel::LoadHash(QHash<QString, QVariant> hash)
         this->_localMode = CMode(hash["localMode"].toHash());
     if (hash.contains("users"))
     {
-        QList<QVariant> users_x = hash["users"].toList();
-        foreach (QVariant user, users_x)
-            this->_users.append(new User(user.toHash()));
+        QHash<QString, QVariant> users_x = hash["users"].toHash();
+        foreach (QString user, users_x.keys())
+            this->_users.insert(user, new User(users_x[user].toHash()));
     }
 }
 
@@ -117,9 +108,9 @@ QHash<QString, QVariant> Channel::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::Channel::ToHash();
     hash.insert("localMode", QVariant(this->_localMode.ToHash()));
-    QList<QVariant> users_l;
-    foreach (User *user, this->_users)
-        users_l.append(user->ToHash());
+    QHash<QString, QVariant> users_l;
+    foreach (QString user, this->_users.keys())
+        users_l.insert(user, this->_users[user]->ToHash());
     hash.insert("users", QVariant(users_l));
     return hash;
 }
@@ -142,7 +133,7 @@ void Channel::ClearUsers()
     this->_users.clear();
 }
 
-QList<User *> Channel::GetUsers() const
+QHash<QString, User *> Channel::GetUsers() const
 {
     return this->_users;
 }
@@ -150,11 +141,9 @@ QList<User *> Channel::GetUsers() const
 User *Channel::GetUser(QString user)
 {
     user = user.toLower();
-    foreach (User *xx, this->_users)
-    {
-        if (xx->GetNick().toLower() == user)
-            return xx;
-    }
+    if (this->_users.contains(user))
+        return this->_users[user];
+
     return NULL;
 }
 
@@ -182,7 +171,7 @@ void Channel::deepCopy(const Channel *source)
     this->_topic = source->_topic;
     this->_topicUser = source->_topicUser;
     this->_localMode = source->_localMode;
-    foreach (User *user, source->_users)
-        this->_users.append(new User(user));
+    foreach (QString user, source->_users.keys())
+        this->_users.insert(user, new User(source->_users[user]));
 }
 

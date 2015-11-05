@@ -45,7 +45,7 @@ namespace libircclient
             void SendMessage(QString text);
             void SetNetwork(Network *network);
             void ClearUsers();
-            QList<User *> GetUsers() const;
+            QHash<QString, User *> GetUsers() const;
             User *GetUser(QString user);
             CMode GetMode();
             void SetMode(QString mode);
@@ -56,7 +56,7 @@ namespace libircclient
             void Event_NickChanged(QString old_nick, QString new_nick); */
         protected:
             CMode _localMode;
-            QList<User*> _users;
+            QHash<QString, User*> _users;
             Network *_net;
         private:
             void deepCopy(const Channel *source);
