@@ -210,9 +210,22 @@ void Network::TransferRaw(QString raw)
     this->socket->flush();
 }
 
+#define SEPARATOR QString((char)1)
+
 int Network::SendMessage(QString text, QString target)
 {
     this->TransferRaw("PRIVMSG " + target + " :" + text);
+    return SUCCESS;
+}
+
+int Network::SendAction(QString text, Channel *channel)
+{
+    return this->SendAction(text, channel->GetName());
+}
+
+int Network::SendAction(QString text, QString target)
+{
+    this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + "ACTION " + text + SEPARATOR);
     return SUCCESS;
 }
 
@@ -652,7 +665,7 @@ void Network::processIncomingRawData(QByteArray data)
         }   break;
         case IRC_NUMERIC_PRIVMSG:
             known = true;
-            emit this->Event_PRIVMSG(&parser);
+            this->processPrivMsg(&parser);
             break;
 
         case IRC_NUMERIC_NOTICE:
@@ -928,6 +941,37 @@ void Network::processInfo(Parser *parser)
         }
     }
     emit this->Event_MyInfo(parser);
+}
+
+void Network::processPrivMsg(Parser *parser)
+{
+    if (parser->GetParameters().count() < 1)
+    {
+        qDebug() << "IRC PARSER: Malformed PRIVMSG: " + parser->GetRaw();
+        return;
+    }
+
+    QString text = parser->GetText();
+    if (text.startsWith(SEPARATOR))
+    {
+        // This is a CTCP message
+        text = text.mid(1);
+        if (text.endsWith(SEPARATOR))
+            text = text.mid(0, text.size() - 1);
+
+        // These are usually split by space
+        QString command = text;
+        QString parameters;
+        if (text.contains(" "))
+        {
+            parameters = command.mid(command.indexOf(" ") + 1);
+            command = command.mid(0, command.indexOf(" "));
+        }
+        emit this->Event_CTCP(parser, command, parameters);
+    } else
+    {
+        emit this->Event_PRIVMSG(parser);
+    }
 }
 
 void Network::processNick(Parser *parser, bool self_command)

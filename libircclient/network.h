@@ -76,6 +76,8 @@ namespace libircclient
             virtual int SendMessage(QString text, Channel *channel);
             virtual int SendMessage(QString text, User *user);
             virtual int SendMessage(QString text, QString target);
+            virtual int SendAction(QString text, Channel *channel);
+            virtual int SendAction(QString text, QString target);
             virtual int GetTimeout() const;
             virtual void RequestPart(QString channel_name);
             virtual void RequestPart(Channel *channel);
@@ -160,6 +162,7 @@ namespace libircclient
             void Event_WhoisInfo(libircclient::Parser *parser);
             void Event_INFO(libircclient::Parser *parser);
             void Event_PRIVMSG(libircclient::Parser *parser);
+            void Event_CTCP(libircclient::Parser *parser, QString ctcp, QString parameters);
             void Event_EndOfNames(libircclient::Parser *parser);
             void Event_NOTICE(libircclient::Parser *parser);
             void Event_NICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
@@ -205,6 +208,7 @@ namespace libircclient
             void processNamrpl(Parser *parser);
             void process433(Parser *parser);
             void processInfo(Parser *parser);
+            void processPrivMsg(Parser *parser);
             void processNick(Parser *parser, bool self_command);
             void deleteTimers();
             //! List of symbols that are used to prefix users
