@@ -49,9 +49,12 @@
 #define IRC_NUMERIC_TRACELINK    200
 #define IRC_NUMERIC_STATS        210
 #define IRC_NUMERIC_AWAY         301
+#define IRC_NUMERIC_WHOEND       315
 #define IRC_NUMERIC_LISTSTART    321
 #define IRC_NUMERIC_LIST         322
 #define IRC_NUMERIC_LISTEND      323
+#define IRC_NUMERIC_MODEINFO     324 // Response to MODE if no paramteres provided
+#define IRC_NUMERIC_MODETIME     329
 #define IRC_NUMERIC_NOTOPIC      331
 #define IRC_NUMERIC_TOPICINFO    332
 #define IRC_NUMERIC_TOPICWHOTIME 333

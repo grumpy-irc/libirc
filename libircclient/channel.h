@@ -32,7 +32,7 @@ namespace libircclient
             Channel(const Channel &channel);
             ~Channel();
             /*!
-             * \brief InsertUser Use this to insert a new user to channel
+             * \brief InsertUser Use this to insert a new user to channel, if user already exists it's updated according to information for new user
              * \param user Pointer to user object, this function creates a copy, so the object passed here can be temporary
              * \return Pointer to newly created user or existing user in case there is already this user in a channel
              */
@@ -56,6 +56,7 @@ namespace libircclient
             void Event_NickChanged(QString old_nick, QString new_nick); */
         protected:
             CMode _localMode;
+            QDateTime _localModeDateTime;
             QHash<QString, User*> _users;
             Network *_net;
         private:

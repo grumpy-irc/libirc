@@ -599,18 +599,16 @@ void Network::processIncomingRawData(QByteArray data)
     // based on cloak mechanisms used by a server, so when it happens we need to update it
     if (self_command && !parser.GetSourceUserInfo()->GetHost().isEmpty() && parser.GetSourceUserInfo()->GetHost() != this->localUser.GetHost())
         this->localUser.SetHost(parser.GetSourceUserInfo()->GetHost());
-    bool known = false;
+    bool known = true;
     switch (parser.GetNumeric())
     {
         case IRC_NUMERIC_PING_CHECK:
-            known = true;
             if (parser.GetParameters().count() == 0)
                 this->TransferRaw("PONG");
             else
                 this->TransferRaw("PONG :" + parser.GetParameters()[0]);
             break;
         case IRC_NUMERIC_MYINFO:
-            known = true;
             // Process the information about network
             if (parser.GetParameters().count() < 4)
                 break;
@@ -620,7 +618,6 @@ void Network::processIncomingRawData(QByteArray data)
 
         case IRC_NUMERIC_JOIN:
         {
-            known = true;
             Channel *channel_p = NULL;
             if (parser.GetParameters().count() < 1 && parser.GetText().isEmpty())
             {
@@ -664,22 +661,19 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_Join(&parser, user, channel_p);
         }   break;
         case IRC_NUMERIC_PRIVMSG:
-            known = true;
             this->processPrivMsg(&parser);
             break;
 
         case IRC_NUMERIC_NOTICE:
-            known = true;
             emit this->Event_NOTICE(&parser);
             break;
 
         case IRC_NUMERIC_NICK:
-            known = true;
             this->processNick(&parser, self_command);
             break;
+
         case IRC_NUMERIC_QUIT:
         {
-            known = true;
             // Remove the user from all channels
             foreach (Channel *channel, this->channels)
             {
@@ -693,7 +687,6 @@ void Network::processIncomingRawData(QByteArray data)
         }   break;
         case IRC_NUMERIC_PART:
         {
-            known = true;
             if (parser.GetParameters().count() < 1)
             {
                 qDebug() << "IRC PARSER: Invalid PART: " + parser.GetRaw();
@@ -723,7 +716,6 @@ void Network::processIncomingRawData(QByteArray data)
         }   break;
         case IRC_NUMERIC_KICK:
         {
-            known = true;
             if (parser.GetParameters().count() < 2)
             {
                 qDebug() << "IRC PARSER: Invalid KICK: " + parser.GetRaw();
@@ -752,11 +744,9 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_Kick(&parser, channel);
         }   break;
         case IRC_NUMERIC_PONG:
-            known = true;
             break;
         case IRC_NUMERIC_MODE:
         {
-            known = true;
             if (parser.GetParameters().count() < 1)
             {
                 qDebug() << "IRC PARSER: Invalid MODE: " + parser.GetRaw();
@@ -778,21 +768,17 @@ void Network::processIncomingRawData(QByteArray data)
         }
             break;
         case IRC_NUMERIC_ISUPPORT:
-            known = true;
             this->processInfo(&parser);
             emit this->Event_INFO(&parser);
             break;
         case IRC_NUMERIC_NAMREPLY:
-            known = true;
             this->processNamrpl(&parser);
             break;
         case IRC_NUMERIC_ENDOFNAMES:
-            known = true;
             emit this->Event_EndOfNames(&parser);
             break;
         case IRC_NUMERIC_TOPIC:
         {
-            known = true;
             if (parser.GetParameters().count() < 1)
             {
                 qDebug() << "IRC PARSER: Invalid TOPIC: " + parser.GetRaw();
@@ -811,7 +797,6 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_TOPICINFO:
         {
-            known = true;
             if (parser.GetParameters().count() < 2)
             {
                 qDebug() << "IRC PARSER: Invalid TOPICINFO: " + parser.GetRaw();
@@ -829,7 +814,6 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_TOPICWHOTIME:
         {
-            known = true;
             if (parser.GetParameters().count() < 2)
             {
                 qDebug() << "IRC PARSER: Invalid TOPICWHOTIME: " + parser.GetRaw();
@@ -846,20 +830,32 @@ void Network::processIncomingRawData(QByteArray data)
         }
             break;
         case IRC_NUMERIC_NICKUSED:
-            known = true;
             this->process433(&parser);
             break;
         case IRC_NUMERIC_MOTD:
             emit this->Event_MOTD(&parser);
-            known = true;
             break;
         case IRC_NUMERIC_MOTDBEGIN:
             emit this->Event_MOTDBegin(&parser);
-            known = true;
             break;
         case IRC_NUMERIC_MOTDEND:
             emit this->Event_MOTDEnd(&parser);
-            known = true;
+            break;
+		case IRC_NUMERIC_WHOREPLY:
+			this->processWho(&parser);
+			break;
+        case IRC_NUMERIC_WHOEND:
+            // 315
+            emit this->Event_EndOfWHO(&parser);
+            break;
+        case IRC_NUMERIC_MODEINFO:
+            this->processMode(&parser);
+            break;
+        case IRC_NUMERIC_MODETIME:
+            this->processMTime(&parser);
+            break;
+        default:
+            known = false;
             break;
     }
     if (!known)
@@ -943,6 +939,33 @@ void Network::processInfo(Parser *parser)
     emit this->Event_MyInfo(parser);
 }
 
+void Network::processWho(Parser *parser)
+{
+    // GrumpyUser1 #support grumpy hidden-715465F6.net.upcbroadband.cz hub.tm-irc.org GrumpyUser1 H
+    QStringList parameters = parser->GetParameters();
+    Channel *channel = NULL;
+    User *user = NULL;
+    if (parameters.count() < 7)
+        goto finish;
+    if (!parameters[1].startsWith(this->channelPrefix))
+        goto finish;
+
+    // Find a channel related to this message and update the user details
+    channel = this->GetChannel(parameters[1]);
+    if (!channel)
+        goto finish;
+    user = channel->GetUser(parameters[5]);
+    if (!user)
+        goto finish;
+    user->SetRealname(parser->GetText());
+    user->SetIdent(parameters[2]);
+    user->SetHost(parameters[3]);
+    user->ServerName = parameters[4];
+
+    finish:
+	    emit this->Event_WHO(parser, channel, user);
+}
+
 void Network::processPrivMsg(Parser *parser)
 {
     if (parser->GetParameters().count() < 1)
@@ -972,6 +995,16 @@ void Network::processPrivMsg(Parser *parser)
     {
         emit this->Event_PRIVMSG(parser);
     }
+}
+
+void Network::processMode(Parser *parser)
+{
+
+}
+
+void Network::processMTime(Parser *parser)
+{
+    
 }
 
 void Network::processNick(Parser *parser, bool self_command)

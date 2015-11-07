@@ -25,6 +25,7 @@ Channel::Channel(QHash<QString, QVariant> hash) : libirc::Channel("")
 Channel::Channel(QString name, Network *network) : libirc::Channel(name)
 {
     this->_net = network;
+    this->_localModeDateTime = QDateTime::currentDateTime();
 }
 
 Channel::Channel(Channel *channel) : libirc::Channel(channel->_name)
@@ -54,6 +55,10 @@ User *Channel::InsertUser(User *user)
         ux = this->_users[luser];
         ux->ChannelPrefix = user->ChannelPrefix;
         ux->CUMode = user->CUMode;
+        ux->SetHost(user->GetHost());
+        ux->SetIdent(user->GetIdent());
+        ux->ServerName = user->ServerName;
+        ux->SetRealname(user->GetRealname());
     }
     else
     {
@@ -94,6 +99,7 @@ bool Channel::ContainsUser(QString user)
 void Channel::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::Channel::LoadHash(hash);
+    UNSERIALIZE_DATETIME(_localModeDateTime);
     if (hash.contains("localMode"))
         this->_localMode = CMode(hash["localMode"].toHash());
     if (hash.contains("users"))
@@ -107,6 +113,7 @@ void Channel::LoadHash(QHash<QString, QVariant> hash)
 QHash<QString, QVariant> Channel::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::Channel::ToHash();
+    SERIALIZE(_localModeDateTime);
     hash.insert("localMode", QVariant(this->_localMode.ToHash()));
     QHash<QString, QVariant> users_l;
     foreach (QString user, this->_users.keys())
@@ -169,6 +176,7 @@ void Channel::deepCopy(const Channel *source)
     this->_topicTime = source->_topicTime;
     this->_name = source->_name;
     this->_topic = source->_topic;
+    this->_localModeDateTime = source->_localModeDateTime;
     this->_topicUser = source->_topicUser;
     this->_localMode = source->_localMode;
     foreach (QString user, source->_users.keys())

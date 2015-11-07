@@ -52,6 +52,7 @@ void User::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::User::LoadHash(hash);
     UNSERIALIZE_CCHAR(ChannelPrefix);
+    UNSERIALIZE_STRING(ServerName);
     UNSERIALIZE_CCHAR(CUMode);
 }
 
@@ -59,6 +60,7 @@ QHash<QString, QVariant> User::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::User::ToHash();
     SERIALIZE_CCHAR(ChannelPrefix);
+    SERIALIZE(ServerName);
     SERIALIZE_CCHAR(CUMode);
     return hash;
 }

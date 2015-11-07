@@ -180,6 +180,10 @@ namespace libircclient
             void Event_Timeout();
             void Event_Connected();
             void Event_Disconnected();
+            void Event_WHO(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
+            void Event_EndOfWHO(libircclient::Parser *parser);
+            void Event_ModeInfo(libircclient::Parser *parser);
+            void Event_ModeTime(libircclient::Parser *parser);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
@@ -208,7 +212,10 @@ namespace libircclient
             void processNamrpl(Parser *parser);
             void process433(Parser *parser);
             void processInfo(Parser *parser);
+			void processWho(Parser *parser);
             void processPrivMsg(Parser *parser);
+            void processMode(Parser *parser);
+            void processMTime(Parser *parser);
             void processNick(Parser *parser, bool self_command);
             void deleteTimers();
             //! List of symbols that are used to prefix users
