@@ -11,12 +11,14 @@
 // Copyright (c) Petr Bena 2015
 
 #include <QtNetwork>
+#include <QAbstractSocket>
 #include <QDebug>
 #include "network.h"
 #include "server.h"
 #include "channel.h"
 #include "parser.h"
 #include "user.h"
+#include "generic.h"
 #include "../libirc/serveraddress.h"
 #include "../libirc/error_code.h"
 
@@ -87,31 +89,9 @@ void Network::Connect()
     else
         this->socket = new QSslSocket();
 
-    /*
-    if (!this->SSL)
-    {
-        connect(this->socket, SIGNAL(connected()), this, SLOT(OnConnected()));
-        this->socket->connectToHost(this->hostname, this->port);
-    }
-    else
-    {
-        // We don't care about self signed certificates
-        connect(((QSslSocket*)this->socket), SIGNAL(encrypted()), this, SLOT(OnConnected()));
-        //QList<QSslError> errors;
-        //errors << QSslError(QSslError::SelfSignedCertificate);
-        //errors << QSslError(QSslError::HostNameMismatch);
-        ((QSslSocket*)this->socket)->ignoreSslErrors();
-        connect(((QSslSocket*)this->socket), SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(OnSslHandshakeFailure(QList<QSslError>)));
-        ((QSslSocket*)this->socket)->connectToHostEncrypted(this->hostname, this->port);
-        if (!((QSslSocket*)this->socket)->waitForEncrypted())
-        {
-            this->closeError("SSL handshake failed: " + this->socket->errorString());
-        }
-    }
-     */
-
     connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(OnError(QAbstractSocket::SocketError)));
     connect(this->socket, SIGNAL(readyRead()), this, SLOT(OnReceive()));
+    connect(this->socket, SIGNAL(disconnected()), this, SLOT(OnDisconnect()));
 
     if (!this->IsSSL())
     {
@@ -145,7 +125,7 @@ void Network::Disconnect(QString reason)
         this->TransferRaw("QUIT :" + reason);
         this->socket->close();
     }
-    delete this->socket;
+    this->socket->deleteLater();
     this->socket = NULL;
     this->deleteTimers();
 }
@@ -286,7 +266,7 @@ void Network::OnPing()
     if (QDateTime::currentDateTime() > this->lastPing.addSecs(this->pingTimeout))
     {
         emit this->Event_Timeout();
-        this->Disconnect();
+        this->closeError("Timeout", ETIMEDOUT);
     }
 }
 
@@ -310,8 +290,9 @@ void Network::closeError(QString error, int code)
     QTcpSocket *temp = this->socket;
     this->socket = NULL;
     temp->close();
-    delete temp;
+    temp->deleteLater();
     this->deleteTimers();
+    emit this->Event_Disconnected();
 }
 
 void Network::OnError(QAbstractSocket::SocketError er)
@@ -319,9 +300,7 @@ void Network::OnError(QAbstractSocket::SocketError er)
     if (this->socket == NULL)
         return;
     emit this->Event_ConnectionFailure(er);
-    //! \todo Improve this
-    // Write the proper error here
-    this->closeError("Error", 1);
+    this->closeError(Generic::ErrorCode2String(er), 1);
 }
 
 void Network::OnReceive()
@@ -338,6 +317,11 @@ void Network::OnReceive()
 
         this->processIncomingRawData(line);
     }
+}
+
+void Network::OnDisconnect()
+{
+    this->closeError("Disconnected", EDISCONNECTED);
 }
 
 User *Network::GetLocalUserInfo()
@@ -746,26 +730,7 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_PONG:
             break;
         case IRC_NUMERIC_MODE:
-        {
-            if (parser.GetParameters().count() < 1)
-            {
-                qDebug() << "IRC PARSER: Invalid MODE: " + parser.GetRaw();
-                break;
-            }
-            QString entity = parser.GetParameters()[0];
-            if (entity.toLower() == this->localUser.GetNick().toLower())
-            {
-                // Someone changed our own UMode
-                this->localUserMode.SetMode(parser.GetText());
-            } else if (entity.startsWith(this->channelPrefix))
-            {
-                // Someone changed a channel mode
-            } else
-            {
-                // Someone changed UMode of another user, this is not supported on majority of servers, unless you are services
-            }
-            emit this->Event_Mode(&parser);
-        }
+            this->processMode(&parser);
             break;
         case IRC_NUMERIC_ISUPPORT:
             this->processInfo(&parser);
@@ -813,21 +778,7 @@ void Network::processIncomingRawData(QByteArray data)
         }
             break;
         case IRC_NUMERIC_TOPICWHOTIME:
-        {
-            if (parser.GetParameters().count() < 2)
-            {
-                qDebug() << "IRC PARSER: Invalid TOPICWHOTIME: " + parser.GetRaw();
-                break;
-            }
-            Channel *channel = this->GetChannel(parser.GetParameters()[1]);
-            if (!channel)
-            {
-                DebugInvalid("Channel struct not in memory", &parser);
-                break;
-            }
-            channel->SetTopicTime(QDateTime::fromTime_t(parser.GetText().toUInt()));
-            emit this->Event_TOPICWhoTime(&parser, channel);
-        }
+            this->processTopicWhoTime(&parser);
             break;
         case IRC_NUMERIC_NICKUSED:
             this->process433(&parser);
@@ -849,7 +800,7 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_EndOfWHO(&parser);
             break;
         case IRC_NUMERIC_MODEINFO:
-            this->processMode(&parser);
+            this->processMdIn(&parser);
             break;
         case IRC_NUMERIC_MODETIME:
             this->processMTime(&parser);
@@ -997,14 +948,91 @@ void Network::processPrivMsg(Parser *parser)
     }
 }
 
-void Network::processMode(Parser *parser)
+void Network::processMdIn(Parser *parser)
+{
+    QStringList pl = parser->GetParameters();
+    if (pl.size() < 3)
+    {
+        qDebug() << "IRC PARSER: Invalid MODEINFO: " + parser->GetRaw();
+        return;
+    }
+    Channel *channel = this->GetChannel(pl[1]);
+    if (!channel)
+    {
+        DebugInvalid("Channel struct not in memory", parser);
+        return;
+    }
+    channel->SetMode(pl[2]);
+    emit this->Event_ModeInfo(parser);
+}
+
+void Network::processTopic(Parser *parser)
 {
 
 }
 
+void Network::processKick(Parser *parser)
+{
+
+}
+
+void Network::processTopicWhoTime(Parser *parser)
+{
+    if (parser->GetParameters().count() < 2)
+    {
+        qDebug() << "IRC PARSER: Invalid TOPICWHOTIME: " + parser->GetRaw();
+        return;
+    }
+    QStringList parameters = parser->GetParameters();
+    Channel *channel = this->GetChannel(parameters[1]);
+    if (!channel)
+    {
+        DebugInvalid("Channel struct not in memory", parser);
+        return;
+    }
+    channel->SetTopicUser(parameters[2]);
+    channel->SetTopicTime(QDateTime::fromTime_t(parameters[3].toUInt()));
+    emit this->Event_TOPICWhoTime(parser, channel);
+}
+
+void Network::processMode(Parser *parser)
+{
+    if (parser->GetParameters().count() < 1)
+    {
+        qDebug() << "IRC PARSER: Invalid MODE: " + parser->GetRaw();
+        return;
+    }
+    QString entity = parser->GetParameters()[0];
+    if (entity.toLower() == this->localUser.GetNick().toLower())
+    {
+        // Someone changed our own UMode
+        this->localUserMode.SetMode(parser->GetText());
+    } else if (entity.startsWith(this->channelPrefix))
+    {
+        // Someone changed a channel mode
+    } else
+    {
+        // Someone changed UMode of another user, this is not supported on majority of servers, unless you are services
+    }
+    emit this->Event_Mode(parser);
+}
+
 void Network::processMTime(Parser *parser)
 {
-    
+    QStringList parameters = parser->GetParameters();
+    if (parameters.size() < 3)
+    {
+        qDebug() << "IRC PARSER: Invalid MODETIME: " + parser->GetRaw();
+        return;
+    }
+    Channel *channel = this->GetChannel(parameters[1]);
+    if (!channel)
+    {
+        DebugInvalid("Channel struct not in memory", parser);
+        return;
+    }
+    channel->SetMTime(QDateTime::fromTime_t(parameters[2].toUInt()));
+    emit this->Event_ModeTime(parser);
 }
 
 void Network::processNick(Parser *parser, bool self_command)
@@ -1071,13 +1099,13 @@ void Network::deleteTimers()
     if (this->timerPingSend)
     {
         this->timerPingSend->stop();
-        delete this->timerPingSend;
+        this->timerPingSend->deleteLater();
         this->timerPingSend = NULL;
     }
     if (this->timerPingTimeout)
     {
         this->timerPingTimeout->stop();
-        delete this->timerPingTimeout;
+        this->timerPingTimeout->deleteLater();
         this->timerPingTimeout = NULL;
     }
 }

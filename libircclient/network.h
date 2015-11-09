@@ -28,7 +28,8 @@
 
 class QTcpSocket;
 
-#define EHANDSHAKE 20
+#define EHANDSHAKE    20
+#define EDISCONNECTED 30
 
 namespace libirc
 {
@@ -189,6 +190,7 @@ namespace libircclient
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
             virtual void OnError(QAbstractSocket::SocketError er);
             void OnReceive();
+            void OnDisconnect();
             void OnConnected();
             void OnPing();
             void OnPingSend();
@@ -215,6 +217,10 @@ namespace libircclient
 			void processWho(Parser *parser);
             void processPrivMsg(Parser *parser);
             void processMode(Parser *parser);
+            void processMdIn(Parser *parser);
+            void processTopic(Parser *parser);
+            void processKick(Parser *parser);
+            void processTopicWhoTime(Parser *parser);
             void processMTime(Parser *parser);
             void processNick(Parser *parser, bool self_command);
             void deleteTimers();

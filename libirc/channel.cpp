@@ -39,6 +39,11 @@ void Channel::SetTopicTime(QDateTime time)
     this->_topicTime = time;
 }
 
+QDateTime Channel::GetTopicTime() const
+{
+    return this->_topicTime;
+}
+
 QString Channel::GetTopicUser() const
 {
     return this->_topicUser;

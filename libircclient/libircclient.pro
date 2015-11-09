@@ -19,7 +19,8 @@ SOURCES += user.cpp \
     mode.cpp \
     server.cpp \
     network.cpp \
-    parser.cpp
+    parser.cpp \
+    generic.cpp
 
 HEADERS += user.h\
         libircclient_global.h \
@@ -28,7 +29,8 @@ HEADERS += user.h\
     mode.h \
     server.h \
     network.h \
-    parser.h
+    parser.h \
+    generic.h
 
 unix {
     target.path = /usr/lib

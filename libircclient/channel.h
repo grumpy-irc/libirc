@@ -47,6 +47,8 @@ namespace libircclient
             void ClearUsers();
             QHash<QString, User *> GetUsers() const;
             User *GetUser(QString user);
+            QDateTime GetMTime();
+            void SetMTime(QDateTime tm);
             CMode GetMode();
             void SetMode(QString mode);
             void Part();

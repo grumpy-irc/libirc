@@ -28,6 +28,7 @@ namespace libirc
             virtual void SetTopic(QString topic);
             virtual QString GetTopic() const;
             virtual void SetTopicTime(QDateTime time);
+            virtual QDateTime GetTopicTime() const;
             virtual QString GetTopicUser() const;
             virtual void SetTopicUser(QString user);
             void LoadHash(QHash<QString, QVariant> hash);

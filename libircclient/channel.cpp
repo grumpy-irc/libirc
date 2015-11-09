@@ -154,6 +154,16 @@ User *Channel::GetUser(QString user)
     return NULL;
 }
 
+QDateTime Channel::GetMTime()
+{
+    return this->_localModeDateTime;
+}
+
+void Channel::SetMTime(QDateTime tm)
+{
+    this->_localModeDateTime = tm;
+}
+
 CMode Channel::GetMode()
 {
     return this->_localMode;
