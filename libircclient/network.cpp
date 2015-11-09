@@ -802,7 +802,7 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_MODEINFO:
             this->processMdIn(&parser);
             break;
-        case IRC_NUMERIC_MODETIME:
+        case IRC_NUMERIC_CREATIONTIME:
             this->processMTime(&parser);
             break;
         default:
@@ -1032,7 +1032,7 @@ void Network::processMTime(Parser *parser)
         return;
     }
     channel->SetMTime(QDateTime::fromTime_t(parameters[2].toUInt()));
-    emit this->Event_ModeTime(parser);
+    emit this->Event_CreationTime(parser);
 }
 
 void Network::processNick(Parser *parser, bool self_command)

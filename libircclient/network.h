@@ -187,7 +187,7 @@ namespace libircclient
             void Event_WHO(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_EndOfWHO(libircclient::Parser *parser);
             void Event_ModeInfo(libircclient::Parser *parser);
-            void Event_ModeTime(libircclient::Parser *parser);
+            void Event_CreationTime(libircclient::Parser *parser);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
