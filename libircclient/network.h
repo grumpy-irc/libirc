@@ -28,6 +28,9 @@
 
 class QTcpSocket;
 
+#ifndef ETIMEDOUT
+#define ETIMEDOUT     10
+#endif
 #define EHANDSHAKE    20
 #define EDISCONNECTED 30
 
