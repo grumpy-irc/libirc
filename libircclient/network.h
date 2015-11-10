@@ -222,9 +222,10 @@ namespace libircclient
             void processMode(Parser *parser);
             void processMdIn(Parser *parser);
             void processTopic(Parser *parser);
-            void processKick(Parser *parser);
+            void processKick(Parser *parser, bool self_command);
             void processTopicWhoTime(Parser *parser);
             void processMTime(Parser *parser);
+            void processJoin(Parser *parser, bool self_command);
             void processNick(Parser *parser, bool self_command);
             void deleteTimers();
             //! List of symbols that are used to prefix users

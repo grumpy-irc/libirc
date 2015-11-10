@@ -601,49 +601,8 @@ void Network::processIncomingRawData(QByteArray data)
             break;
 
         case IRC_NUMERIC_JOIN:
-        {
-            Channel *channel_p = NULL;
-            if (parser.GetParameters().count() < 1 && parser.GetText().isEmpty())
-            {
-                // broken
-                DebugInvalid("Malformed JOIN", &parser);
-                break;
-            }
-            // On some servers channel is passed as text and on some as parameter
-            QString channel_name = parser.GetText();
-            if (parser.GetParameters().count() > 0)
-                channel_name = parser.GetParameters()[0];
-            if (!channel_name.startsWith(this->channelPrefix))
-            {
-                DebugInvalid("Malformed JOIN", &parser);
-                break;
-            }
-            // Check if the person who joined the channel isn't us
-            if (self_command)
-            {
-                // Yes, we joined a new channel
-                if (this->ContainsChannel(channel_name))
-                {
-                    // what the fuck?? we joined the channel which we are already in
-                    qDebug() << "Server told us we just joined a channel we are already in: " + channel_name + " network: " + this->GetHost();
-                    goto join_emit;
-                }
-                channel_p = new Channel(channel_name, this);
-                this->channels.append(channel_p);
-                emit this->Event_SelfJoin(channel_p);
-            }
-        join_emit:
-            if (!channel_p)
-                channel_p = this->GetChannel(channel_name);
-            if (!channel_p)
-            {
-                qDebug() << "Server told us that user " + parser.GetSourceUserInfo()->ToString() + " joined channel " + channel_name + " which we are not in";
-                break;
-            }
-            // Insert this user to a channel
-            User *user = channel_p->InsertUser(parser.GetSourceUserInfo());
-            emit this->Event_Join(&parser, user, channel_p);
-        }   break;
+            this->processJoin(&parser, self_command);
+            break;
         case IRC_NUMERIC_PRIVMSG:
             this->processPrivMsg(&parser);
             break;
@@ -699,34 +658,8 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_Part(&parser, channel);
         }   break;
         case IRC_NUMERIC_KICK:
-        {
-            if (parser.GetParameters().count() < 2)
-            {
-                qDebug() << "IRC PARSER: Invalid KICK: " + parser.GetRaw();
-                break;
-            }
-            Channel *channel = this->GetChannel(parser.GetParameters()[0]);
-            if (self_command)
-            {
-                if (!channel)
-                {
-                    DebugInvalid("Channel struct not in memory", &parser);
-                }
-                else
-                {
-                    emit this->Event_SelfKick(&parser, channel);
-                    this->channels.removeOne(channel);
-                    emit this->Event_Kick(&parser, channel);
-                    delete channel;
-                    break;
-                }
-            }
-            else if (channel)
-            {
-                channel->RemoveUser(parser.GetParameters()[1]);
-            }
-            emit this->Event_Kick(&parser, channel);
-        }   break;
+            this->processKick(&parser, self_command);
+            break;
         case IRC_NUMERIC_PONG:
             break;
         case IRC_NUMERIC_MODE:
@@ -743,22 +676,7 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_EndOfNames(&parser);
             break;
         case IRC_NUMERIC_TOPIC:
-        {
-            if (parser.GetParameters().count() < 1)
-            {
-                qDebug() << "IRC PARSER: Invalid TOPIC: " + parser.GetRaw();
-                break;
-            }
-            Channel *channel = this->GetChannel(parser.GetParameters()[0]);
-            if (!channel)
-            {
-                DebugInvalid("Channel struct not in memory", &parser);
-                break;
-            }
-            QString topic = channel->GetTopic();
-            channel->SetTopic(parser.GetText());
-            emit this->Event_TOPIC(&parser, channel, topic);
-        }
+            this->processTopic(&parser);
             break;
         case IRC_NUMERIC_TOPICINFO:
         {
@@ -968,12 +886,50 @@ void Network::processMdIn(Parser *parser)
 
 void Network::processTopic(Parser *parser)
 {
-
+    if (parser->GetParameters().count() < 1)
+    {
+        qDebug() << "IRC PARSER: Invalid TOPIC: " + parser->GetRaw();
+        return;
+    }
+    Channel *channel = this->GetChannel(parser->GetParameters()[0]);
+    if (!channel)
+    {
+        DebugInvalid("Channel struct not in memory", parser);
+        return;
+    }
+    QString topic = channel->GetTopic();
+    channel->SetTopic(parser->GetText());
+    emit this->Event_TOPIC(parser, channel, topic);
 }
 
-void Network::processKick(Parser *parser)
+void Network::processKick(Parser *parser, bool self_command)
 {
-
+    if (parser->GetParameters().count() < 2)
+    {
+        qDebug() << "IRC PARSER: Invalid KICK: " + parser->GetRaw();
+        return;
+    }
+    Channel *channel = this->GetChannel(parser->GetParameters()[0]);
+    if (self_command)
+    {
+        if (!channel)
+        {
+            DebugInvalid("Channel struct not in memory", parser);
+        }
+        else
+        {
+            emit this->Event_SelfKick(parser, channel);
+            this->channels.removeOne(channel);
+            emit this->Event_Kick(parser, channel);
+            delete channel;
+            return;
+        }
+    }
+    else if (channel)
+    {
+        channel->RemoveUser(parser->GetParameters()[1]);
+    }
+    emit this->Event_Kick(parser, channel);
 }
 
 void Network::processTopicWhoTime(Parser *parser)
@@ -1033,6 +989,51 @@ void Network::processMTime(Parser *parser)
     }
     channel->SetMTime(QDateTime::fromTime_t(parameters[2].toUInt()));
     emit this->Event_CreationTime(parser);
+}
+
+void Network::processJoin(Parser *parser, bool self_command)
+{
+    Channel *channel_p = NULL;
+    if (parser->GetParameters().count() < 1 && parser->GetText().isEmpty())
+    {
+        // broken
+        DebugInvalid("Malformed JOIN", parser);
+        return;
+    }
+    // On some servers channel is passed as text and on some as parameter
+    QString channel_name = parser->GetText();
+    if (parser->GetParameters().count() > 0)
+        channel_name = parser->GetParameters()[0];
+    if (!channel_name.startsWith(this->channelPrefix))
+    {
+        DebugInvalid("Malformed JOIN", parser);
+        return;
+    }
+    // Check if the person who joined the channel isn't us
+    if (self_command)
+    {
+        // Yes, we joined a new channel
+        if (this->ContainsChannel(channel_name))
+        {
+            // what the fuck?? we joined the channel which we are already in
+            qDebug() << "Server told us we just joined a channel we are already in: " + channel_name + " network: " + this->GetHost();
+            goto join_emit;
+        }
+        channel_p = new Channel(channel_name, this);
+        this->channels.append(channel_p);
+        emit this->Event_SelfJoin(channel_p);
+    }
+join_emit:
+    if (!channel_p)
+        channel_p = this->GetChannel(channel_name);
+    if (!channel_p)
+    {
+        qDebug() << "Server told us that user " + parser->GetSourceUserInfo()->ToString() + " joined channel " + channel_name + " which we are not in";
+        return;
+    }
+    // Insert this user to a channel
+    User *user = channel_p->InsertUser(parser->GetSourceUserInfo());
+    emit this->Event_Join(parser, user, channel_p);
 }
 
 void Network::processNick(Parser *parser, bool self_command)
