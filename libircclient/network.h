@@ -90,10 +90,10 @@ namespace libircclient
             virtual int SendAction(QString text, Channel *channel, Priority priority = Priority_Normal);
             virtual int SendAction(QString text, QString target, Priority priority = Priority_Normal);
             virtual int GetTimeout() const;
-            virtual void RequestPart(QString channel_name);
-            virtual void RequestPart(Channel *channel);
-            virtual void RequestNick(QString nick);
-            virtual void Identify(QString Nickname = "", QString Password = "");
+            virtual void RequestPart(QString channel_name, Priority priority = Priority_Normal);
+            virtual void RequestPart(Channel *channel, Priority priority = Priority_Normal);
+            virtual void RequestNick(QString nick, Priority priority = Priority_Normal);
+            virtual void Identify(QString Nickname = "", QString Password = "", Priority priority = Priority_Normal);
             virtual bool ContainsChannel(QString channel_name);
             //////////////////////////////////////////////////////////////////////////////////////////
             // Synchronization tools

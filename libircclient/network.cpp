@@ -170,47 +170,47 @@ void Network::TransferRaw(QString raw, libircclient::Priority priority)
 
 int Network::SendMessage(QString text, QString target, Priority priority)
 {
-    this->TransferRaw("PRIVMSG " + target + " :" + text);
+    this->TransferRaw("PRIVMSG " + target + " :" + text, priority);
     return SUCCESS;
 }
 
 int Network::SendAction(QString text, Channel *channel, Priority priority)
 {
-    return this->SendAction(text, channel->GetName());
+    return this->SendAction(text, channel->GetName(), priority);
 }
 
 int Network::SendAction(QString text, QString target, Priority priority)
 {
-    this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + "ACTION " + text + SEPARATOR);
+    this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + "ACTION " + text + SEPARATOR, priority);
     return SUCCESS;
 }
 
 int Network::SendMessage(QString text, Channel *channel, Priority priority)
 {
-    return this->SendMessage(text, channel->GetName());
+    return this->SendMessage(text, channel->GetName(), priority);
 }
 
 int Network::SendMessage(QString text, User *user, Priority priority)
 {
-    return this->SendMessage(text, user->GetNick());
+    return this->SendMessage(text, user->GetNick(), priority);
 }
 
-void Network::RequestPart(QString channel_name)
+void Network::RequestPart(QString channel_name, Priority priority)
 {
-    this->TransferRaw("PART " + channel_name);
+    this->TransferRaw("PART " + channel_name, priority);
 }
 
-void Network::RequestPart(Channel *channel)
+void Network::RequestPart(Channel *channel, Priority priority)
 {
-    this->TransferRaw("PART " + channel->GetName());
+    this->TransferRaw("PART " + channel->GetName(), priority);
 }
 
-void Network::RequestNick(QString nick)
+void Network::RequestNick(QString nick, Priority priority)
 {
-    this->TransferRaw("NICK " + nick);
+    this->TransferRaw("NICK " + nick, priority);
 }
 
-void Network::Identify(QString Nickname, QString Password)
+void Network::Identify(QString Nickname, QString Password, Priority priority)
 {
     if (Nickname.isEmpty())
         Nickname = this->localUser.GetNick();
@@ -218,7 +218,7 @@ void Network::Identify(QString Nickname, QString Password)
         Password = this->password;
     QString ident_line = this->identifyString;
     ident_line.replace("$nickname", Nickname).replace("$password", Password);
-    this->TransferRaw(ident_line);
+    this->TransferRaw(ident_line, priority);
 }
 
 QString Network::GetServerAddress()
@@ -253,7 +253,7 @@ void Network::SetPassword(QString Password)
 
 void Network::OnPingSend()
 {
-    this->TransferRaw("PING :" + this->GetServerAddress());
+    this->TransferRaw("PING :" + this->GetServerAddress(), libircclient::Priority_High);
 }
 
 void Network::OnReceive(QByteArray data)
@@ -578,9 +578,9 @@ void Network::processIncomingRawData(QByteArray data)
     {
         case IRC_NUMERIC_PING_CHECK:
             if (parser.GetParameters().count() == 0)
-                this->TransferRaw("PONG");
+                this->TransferRaw("PONG", Priority_High);
             else
-                this->TransferRaw("PONG :" + parser.GetParameters()[0]);
+                this->TransferRaw("PONG :" + parser.GetParameters()[0], Priority_High);
             break;
         case IRC_NUMERIC_MYINFO:
             // Process the information about network
