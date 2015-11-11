@@ -24,49 +24,21 @@
 
 using namespace libircclient;
 
-Network::Network(libirc::ServerAddress &server, QString name, bool multithread) : libirc::Network(name)
+Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(name)
 {
-    this->socket = NULL;
+    this->initialize();
     this->hostname = server.GetHost();
-    this->localUser.SetIdent("grumpy");
     if (server.GetNick().isEmpty())
         this->localUser.SetNick("GrumpyUser");
     else
         this->localUser.SetNick(server.GetNick());
-    this->localUser.SetRealname("GrumpyIRC");
     this->usingSSL = server.UsingSSL();
-    this->pingTimeout = 60;
     this->port = server.GetPort();
-    this->timerPingTimeout = NULL;
-    this->timerPingSend = NULL;
-    this->pingRate = 20000;
-    this->defaultQuit = "Grumpy IRC";
-    this->channelPrefix = '#';
-    this->isMultithreaded = multithread;
-    this->autoRejoin = false;
-    this->identifyString = "PRIVMSG NickServ identify $nickname $password";
-    this->alternateNickNumber = 0;
-    this->server = new Server();
-    // This is overriden for every server that is following IRC standards
-    this->channelUserPrefixes << '@' << '+';
-    this->CUModes << 'o' << 'v';
-    this->CModes << 'i' << 'm';
-    this->ResolveOnNickConflicts = true;
-    this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
-    this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
-    this->sender = NULL;
 }
 
 Network::Network(QHash<QString, QVariant> hash) : libirc::Network("")
 {
-    this->socket = NULL;
-    this->port = 0;
-    this->server = NULL;
-    this->timerPingSend = NULL;
-    this->timerPingTimeout = NULL;
-    this->ResolveOnNickConflicts = true;
-    this->usingSSL = false;
-    this->pingTimeout = 0;
+    this->initialize();
     this->LoadHash(hash);
 }
 
@@ -77,29 +49,15 @@ Network::~Network()
     delete this->socket;
     qDeleteAll(this->channels);
     qDeleteAll(this->users);
-    if (this->sender)
-    {
-        this->sender->exit();
-        this->sender->deleteLater();
-        this->sender = NULL;
-    }
 }
 
 void Network::Connect()
 {
     if (this->IsConnected())
         return;
+    this->deleteTimers();
     //delete this->network_thread;
     delete this->socket;
-
-    if (this->isMultithreaded)
-    {
-        delete this->sender;
-        this->sender = new Network_SenderThread(this->IsSSL(), this);
-        this->sender->start();
-        //moveToThread(this->sender);
-        return;
-    }
 
     //this->network_thread = new NetworkThread(this);
     if (!this->IsSSL())
@@ -126,6 +84,7 @@ void Network::Connect()
             this->closeError("SSL handshake failed: " + this->socket->errorString(), EHANDSHAKE);
         }*/
     }
+    this->senderTimer.start(20);
 }
 
 void Network::Reconnect()
@@ -141,26 +100,15 @@ void Network::Disconnect(QString reason)
     if (this->IsConnected())
     {
         this->TransferRaw("QUIT :" + reason);
-        if (!this->isMultithreaded)
-            this->socket->close();
-        if (this->sender)
-        {
-            this->sender->exit();
-            this->sender->deleteLater();
-            this->sender = NULL;
-        }
+        this->socket->close();
     }
-    if (!this->isMultithreaded)
-        this->socket->deleteLater();
+    this->socket->deleteLater();
     this->socket = NULL;
     this->deleteTimers();
 }
 
 bool Network::IsConnected()
 {
-    if (this->isMultithreaded && this->sender)
-        return this->sender->IsConnected();
-
     if (!this->socket)
         return false;
 
@@ -215,14 +163,7 @@ void Network::TransferRaw(QString raw, libircclient::Priority priority)
 
     QByteArray data = QString(raw + "\n").toUtf8();
     emit this->Event_RawOutgoing(data);
-    if (this->isMultithreaded)
-    {
-        this->sender->Transfer(data, priority);
-    } else
-    {
-        this->socket->write(data);
-        this->socket->flush();
-    }
+    this->scheduleDelivery(data, priority);
 }
 
 #define SEPARATOR QString((char)1)
@@ -337,12 +278,6 @@ void Network::closeError(QString error, int code)
     temp->close();
     temp->deleteLater();
     this->deleteTimers();
-    if (this->sender)
-    {
-        this->sender->exit();
-        this->sender->deleteLater();
-        this->sender = NULL;
-    }
     emit this->Event_Disconnected();
 }
 
@@ -607,7 +542,6 @@ void Network::OnConnected()
     this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
     this->TransferRaw("NICK " + this->localUser.GetNick());
     this->lastPing = QDateTime::currentDateTime();
-    this->deleteTimers();
     this->timerPingSend = new QTimer(this);
     connect(this->timerPingSend, SIGNAL(timeout()), this, SLOT(OnPingSend()));
     this->timerPingTimeout = new QTimer(this);
@@ -1165,30 +1099,39 @@ void Network::deleteTimers()
         this->timerPingTimeout->deleteLater();
         this->timerPingTimeout = NULL;
     }
+    this->senderTimer.stop();
 }
 
-Network_SenderThread::Network_SenderThread(bool is_secured, Network *parent)
+void Network::initialize()
 {
-    this->isSecured = is_secured;
-    this->network = parent;
-    this->delay = QDateTime::currentDateTime();
-    this->timer = 0;
     this->socket = NULL;
+    this->localUser.SetIdent("grumpy");
+    this->localUser.SetRealname("GrumpyIRC");
+    this->pingTimeout = 60;
+    this->timerPingTimeout = NULL;
+    this->timerPingSend = NULL;
+    this->pingRate = 20000;
+    this->defaultQuit = "Grumpy IRC";
+    this->channelPrefix = '#';
+    this->autoRejoin = false;
+    this->identifyString = "PRIVMSG NickServ identify $nickname $password";
+    this->alternateNickNumber = 0;
+    this->server = new Server();
+    // This is overriden for every server that is following IRC standards
+    this->channelUserPrefixes << '@' << '+';
+    this->CUModes << 'o' << 'v';
+    this->CModes << 'i' << 'm';
+    this->ResolveOnNickConflicts = true;
+    this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
+    this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
     this->MSDelayOnEmpty = 10;
     this->MSDelayOnOpen = 2000;
     this->MSWait = 800;
+    this->senderTime = QDateTime::currentDateTime();
+    connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
 }
 
-Network_SenderThread::~Network_SenderThread()
-{
-    if (this->timer)
-        this->timer->stop();
-
-    delete this->timer;
-    delete this->socket;
-}
-
-void Network_SenderThread::Transfer(QByteArray data, libircclient::Priority priority)
+void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
 {
     this->mutex.lock();
     switch (priority)
@@ -1200,90 +1143,34 @@ void Network_SenderThread::Transfer(QByteArray data, libircclient::Priority prio
             this->mprFIFO.append(data);
             break;
         case Priority_Low:
-            this->mprFIFO.append(data);
+            this->lprFIFO.append(data);
             break;
     }
     this->mutex.unlock();
 }
 
-bool Network_SenderThread::IsConnected()
+void Network::OnSend()
 {
-    if (!this->socket)
-        return false;
-    return this->socket->isOpen();
-}
-
-void Network_SenderThread::OnSend()
-{
-    if (QDateTime::currentDateTime() < this->delay)
+    if (QDateTime::currentDateTime() < this->senderTime)
         return;
-    if (!this->socket->isOpen())
-    {
-        this->pseudoSleep(this->MSDelayOnOpen);
-        return;
-    }
-    QByteArray packet = this->GetData();
+    QByteArray packet = this->getDataToSend();
     if (packet.isEmpty())
     {
         this->pseudoSleep(this->MSDelayOnEmpty);
         return;
     }
+    QString line(packet);
     this->socket->write(packet);
     this->socket->flush();
     this->pseudoSleep(this->MSWait);
 }
 
-void Network_SenderThread::OnRead()
+void Network::pseudoSleep(unsigned int msec)
 {
-    if (!this->IsConnected())
-        return;
-    while (this->socket->canReadLine())
-    {
-        QByteArray line = this->socket->readLine();
-        if (line.length() == 0)
-            return;
-
-        this->network->OnReceive(line);
-    }
+    this->senderTime = QDateTime::currentDateTime().addMSecs(msec);
 }
 
-void Network_SenderThread::pseudoSleep(unsigned int msec)
-{
-    this->delay = QDateTime::currentDateTime().addMSecs(msec);
-}
-
-void Network_SenderThread::run()
-{
-    this->timer = new QTimer();
-    connect(this->timer, SIGNAL(timeout()), this, SLOT(OnSend()));
-    // Initialize the connection
-    if (!this->isSecured)
-        this->socket = new QTcpSocket();
-    else
-        this->socket = new QSslSocket();
-
-    connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)), this->network, SLOT(OnError(QAbstractSocket::SocketError)), Qt::ConnectionType::QueuedConnection);
-    connect(this->socket, SIGNAL(readyRead()), this, SLOT(OnRead()));
-    connect(this->socket, SIGNAL(disconnected()), this->network, SLOT(OnDisconnect()), Qt::ConnectionType::QueuedConnection);
-
-    if (!this->isSecured)
-    {
-        connect(this->socket, SIGNAL(connected()), this->network, SLOT(OnConnected()), Qt::ConnectionType::QueuedConnection);
-        this->socket->connectToHost(this->network->hostname, this->network->port);
-    } else
-    {
-        ((QSslSocket*)this->socket)->ignoreSslErrors();
-        connect(((QSslSocket*)this->socket), SIGNAL(sslErrors(QList<QSslError>)), this->network, SLOT(OnSslHandshakeFailure(QList<QSslError>)), Qt::ConnectionType::QueuedConnection);
-        connect(((QSslSocket*)this->socket), SIGNAL(encrypted()), this->network, SLOT(OnConnected()), Qt::ConnectionType::QueuedConnection);
-        ((QSslSocket*)this->socket)->connectToHostEncrypted(this->network->hostname, this->network->port);
-        if (!((QSslSocket*)this->socket)->waitForEncrypted())
-            return;
-    }
-    this->timer->start(20);
-    this->exec();
-}
-
-QByteArray Network_SenderThread::GetData()
+QByteArray Network::getDataToSend()
 {
     QByteArray item;
     this->mutex.lock();

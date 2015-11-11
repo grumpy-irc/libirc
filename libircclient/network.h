@@ -56,43 +56,7 @@ namespace libircclient
 
     class Server;
     class Channel;
-    class Network;
     class Parser;
-
-    class LIBIRCCLIENTSHARED_EXPORT Network_SenderThread : public QThread
-    {
-        Q_OBJECT
-
-        public:
-            Network_SenderThread(bool is_secured, Network *parent);
-            ~Network_SenderThread();
-            void Transfer(QByteArray data, libircclient::Priority priority);
-            bool IsConnected();
-            unsigned int MSDelayOnEmpty;
-            unsigned int MSDelayOnOpen;
-            unsigned int MSWait;
-
-        protected slots:
-            void OnSend();
-            void OnRead();
-
-        private:
-            void pseudoSleep(unsigned int msec);
-            void run();
-            QByteArray GetData();
-
-            QDateTime delay;
-            QTimer *timer;
-
-            bool isSecured;
-            Network *network;
-
-            QMutex mutex;
-            QList<QByteArray> hprFIFO;
-            QList<QByteArray> mprFIFO;
-            QList<QByteArray> lprFIFO;
-            QTcpSocket *socket;
-    };
 
     class LIBIRCCLIENTSHARED_EXPORT Network : public libirc::Network
     {
@@ -101,7 +65,7 @@ namespace libircclient
         public:
             friend class Network_SenderThread;
 
-            Network(libirc::ServerAddress &server, QString name, bool multithread = true);
+            Network(libirc::ServerAddress &server, QString name);
             Network(QHash<QString, QVariant> hash);
             virtual ~Network();
             virtual void Connect();
@@ -242,6 +206,7 @@ namespace libircclient
             virtual void OnReceive();
             virtual void OnDisconnect();
             virtual void OnConnected();
+            virtual void OnSend();
             virtual void OnPing();
             virtual void OnPingSend();
 
@@ -276,8 +241,24 @@ namespace libircclient
             void processJoin(Parser *parser, bool self_command);
             void processNick(Parser *parser, bool self_command);
             void deleteTimers();
-            bool isMultithreaded;
-            Network_SenderThread *sender;
+            void initialize();
+            void pseudoSleep(unsigned int msec);
+            QByteArray getDataToSend();
+            void scheduleDelivery(QByteArray data, libircclient::Priority priority);
+
+            /////////////////////////////////////
+            // This probably doesn't need syncing
+            unsigned int MSDelayOnEmpty;
+            unsigned int MSDelayOnOpen;
+            unsigned int MSWait;
+            QDateTime senderTime;
+            QTimer senderTimer;
+            QMutex mutex;
+            QList<QByteArray> hprFIFO;
+            QList<QByteArray> mprFIFO;
+            QList<QByteArray> lprFIFO;
+            /////////////////////////////////////
+
             //! List of symbols that are used to prefix users
             QList<char> channelUserPrefixes;
             QList<char> CModes;
