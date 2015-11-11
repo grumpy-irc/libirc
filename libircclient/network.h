@@ -72,9 +72,6 @@ namespace libircclient
             QString GetHost();
             QString GetIdent();
             QString GetServerAddress();
-            //! This will update the nick in operating memory, it will not request it from server and may cause troubles
-            //! if not properly called. This is only used for resynchronization.
-            virtual void SetNick(QString nick);
             virtual void SetPassword(QString Password);
             virtual void TransferRaw(QString raw);
             virtual int SendMessage(QString text, Channel *channel);
@@ -90,6 +87,9 @@ namespace libircclient
             virtual bool ContainsChannel(QString channel_name);
             //////////////////////////////////////////////////////////////////////////////////////////
             // Synchronization tools
+            //! This will update the nick in operating memory, it will not request it from server and may cause troubles
+            //! if not properly called. This is only used for resynchronization.
+            virtual void _st_SetNick(QString nick);
             //! This will delete all internal memory structures related to channels this user is in.
             //! Use only for synchronization purposes, while implementing something like grumpyd
             //! calling this function on live IRC network connection will have unpredictable result
@@ -128,6 +128,7 @@ namespace libircclient
             virtual void SetCUModes(QList<char> data);
             virtual QList<char> GetCUModes();
             virtual void SetCCModes(QList<char> data);
+            virtual UMode GetLocalUserMode();
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
             bool ResolveOnNickConflicts;

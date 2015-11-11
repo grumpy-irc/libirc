@@ -103,10 +103,10 @@ void Network::Connect()
         connect(((QSslSocket*)this->socket), SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(OnSslHandshakeFailure(QList<QSslError>)));
         connect(((QSslSocket*)this->socket), SIGNAL(encrypted()), this, SLOT(OnConnected()));
         ((QSslSocket*)this->socket)->connectToHostEncrypted(this->hostname, this->port);
-        if (this->socket && !((QSslSocket*)this->socket)->waitForEncrypted())
+        /*if (this->socket && !((QSslSocket*)this->socket)->waitForEncrypted())
         {
             this->closeError("SSL handshake failed: " + this->socket->errorString(), EHANDSHAKE);
-        }
+        }*/
     }
 }
 
@@ -250,7 +250,7 @@ QString Network::GetServerAddress()
     return this->hostname;
 }
 
-void Network::SetNick(QString nick)
+void Network::_st_SetNick(QString nick)
 {
     this->localUser.SetNick(nick);
 }
@@ -396,6 +396,11 @@ void Network::SetCUModes(QList<char> data)
 void Network::SetCCModes(QList<char> data)
 {
     this->CCModes = data;
+}
+
+UMode Network::GetLocalUserMode()
+{
+    return this->localUserMode;
 }
 
 QList<char> Network::GetCCModes()
