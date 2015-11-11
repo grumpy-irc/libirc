@@ -24,7 +24,7 @@
 
 using namespace libircclient;
 
-Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(name)
+Network::Network(libirc::ServerAddress &server, QString name, bool multithread) : libirc::Network(name)
 {
     this->socket = NULL;
     this->hostname = server.GetHost();
@@ -42,6 +42,7 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
     this->pingRate = 20000;
     this->defaultQuit = "Grumpy IRC";
     this->channelPrefix = '#';
+    this->isMultithreaded = multithread;
     this->autoRejoin = false;
     this->identifyString = "PRIVMSG NickServ identify $nickname $password";
     this->alternateNickNumber = 0;
@@ -53,6 +54,7 @@ Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(
     this->ResolveOnNickConflicts = true;
     this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
     this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
+    this->sender = NULL;
 }
 
 Network::Network(QHash<QString, QVariant> hash) : libirc::Network("")
@@ -75,6 +77,12 @@ Network::~Network()
     delete this->socket;
     qDeleteAll(this->channels);
     qDeleteAll(this->users);
+    if (this->sender)
+    {
+        this->sender->exit();
+        this->sender->deleteLater();
+        this->sender = NULL;
+    }
 }
 
 void Network::Connect()
@@ -83,6 +91,16 @@ void Network::Connect()
         return;
     //delete this->network_thread;
     delete this->socket;
+
+    if (this->isMultithreaded)
+    {
+        delete this->sender;
+        this->sender = new Network_SenderThread(this->IsSSL(), this);
+        this->sender->start();
+        //moveToThread(this->sender);
+        return;
+    }
+
     //this->network_thread = new NetworkThread(this);
     if (!this->IsSSL())
         this->socket = new QTcpSocket();
@@ -123,15 +141,26 @@ void Network::Disconnect(QString reason)
     if (this->IsConnected())
     {
         this->TransferRaw("QUIT :" + reason);
-        this->socket->close();
+        if (!this->isMultithreaded)
+            this->socket->close();
+        if (this->sender)
+        {
+            this->sender->exit();
+            this->sender->deleteLater();
+            this->sender = NULL;
+        }
     }
-    this->socket->deleteLater();
+    if (!this->isMultithreaded)
+        this->socket->deleteLater();
     this->socket = NULL;
     this->deleteTimers();
 }
 
 bool Network::IsConnected()
 {
+    if (this->isMultithreaded && this->sender)
+        return this->sender->IsConnected();
+
     if (!this->socket)
         return false;
 
@@ -176,7 +205,7 @@ QString Network::GetIdent()
     return this->localUser.GetIdent();
 }
 
-void Network::TransferRaw(QString raw)
+void Network::TransferRaw(QString raw, libircclient::Priority priority)
 {
     if (!this->IsConnected())
         return;
@@ -186,35 +215,41 @@ void Network::TransferRaw(QString raw)
 
     QByteArray data = QString(raw + "\n").toUtf8();
     emit this->Event_RawOutgoing(data);
-    this->socket->write(data);
-    this->socket->flush();
+    if (this->isMultithreaded)
+    {
+        this->sender->Transfer(data, priority);
+    } else
+    {
+        this->socket->write(data);
+        this->socket->flush();
+    }
 }
 
 #define SEPARATOR QString((char)1)
 
-int Network::SendMessage(QString text, QString target)
+int Network::SendMessage(QString text, QString target, Priority priority)
 {
     this->TransferRaw("PRIVMSG " + target + " :" + text);
     return SUCCESS;
 }
 
-int Network::SendAction(QString text, Channel *channel)
+int Network::SendAction(QString text, Channel *channel, Priority priority)
 {
     return this->SendAction(text, channel->GetName());
 }
 
-int Network::SendAction(QString text, QString target)
+int Network::SendAction(QString text, QString target, Priority priority)
 {
     this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + "ACTION " + text + SEPARATOR);
     return SUCCESS;
 }
 
-int Network::SendMessage(QString text, Channel *channel)
+int Network::SendMessage(QString text, Channel *channel, Priority priority)
 {
     return this->SendMessage(text, channel->GetName());
 }
 
-int Network::SendMessage(QString text, User *user)
+int Network::SendMessage(QString text, User *user, Priority priority)
 {
     return this->SendMessage(text, user->GetNick());
 }
@@ -280,6 +315,16 @@ void Network::OnPingSend()
     this->TransferRaw("PING :" + this->GetServerAddress());
 }
 
+void Network::OnReceive(QByteArray data)
+{
+    if (data.length() == 0)
+        return;
+
+    emit this->Event_RawIncoming(data);
+
+    this->processIncomingRawData(data);
+}
+
 void Network::closeError(QString error, int code)
 {
     // Delete the socket first to prevent neverending loop
@@ -292,6 +337,12 @@ void Network::closeError(QString error, int code)
     temp->close();
     temp->deleteLater();
     this->deleteTimers();
+    if (this->sender)
+    {
+        this->sender->exit();
+        this->sender->deleteLater();
+        this->sender = NULL;
+    }
     emit this->Event_Disconnected();
 }
 
@@ -1114,4 +1165,141 @@ void Network::deleteTimers()
         this->timerPingTimeout->deleteLater();
         this->timerPingTimeout = NULL;
     }
+}
+
+Network_SenderThread::Network_SenderThread(bool is_secured, Network *parent)
+{
+    this->isSecured = is_secured;
+    this->network = parent;
+    this->delay = QDateTime::currentDateTime();
+    this->timer = 0;
+    this->socket = NULL;
+    this->MSDelayOnEmpty = 10;
+    this->MSDelayOnOpen = 2000;
+    this->MSWait = 800;
+}
+
+Network_SenderThread::~Network_SenderThread()
+{
+    if (this->timer)
+        this->timer->stop();
+
+    delete this->timer;
+    delete this->socket;
+}
+
+void Network_SenderThread::Transfer(QByteArray data, libircclient::Priority priority)
+{
+    this->mutex.lock();
+    switch (priority)
+    {
+        case Priority_High:
+            this->hprFIFO.append(data);
+            break;
+        case Priority_Normal:
+            this->mprFIFO.append(data);
+            break;
+        case Priority_Low:
+            this->mprFIFO.append(data);
+            break;
+    }
+    this->mutex.unlock();
+}
+
+bool Network_SenderThread::IsConnected()
+{
+    if (!this->socket)
+        return false;
+    return this->socket->isOpen();
+}
+
+void Network_SenderThread::OnSend()
+{
+    if (QDateTime::currentDateTime() < this->delay)
+        return;
+    if (!this->socket->isOpen())
+    {
+        this->pseudoSleep(this->MSDelayOnOpen);
+        return;
+    }
+    QByteArray packet = this->GetData();
+    if (packet.isEmpty())
+    {
+        this->pseudoSleep(this->MSDelayOnEmpty);
+        return;
+    }
+    this->socket->write(packet);
+    this->socket->flush();
+    this->pseudoSleep(this->MSWait);
+}
+
+void Network_SenderThread::OnRead()
+{
+    if (!this->IsConnected())
+        return;
+    while (this->socket->canReadLine())
+    {
+        QByteArray line = this->socket->readLine();
+        if (line.length() == 0)
+            return;
+
+        this->network->OnReceive(line);
+    }
+}
+
+void Network_SenderThread::pseudoSleep(unsigned int msec)
+{
+    this->delay = QDateTime::currentDateTime().addMSecs(msec);
+}
+
+void Network_SenderThread::run()
+{
+    this->timer = new QTimer();
+    connect(this->timer, SIGNAL(timeout()), this, SLOT(OnSend()));
+    // Initialize the connection
+    if (!this->isSecured)
+        this->socket = new QTcpSocket();
+    else
+        this->socket = new QSslSocket();
+
+    connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)), this->network, SLOT(OnError(QAbstractSocket::SocketError)), Qt::ConnectionType::QueuedConnection);
+    connect(this->socket, SIGNAL(readyRead()), this, SLOT(OnRead()));
+    connect(this->socket, SIGNAL(disconnected()), this->network, SLOT(OnDisconnect()), Qt::ConnectionType::QueuedConnection);
+
+    if (!this->isSecured)
+    {
+        connect(this->socket, SIGNAL(connected()), this->network, SLOT(OnConnected()), Qt::ConnectionType::QueuedConnection);
+        this->socket->connectToHost(this->network->hostname, this->network->port);
+    } else
+    {
+        ((QSslSocket*)this->socket)->ignoreSslErrors();
+        connect(((QSslSocket*)this->socket), SIGNAL(sslErrors(QList<QSslError>)), this->network, SLOT(OnSslHandshakeFailure(QList<QSslError>)), Qt::ConnectionType::QueuedConnection);
+        connect(((QSslSocket*)this->socket), SIGNAL(encrypted()), this->network, SLOT(OnConnected()), Qt::ConnectionType::QueuedConnection);
+        ((QSslSocket*)this->socket)->connectToHostEncrypted(this->network->hostname, this->network->port);
+        if (!((QSslSocket*)this->socket)->waitForEncrypted())
+            return;
+    }
+    this->timer->start(20);
+    this->exec();
+}
+
+QByteArray Network_SenderThread::GetData()
+{
+    QByteArray item;
+    this->mutex.lock();
+    if (this->hprFIFO.size())
+    {
+        item = this->hprFIFO.first();
+        this->hprFIFO.removeFirst();
+    } else if (this->mprFIFO.size())
+    {
+        item = this->mprFIFO.first();
+        this->mprFIFO.removeFirst();
+    } else if (this->lprFIFO.size())
+    {
+        item = this->lprFIFO.first();
+        this->lprFIFO.removeFirst();
+    }
+    this->mutex.unlock();
+    return item;
 }

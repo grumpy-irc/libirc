@@ -20,6 +20,7 @@
 #include <QString>
 #include <QDateTime>
 #include <QSslSocket>
+#include <QThread>
 #include <QAbstractSocket>
 #include <QTcpSocket>
 #include <QTimer>
@@ -41,6 +42,13 @@ namespace libirc
 
 namespace libircclient
 {
+    enum Priority
+    {
+        Priority_High = 2,
+        Priority_Normal = 1,
+        Priority_Low = 0
+    };
+
     enum Encoding
     {
         EncodingUTF8
@@ -48,14 +56,52 @@ namespace libircclient
 
     class Server;
     class Channel;
+    class Network;
     class Parser;
+
+    class LIBIRCCLIENTSHARED_EXPORT Network_SenderThread : public QThread
+    {
+        Q_OBJECT
+
+        public:
+            Network_SenderThread(bool is_secured, Network *parent);
+            ~Network_SenderThread();
+            void Transfer(QByteArray data, libircclient::Priority priority);
+            bool IsConnected();
+            unsigned int MSDelayOnEmpty;
+            unsigned int MSDelayOnOpen;
+            unsigned int MSWait;
+
+        protected slots:
+            void OnSend();
+            void OnRead();
+
+        private:
+            void pseudoSleep(unsigned int msec);
+            void run();
+            QByteArray GetData();
+
+            QDateTime delay;
+            QTimer *timer;
+
+            bool isSecured;
+            Network *network;
+
+            QMutex mutex;
+            QList<QByteArray> hprFIFO;
+            QList<QByteArray> mprFIFO;
+            QList<QByteArray> lprFIFO;
+            QTcpSocket *socket;
+    };
 
     class LIBIRCCLIENTSHARED_EXPORT Network : public libirc::Network
     {
         Q_OBJECT
 
         public:
-            Network(libirc::ServerAddress &server, QString name);
+            friend class Network_SenderThread;
+
+            Network(libirc::ServerAddress &server, QString name, bool multithread = true);
             Network(QHash<QString, QVariant> hash);
             virtual ~Network();
             virtual void Connect();
@@ -73,12 +119,12 @@ namespace libircclient
             QString GetIdent();
             QString GetServerAddress();
             virtual void SetPassword(QString Password);
-            virtual void TransferRaw(QString raw);
-            virtual int SendMessage(QString text, Channel *channel);
-            virtual int SendMessage(QString text, User *user);
-            virtual int SendMessage(QString text, QString target);
-            virtual int SendAction(QString text, Channel *channel);
-            virtual int SendAction(QString text, QString target);
+            virtual void TransferRaw(QString raw, Priority priority = Priority_Normal);
+            virtual int SendMessage(QString text, Channel *channel, Priority priority = Priority_Normal);
+            virtual int SendMessage(QString text, User *user, Priority priority = Priority_Normal);
+            virtual int SendMessage(QString text, QString target, Priority priority = Priority_Normal);
+            virtual int SendAction(QString text, Channel *channel, Priority priority = Priority_Normal);
+            virtual int SendAction(QString text, QString target, Priority priority = Priority_Normal);
             virtual int GetTimeout() const;
             virtual void RequestPart(QString channel_name);
             virtual void RequestPart(Channel *channel);
@@ -193,13 +239,14 @@ namespace libircclient
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
             virtual void OnError(QAbstractSocket::SocketError er);
-            void OnReceive();
-            void OnDisconnect();
-            void OnConnected();
-            void OnPing();
-            void OnPingSend();
+            virtual void OnReceive();
+            virtual void OnDisconnect();
+            virtual void OnConnected();
+            virtual void OnPing();
+            virtual void OnPingSend();
 
         protected:
+            virtual void OnReceive(QByteArray data);
             virtual void closeError(QString error, int code);
             bool usingSSL;
             QTcpSocket *socket;
@@ -229,6 +276,8 @@ namespace libircclient
             void processJoin(Parser *parser, bool self_command);
             void processNick(Parser *parser, bool self_command);
             void deleteTimers();
+            bool isMultithreaded;
+            Network_SenderThread *sender;
             //! List of symbols that are used to prefix users
             QList<char> channelUserPrefixes;
             QList<char> CModes;

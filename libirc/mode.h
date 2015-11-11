@@ -20,7 +20,7 @@
 
 namespace libirc
 {
-    class LIBIRCSHARED_EXPORT Mode : SerializableItem
+    class LIBIRCSHARED_EXPORT Mode : public SerializableItem
     {
         public:
             Mode();
