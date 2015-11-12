@@ -139,6 +139,7 @@ namespace libircclient
             virtual QList<char> GetCUModes();
             virtual void SetCCModes(QList<char> data);
             virtual UMode GetLocalUserMode();
+            QList<char> ParameterModes();
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
             //! This will automatically fix your own identification data in case they change
@@ -205,6 +206,8 @@ namespace libircclient
             void Event_WHO(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_EndOfWHO(libircclient::Parser *parser);
             void Event_ModeInfo(libircclient::Parser *parser);
+            void Event_ChannelModeChanged(libircclient::Parser *parser, libircclient::Channel *channel);
+            void Event_ChannelUserModeChanged(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_CreationTime(libircclient::Parser *parser);
             void Event_Welcome(libircclient::Parser *parser);
 

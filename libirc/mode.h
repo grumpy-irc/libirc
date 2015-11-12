@@ -20,6 +20,25 @@
 
 namespace libirc
 {
+    class LIBIRCSHARED_EXPORT SingleMode : public SerializableItem
+    {
+        public:
+            static QList<SingleMode> ToModeList(QString mode_string, QList<QString> parameters, QList<char> parameter_modes);
+
+            SingleMode(QString mode);
+            virtual ~SingleMode();
+            bool IsIncluding();
+            char Get();
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
+            QString Parameter;
+
+        private:
+            bool including;
+            bool valid;
+            char mode;
+    };
+
     class LIBIRCSHARED_EXPORT Mode : public SerializableItem
     {
         public:
@@ -37,9 +56,13 @@ namespace libirc
             void IncludeMode(char mode);
             void ExcludeMode(char mode);
             void ResetMode(char mode);
+            void ResetModes(QList<char> modes);
+            QList<char> GetExcluding();
+            QList<char> GetIncluding();
             QString ToString();
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
+            QString Parameter;
 
         protected:
             QList<char> included_modes;

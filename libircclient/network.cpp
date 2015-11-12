@@ -389,6 +389,14 @@ UMode Network::GetLocalUserMode()
     return this->localUserMode;
 }
 
+QList<char> Network::ParameterModes()
+{
+    QList<char> results;
+    results.append(this->CUModes);
+    results.append(this->CPModes);
+    return results;
+}
+
 QList<char> Network::GetCCModes()
 {
     return this->CCModes;
@@ -961,6 +969,69 @@ void Network::processMode(Parser *parser)
     } else if (entity.startsWith(this->channelPrefix))
     {
         // Someone changed a channel mode
+        // Get a channel first
+        QStringList parameters = parser->GetParameters();
+        Channel *channel = this->GetChannel(parameters[0]);
+        if (channel == NULL)
+        {
+            qDebug() << "IRC PARSER: No channel: " + parser->GetRaw();
+            return;
+        }
+        parameters.removeFirst();
+        if (parameters.isEmpty())
+        {
+            qDebug() << "IRC PARSER: Invalid MODE: " + parser->GetRaw();
+            return;
+        }
+        QString mode = parameters[0];
+        parameters.removeFirst();
+        QList<char> parameter_modes = this->ParameterModes();
+        Mode new_mode(mode);
+        // remove the parameter modes, as we can't apply them to local channel mode
+        new_mode.ResetModes(parameter_modes);
+        channel->SetMode(new_mode.ToString());
+        emit this->Event_ChannelModeChanged(parser, channel);
+        // now that we updated the static mode, we need to update all respective bans, users and similar stuff
+        QList<libirc::SingleMode> modes = libirc::SingleMode::ToModeList(mode, parameters, parameter_modes);
+        foreach (libirc::SingleMode sm, modes)
+        {
+            if (this->CUModes.contains(sm.Get()))
+            {
+                // User mode was changed
+                User *user = channel->GetUser(sm.Parameter);
+                if (user == NULL)
+                {
+                    qDebug() << "IRC PARSER: Invalid user: " + parser->GetRaw();
+                    continue;
+                }
+                if (sm.IsIncluding())
+                {
+                    // User mode was changed, the trick here is that some irc daemons allow users to have multiple modes
+                    // so we need to figure if this user mode is higher level mode than mode that user currently posses
+                    char current_mode = user->CUMode;
+                    if (this->CUModes.indexOf(current_mode) < this->CUModes.indexOf(sm.Get()))
+                    {
+                        // yes this mode is higher, so let's update their current mode and also change their channel symbol
+                        user->CUMode = sm.Get();
+                        user->ChannelPrefix = this->channelUserPrefixes[this->CUModes.indexOf(sm.Get())];
+                    }
+                } else
+                {
+                    // The mode is revoked, however that matter only if user actually posses the mode, some irc servers
+                    // let you revoke mode of user who never even had it
+                    // so we check if user actually have that
+                    if (sm.Get() == user->CUMode)
+                    {
+                        //! \todo Some networks allow users to have more than 1 user mode, although they don't easily actually share
+                        //! that information. We should however maintain a list of modes this user posses
+                        user->CUMode = 0;
+                        user->ChannelPrefix = 0;
+                    }
+                }
+                emit this->Event_ChannelUserModeChanged(parser, channel, user);
+            }
+        }
+        //! \todo Bans / exemption and others
     } else
     {
         // Someone changed UMode of another user, this is not supported on majority of servers, unless you are services
