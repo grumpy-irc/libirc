@@ -141,6 +141,13 @@ namespace libircclient
             virtual UMode GetLocalUserMode();
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
+            //! This will automatically fix your own identification data in case they change
+            //! For example if server changes your hostname (cloak) system will recognize
+            //! the change and update localUser accordingly.
+            //!
+            //! There is a small CPU penalty for this, so this feature can be turned off
+            //! in case that this information isn't important for you
+            bool ResolveOnSelfChanges;
             bool ResolveOnNickConflicts;
             QHash<char, QString> ChannelModeHelp;
             QHash<char, QString> UserModeHelp;
@@ -199,6 +206,7 @@ namespace libircclient
             void Event_EndOfWHO(libircclient::Parser *parser);
             void Event_ModeInfo(libircclient::Parser *parser);
             void Event_CreationTime(libircclient::Parser *parser);
+            void Event_Welcome(libircclient::Parser *parser);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
@@ -251,6 +259,7 @@ namespace libircclient
             unsigned int MSDelayOnEmpty;
             unsigned int MSDelayOnOpen;
             unsigned int MSWait;
+            bool loggedIn;
             QDateTime senderTime;
             QTimer senderTimer;
             QMutex mutex;

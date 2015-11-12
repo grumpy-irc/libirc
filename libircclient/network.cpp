@@ -593,6 +593,7 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_JOIN:
             this->processJoin(&parser, self_command);
             break;
+
         case IRC_NUMERIC_PRIVMSG:
             this->processPrivMsg(&parser);
             break;
@@ -712,6 +713,10 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_CREATIONTIME:
             this->processMTime(&parser);
+            break;
+        case IRC_NUMERIC_WELCOME:
+            emit this->Event_Welcome(&parser);
+            this->loggedIn = true;
             break;
         default:
             known = false;
@@ -1063,6 +1068,11 @@ void Network::processNick(Parser *parser, bool self_command)
 
 void Network::process433(Parser *parser)
 {
+    if (this->loggedIn)
+    {
+        emit this->Event_NickCollision(parser);
+        return;
+    }
     // Try to get some alternative nick
     bool no_alternative = this->alternateNick.isEmpty();
     if (this->originalNick == this->alternateNick || this->GetNick() == this->alternateNick)
@@ -1117,11 +1127,13 @@ void Network::initialize()
     this->identifyString = "PRIVMSG NickServ identify $nickname $password";
     this->alternateNickNumber = 0;
     this->server = new Server();
+    this->ResolveOnSelfChanges = true;
+    this->ResolveOnNickConflicts = true;
+    this->loggedIn = false;
     // This is overriden for every server that is following IRC standards
     this->channelUserPrefixes << '@' << '+';
     this->CUModes << 'o' << 'v';
     this->CModes << 'i' << 'm';
-    this->ResolveOnNickConflicts = true;
     this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
     this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
     this->MSDelayOnEmpty = 10;
