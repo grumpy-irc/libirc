@@ -185,6 +185,22 @@ int Network::SendAction(QString text, QString target, Priority priority)
     return SUCCESS;
 }
 
+int Network::SendNotice(QString text, User *user, Priority priority)
+{
+    return this->SendNotice(text, user->GetNick(), priority);
+}
+
+int Network::SendNotice(QString text, Channel *channel, Priority priority)
+{
+    return this->SendNotice(text, channel->GetName(), priority);
+}
+
+int Network::SendNotice(QString text, QString target, Priority priority)
+{
+    this->TransferRaw(QString("NOTICE ") + target + " :" + text, priority);
+    return SUCCESS;
+}
+
 int Network::SendMessage(QString text, Channel *channel, Priority priority)
 {
     return this->SendMessage(text, channel->GetName(), priority);
@@ -234,6 +250,15 @@ void Network::_st_SetNick(QString nick)
 int Network::GetTimeout() const
 {
     return this->pingTimeout;
+}
+
+int Network::SendCtcp(QString name, QString text, QString target, Priority priority)
+{
+    if (!text.isEmpty())
+        this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + name + " " + text + SEPARATOR, priority);
+    else
+        this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + name + SEPARATOR, priority);
+    return SUCCESS;
 }
 
 void Network::OnPing()

@@ -89,7 +89,11 @@ namespace libircclient
             virtual int SendMessage(QString text, QString target, Priority priority = Priority_Normal);
             virtual int SendAction(QString text, Channel *channel, Priority priority = Priority_Normal);
             virtual int SendAction(QString text, QString target, Priority priority = Priority_Normal);
+            virtual int SendNotice(QString text, User *user, Priority priority = Priority_Normal);
+            virtual int SendNotice(QString text, Channel *channel, Priority priority = Priority_Normal);
+            virtual int SendNotice(QString text, QString target, Priority priority = Priority_Normal);
             virtual int GetTimeout() const;
+            virtual int SendCtcp(QString name, QString text, QString target, Priority priority = Priority_Normal);
             virtual void RequestPart(QString channel_name, Priority priority = Priority_Normal);
             virtual void RequestPart(Channel *channel, Priority priority = Priority_Normal);
             virtual void RequestNick(QString nick, Priority priority = Priority_Normal);
