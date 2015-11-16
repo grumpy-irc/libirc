@@ -84,7 +84,7 @@ void Network::Connect()
             this->closeError("SSL handshake failed: " + this->socket->errorString(), EHANDSHAKE);
         }*/
     }
-    this->senderTimer.start(20);
+    this->senderTimer.start(this->MSDelayOnEmpty);
 }
 
 void Network::Reconnect()
@@ -1207,7 +1207,7 @@ void Network::initialize()
     this->CModes << 'i' << 'm';
     this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
     this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
-    this->MSDelayOnEmpty = 10;
+    this->MSDelayOnEmpty = 300;
     this->MSDelayOnOpen = 2000;
     this->MSWait = 800;
     this->senderTime = QDateTime::currentDateTime();
@@ -1239,7 +1239,7 @@ void Network::OnSend()
     QByteArray packet = this->getDataToSend();
     if (packet.isEmpty())
     {
-        this->pseudoSleep(this->MSDelayOnEmpty);
+        //this->pseudoSleep(this->MSDelayOnEmpty);
         return;
     }
     QString line(packet);
