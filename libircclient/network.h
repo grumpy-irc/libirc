@@ -244,7 +244,7 @@ namespace libircclient
             void processNamrpl(Parser *parser);
             void process433(Parser *parser);
             void processInfo(Parser *parser);
-			void processWho(Parser *parser);
+            void processWho(Parser *parser);
             void processPrivMsg(Parser *parser);
             void processMode(Parser *parser);
             void processMdIn(Parser *parser);
@@ -256,6 +256,7 @@ namespace libircclient
             void processNick(Parser *parser, bool self_command);
             void deleteTimers();
             void initialize();
+            void freemm();
             void pseudoSleep(unsigned int msec);
             QByteArray getDataToSend();
             void scheduleDelivery(QByteArray data, libircclient::Priority priority);

@@ -47,8 +47,7 @@ Network::~Network()
     delete this->server;
     this->deleteTimers();
     delete this->socket;
-    qDeleteAll(this->channels);
-    qDeleteAll(this->users);
+    this->freemm();
 }
 
 void Network::Connect()
@@ -105,6 +104,7 @@ void Network::Disconnect(QString reason)
     this->socket->deleteLater();
     this->socket = NULL;
     this->deleteTimers();
+    this->freemm();
 }
 
 bool Network::IsConnected()
@@ -1237,6 +1237,19 @@ void Network::initialize()
     this->MSWait = 800;
     this->senderTime = QDateTime::currentDateTime();
     connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
+}
+
+void Network::freemm()
+{
+    qDeleteAll(this->channels);
+    this->channels.clear();
+    qDeleteAll(this->users);
+    this->users.clear();
+    this->mutex.lock();
+    this->lprFIFO.clear();
+    this->mprFIFO.clear();
+    this->hprFIFO.clear();
+    this->mutex.unlock();
 }
 
 void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
