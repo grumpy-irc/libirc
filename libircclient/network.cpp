@@ -148,6 +148,11 @@ QString Network::GetHost()
     return this->localUser.GetHost();
 }
 
+unsigned int Network::GetPort()
+{
+    return this->port;
+}
+
 QString Network::GetIdent()
 {
     return this->localUser.GetIdent();

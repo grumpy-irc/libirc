@@ -80,6 +80,7 @@ namespace libircclient
             virtual bool IsSSL();
             QString GetNick();
             QString GetHost();
+            unsigned int GetPort();
             QString GetIdent();
             QString GetServerAddress();
             virtual void SetPassword(QString Password);
