@@ -1039,7 +1039,7 @@ void Network::processMode(Parser *parser)
                     // User mode was changed, the trick here is that some irc daemons allow users to have multiple modes
                     // so we need to figure if this user mode is higher level mode than mode that user currently posses
                     char current_mode = user->CUMode;
-                    if (this->CUModes.indexOf(current_mode) > this->CUModes.indexOf(sm.Get()))
+                    if (!this->CUModes.contains(current_mode) || this->CUModes.indexOf(current_mode) > this->CUModes.indexOf(sm.Get()))
                     {
                         // yes this mode is higher, so let's update their current mode and also change their channel symbol
                         user->CUMode = sm.Get();
