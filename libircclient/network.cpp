@@ -55,6 +55,7 @@ void Network::Connect()
     if (this->IsConnected())
         return;
     this->deleteTimers();
+    this->scheduling = true;
     //delete this->network_thread;
     delete this->socket;
 
@@ -98,6 +99,7 @@ void Network::Disconnect(QString reason)
         reason = this->defaultQuit;
     if (this->IsConnected())
     {
+        this->scheduling = false;
         this->TransferRaw("QUIT :" + reason);
         this->socket->close();
     }
@@ -168,7 +170,15 @@ void Network::TransferRaw(QString raw, libircclient::Priority priority)
 
     QByteArray data = QString(raw + "\n").toUtf8();
     emit this->Event_RawOutgoing(data);
-    this->scheduleDelivery(data, priority);
+    if (this->scheduling)
+    {
+        this->scheduleDelivery(data, priority);
+    }
+    else
+    {
+        this->socket->write(data);
+        this->socket->flush();
+    }
 }
 
 #define SEPARATOR QString((char)1)
@@ -1221,6 +1231,7 @@ void Network::initialize()
     this->pingTimeout = 60;
     this->timerPingTimeout = NULL;
     this->timerPingSend = NULL;
+    this->scheduling = true;
     this->pingRate = 20000;
     this->defaultQuit = "Grumpy IRC";
     this->channelPrefix = '#';

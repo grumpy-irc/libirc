@@ -268,6 +268,7 @@ namespace libircclient
             unsigned int MSDelayOnOpen;
             unsigned int MSWait;
             bool loggedIn;
+            bool scheduling;
             QDateTime senderTime;
             QTimer senderTimer;
             QMutex mutex;
