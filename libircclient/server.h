@@ -24,6 +24,8 @@ namespace libircclient
         public:
             Server();
             Server(QHash<QString, QVariant> hash);
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
     };
 }
 

@@ -215,6 +215,7 @@ namespace libircclient
             void Event_ChannelUserModeChanged(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_CreationTime(libircclient::Parser *parser);
             void Event_Welcome(libircclient::Parser *parser);
+            void Event_ISUPPORT(libircclient::Parser *parser);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);

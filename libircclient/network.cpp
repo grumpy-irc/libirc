@@ -636,6 +636,7 @@ void Network::processIncomingRawData(QByteArray data)
                 break;
             this->server->SetName(parser.GetParameters()[0]);
             this->server->SetVersion(parser.GetParameters()[1]);
+            emit this->Event_MyInfo(&parser);
             break;
 
         case IRC_NUMERIC_JOIN:
@@ -706,7 +707,6 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_ISUPPORT:
             this->processInfo(&parser);
-            emit this->Event_INFO(&parser);
             break;
         case IRC_NUMERIC_NAMREPLY:
             this->processNamrpl(&parser);
@@ -848,7 +848,7 @@ void Network::processInfo(Parser *parser)
             continue;
         }
     }
-    emit this->Event_MyInfo(parser);
+    emit this->Event_ISUPPORT(parser);
 }
 
 void Network::processWho(Parser *parser)
