@@ -18,23 +18,27 @@ User::User()
 {
     this->ChannelPrefix = 0;
     this->CUMode = 0;
+    this->IsAway = false;
 }
 
 User::User(QHash<QString, QVariant> hash)
 {
     this->ChannelPrefix = 0;
+    this->IsAway = false;
     this->CUMode = 0;
     this->LoadHash(hash);
 }
 
 User::User(QString user) : libirc::User(user)
 {
+    this->IsAway = false;
     this->ChannelPrefix = 0;
     this->CUMode = 0;
 }
 
 User::User(User *user) : libirc::User(user)
 {
+    this->IsAway = user->IsAway;
     this->ChannelPrefix = user->ChannelPrefix;
     this->CUMode = user->CUMode;
 }
@@ -52,6 +56,8 @@ void User::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::User::LoadHash(hash);
     UNSERIALIZE_CCHAR(ChannelPrefix);
+    UNSERIALIZE_STRING(AwayMs);
+    UNSERIALIZE_BOOL(IsAway);
     UNSERIALIZE_STRING(ServerName);
     UNSERIALIZE_CCHAR(CUMode);
 }
@@ -61,7 +67,9 @@ QHash<QString, QVariant> User::ToHash()
     QHash<QString, QVariant> hash = libirc::User::ToHash();
     SERIALIZE_CCHAR(ChannelPrefix);
     SERIALIZE(ServerName);
+    SERIALIZE(IsAway);
     SERIALIZE_CCHAR(CUMode);
+    SERIALIZE(AwayMs);
     return hash;
 }
 

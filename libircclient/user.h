@@ -29,8 +29,11 @@ namespace libircclient
             char ChannelPrefix;
             QString ServerName;
             char CUMode;
+            QString AwayMs;
+            bool IsAway;
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
+
 
         private:
 

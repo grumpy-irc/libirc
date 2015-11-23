@@ -871,7 +871,13 @@ void Network::processWho(Parser *parser)
         goto finish;
     user->SetRealname(parser->GetText());
     user->SetIdent(parameters[2]);
+    bool is_away = parameters[6].contains("G");
     user->SetHost(parameters[3]);
+    if (user->IsAway != is_away)
+    {
+        user->IsAway = true;
+        emit this->Event_UserAwayStatusChange(parser, channel, user);
+    }
     user->ServerName = parameters[4];
 
     finish:

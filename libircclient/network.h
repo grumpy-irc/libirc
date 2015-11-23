@@ -192,6 +192,7 @@ namespace libircclient
             void Event_CTCP(libircclient::Parser *parser, QString ctcp, QString parameters);
             void Event_EndOfNames(libircclient::Parser *parser);
             void Event_NOTICE(libircclient::Parser *parser);
+            void Event_UserAwayStatusChange(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_NICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
             void Event_SelfNICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
             //! IRC_NUMERIC_MYINFO
