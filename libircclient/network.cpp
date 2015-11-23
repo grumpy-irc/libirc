@@ -749,9 +749,9 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_MOTDEND:
             emit this->Event_MOTDEnd(&parser);
             break;
-		case IRC_NUMERIC_WHOREPLY:
-			this->processWho(&parser);
-			break;
+        case IRC_NUMERIC_WHOREPLY:
+            this->processWho(&parser);
+            break;
         case IRC_NUMERIC_WHOEND:
             // 315
             emit this->Event_EndOfWHO(&parser);
@@ -855,6 +855,7 @@ void Network::processWho(Parser *parser)
 {
     // GrumpyUser1 #support grumpy hidden-715465F6.net.upcbroadband.cz hub.tm-irc.org GrumpyUser1 H
     QStringList parameters = parser->GetParameters();
+    bool is_away;
     Channel *channel = NULL;
     User *user = NULL;
     if (parameters.count() < 7)
@@ -871,7 +872,7 @@ void Network::processWho(Parser *parser)
         goto finish;
     user->SetRealname(parser->GetText());
     user->SetIdent(parameters[2]);
-    bool is_away = parameters[6].contains("G");
+    is_away = parameters[6].contains("G");
     user->SetHost(parameters[3]);
     if (user->IsAway != is_away)
     {
@@ -881,7 +882,7 @@ void Network::processWho(Parser *parser)
     user->ServerName = parameters[4];
 
     finish:
-	    emit this->Event_WHO(parser, channel, user);
+        emit this->Event_WHO(parser, channel, user);
 }
 
 void Network::processPrivMsg(Parser *parser)
