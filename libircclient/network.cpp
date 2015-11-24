@@ -262,6 +262,13 @@ QString Network::GetServerAddress()
     return this->hostname;
 }
 
+QString Network::GetHelpForMode(char mode, QString missing)
+{
+    if (this->ChannelModeHelp.contains(mode))
+        return this->ChannelModeHelp[mode];
+    return missing;
+}
+
 void Network::_st_SetNick(QString nick)
 {
     this->localUser.SetNick(nick);
@@ -818,6 +825,16 @@ void Network::processNamrpl(Parser *parser)
     }
 }
 
+static QList<char> CLFromStr(QString string)
+{
+    QList<char> lt;
+    foreach (QChar ch, string)
+    {
+        lt.append(ch.toLatin1());
+    }
+    return lt;
+}
+
 void Network::processInfo(Parser *parser)
 {
     // WATCHOPTS=A SILENCE=15 MODES=12 CHANTYPES=# PREFIX=(qaohv)~&@%+ CHANMODES=beI,kfL,lj,psmntirRcOAQKVCuzNSMTGZ NETWORK=tm-irc CASEMAPPING=ascii EXTBAN=~,qjncrRa ELIST=MNUCT STATUSMSG=~&@%+
@@ -851,6 +868,18 @@ void Network::processInfo(Parser *parser)
         {
             this->networkName = info.mid(8);
             continue;
+        } else if (info.startsWith("CHANMODES="))
+        {
+            QString input = info.mid(10);
+            QList<QString> groups = input.split(',');
+            if (groups.count() > 0)
+                this->CPModes = CLFromStr(groups[0]);
+            if (groups.count() > 1)
+                this->CRModes = CLFromStr(groups[1]);
+            if (groups.count() > 2)
+                this->CCModes = CLFromStr(groups[2]);
+            if (groups.count() > 3)
+                this->CModes = CLFromStr(groups[3]);
         }
     }
     emit this->Event_ISUPPORT(parser);

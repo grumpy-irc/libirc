@@ -84,6 +84,7 @@ namespace libircclient
             unsigned int GetPort();
             virtual QString GetIdent();
             virtual QString GetServerAddress();
+            virtual QString GetHelpForMode(char mode, QString missing);
             virtual void SetPassword(QString Password);
             virtual void TransferRaw(QString raw, Priority priority = Priority_Normal);
             virtual int SendMessage(QString text, Channel *channel, Priority priority = Priority_Normal);
@@ -282,10 +283,15 @@ namespace libircclient
 
             //! List of symbols that are used to prefix users
             QList<char> channelUserPrefixes;
+            //! Channel modes with no parameters
             QList<char> CModes;
+            //! Channel parameter modes (+b, +I)
             QList<char> CPModes;
+            //! Channel secret modes (+k)
             QList<char> CRModes;
+            //! Channel user modes (+o, +v)
             QList<char> CUModes;
+            //! Channel numeric modes (+l)
             QList<char> CCModes;
             QString originalNick;
             UMode localUserMode;
