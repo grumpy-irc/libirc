@@ -78,11 +78,12 @@ namespace libircclient
             virtual void SetDefaultIdent(QString ident);
             virtual void SetDefaultUsername(QString realname);
             virtual bool IsSSL();
-            QString GetNick();
-            QString GetHost();
+            virtual QString GetNick();
+            virtual QString GetHost();
+            virtual QString GetServerVersion();
             unsigned int GetPort();
-            QString GetIdent();
-            QString GetServerAddress();
+            virtual QString GetIdent();
+            virtual QString GetServerAddress();
             virtual void SetPassword(QString Password);
             virtual void TransferRaw(QString raw, Priority priority = Priority_Normal);
             virtual int SendMessage(QString text, Channel *channel, Priority priority = Priority_Normal);

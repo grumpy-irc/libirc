@@ -150,6 +150,11 @@ QString Network::GetHost()
     return this->localUser.GetHost();
 }
 
+QString Network::GetServerVersion()
+{
+    return this->server->GetVersion();
+}
+
 unsigned int Network::GetPort()
 {
     return this->port;
