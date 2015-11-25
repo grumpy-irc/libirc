@@ -209,6 +209,11 @@ SingleMode::SingleMode(QString mode)
     }
 }
 
+SingleMode::SingleMode(QHash<QString, QVariant> hash)
+{
+    this->LoadHash(hash);
+}
+
 SingleMode::~SingleMode()
 {
 
@@ -217,6 +222,11 @@ SingleMode::~SingleMode()
 bool SingleMode::IsIncluding()
 {
     return this->including;
+}
+
+bool SingleMode::IsValid()
+{
+    return this->valid;
 }
 
 char SingleMode::Get()

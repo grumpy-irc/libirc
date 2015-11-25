@@ -34,8 +34,15 @@ User::User(QString source)
     {
         this->_nick = temp.mid(0, temp.indexOf("!"));
         temp = temp.mid(temp.indexOf("!") + 1);
-    } else
+    }
+    else if (source.contains("@"))
     {
+        this->_nick = source.mid(0, source.indexOf("@"));
+        this->_host = source.mid(source.indexOf("@") + 1);
+    }
+    else
+    {
+        this->_nick = source;
         return;
     }
     if (temp.contains("@"))

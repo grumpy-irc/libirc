@@ -17,7 +17,6 @@
 #include "server.h"
 #include "channel.h"
 #include "parser.h"
-#include "user.h"
 #include "generic.h"
 #include "../libirc/serveraddress.h"
 #include "../libirc/error_code.h"
@@ -445,6 +444,7 @@ QList<char> Network::ParameterModes()
 {
     QList<char> results;
     results.append(this->CUModes);
+    results.append(this->CRModes);
     results.append(this->CPModes);
     return results;
 }
@@ -778,6 +778,15 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_Welcome(&parser);
             this->loggedIn = true;
             break;
+        case IRC_NUMERIC_EXCEPTION:
+            this->processPMode(&parser, 'e');
+            break;
+        case IRC_NUMERIC_BAN:
+            this->processPMode(&parser, 'b');
+            break;
+        case IRC_NUMERIC_ENDOFBANS:
+            emit this->Event_EndOfBans(&parser);
+            break;
         default:
             known = false;
             break;
@@ -1035,11 +1044,37 @@ void Network::processTopicWhoTime(Parser *parser)
     emit this->Event_TOPICWhoTime(parser, channel);
 }
 
+void Network::processPMode(Parser *parser, char mode)
+{
+    // :hub.tm-irc.org 367 petan|work1 #test test!*@* petan|work1 1448444377
+    //                                Channel  ban        SetBy      Time
+
+    QList<QString> parameters = parser->GetParameters();
+    if (parameters.count() < 5)
+    {
+        emit this->Event_Broken(parser, "Invalid PMODE");
+        return;
+    }
+    libircclient::Channel *channel = this->GetChannel(parameters[1]);
+    if (!channel)
+    {
+        emit this->Event_Broken(parser, "Unknown channel");
+        return;
+    }
+    QString string = QString(QChar(mode));
+    ChannelPMode temp(string);
+    temp.SetBy = User(parameters[3]);
+    temp.Parameter = parameters[2];
+    temp.SetOn = QDateTime::fromTime_t(parameters[4].toUInt());
+    channel->SetPMode(temp);
+    emit this->Event_PMode(parser, mode);
+}
+
 void Network::processMode(Parser *parser)
 {
     if (parser->GetParameters().count() < 1)
     {
-        qDebug() << "IRC PARSER: Invalid MODE: " + parser->GetRaw();
+        emit this->Event_Broken(parser, "Invalid mode");
         return;
     }
     QString entity = parser->GetParameters()[0];
@@ -1110,6 +1145,22 @@ void Network::processMode(Parser *parser)
                     }
                 }
                 emit this->Event_ChannelUserModeChanged(parser, channel, user);
+            } else if (this->CPModes.contains(sm.Get()))
+            {
+                // Ban / Exception / Invite
+                if (!sm.IsIncluding())
+                {
+                    // Remove existing one
+                    channel->RemovePMode(sm);
+                } else
+                {
+                    ChannelPMode channel_mode(QString(QChar(sm.Get())));
+                    if (parser->GetSourceUserInfo())
+                        channel_mode.SetBy = User(parser->GetSourceUserInfo());
+                    channel_mode.SetOn = QDateTime::currentDateTime();
+                    channel_mode.Parameter = sm.Parameter;
+                    channel->SetPMode(channel_mode);
+                }
             }
         }
         //! \todo Bans / exemption and others

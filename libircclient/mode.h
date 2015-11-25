@@ -17,12 +17,11 @@
 #include <QString>
 #include <QDateTime>
 #include <QChar>
+#include "user.h"
 #include "../libirc/mode.h"
 
 namespace libircclient
 {
-    class User;
-
 	class LIBIRCCLIENTSHARED_EXPORT Mode : public libirc::Mode
     {
         public:
@@ -47,33 +46,17 @@ namespace libircclient
             CMode(QString mode_string);
     };
 
-    class LIBIRCCLIENTSHARED_EXPORT ChannelPMode
+    class LIBIRCCLIENTSHARED_EXPORT ChannelPMode : public libirc::SingleMode
     {
         public:
-            ChannelPMode();
+            ChannelPMode(QString mode);
+            ChannelPMode(QHash<QString, QVariant> mode);
             virtual ~ChannelPMode();
+            void LoadHash(QHash<QString, QVariant> hash);
+            QHash<QString, QVariant> ToHash();
             char Symbol;
-            QString Parameter;
             QDateTime SetOn;
-            User *SetBy;
-    };
-
-    class LIBIRCCLIENTSHARED_EXPORT ChannelBan : public ChannelPMode
-    {
-        public:
-            ChannelBan();
-    };
-
-    class LIBIRCCLIENTSHARED_EXPORT ChannelInvite : public ChannelPMode
-    {
-        public:
-            ChannelInvite();
-    };
-
-    class LIBIRCCLIENTSHARED_EXPORT ChannelException : public ChannelPMode
-    {
-        public:
-            ChannelException();
+            User SetBy;
     };
 }
 

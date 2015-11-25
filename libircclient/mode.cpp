@@ -50,17 +50,34 @@ CMode::CMode(QString mode_string)
 
 }
 
-ChannelPMode::ChannelPMode()
+ChannelPMode::ChannelPMode(QString mode) : libirc::SingleMode(mode)
 {
-    this->SetBy = NULL;
+
+}
+
+ChannelPMode::ChannelPMode(QHash<QString, QVariant> mode) : libirc::SingleMode(mode)
+{
+    this->LoadHash(mode);
 }
 
 ChannelPMode::~ChannelPMode()
 {
-    delete this->SetBy;
+
 }
 
-ChannelException::ChannelException()
+void ChannelPMode::LoadHash(QHash<QString, QVariant> hash)
 {
-
+    SingleMode::LoadHash(hash);
+    UNSERIALIZE_DATETIME(SetOn);
+    if (hash.contains("SetBy"))
+        this->SetBy.LoadHash(hash["SetBy"].toHash());
 }
+
+QHash<QString, QVariant> ChannelPMode::ToHash()
+{
+    QHash<QString, QVariant> hash = SingleMode::ToHash();
+    hash.insert("SetBy", this->SetBy.ToHash());
+    SERIALIZE(SetOn);
+    return hash;
+}
+

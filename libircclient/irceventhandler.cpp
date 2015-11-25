@@ -21,7 +21,6 @@ IRCEventHandler::IRCEventHandler()
 
 }
 
-
 IRCEventHandler::~IRCEventHandler()
 {
 

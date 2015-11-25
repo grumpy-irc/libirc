@@ -49,6 +49,11 @@ namespace libircclient
             User *GetUser(QString user);
             QDateTime GetMTime();
             void SetMTime(QDateTime tm);
+            QList<ChannelPMode> GetBans();
+            QList<ChannelPMode> GetExceptions();
+            void RemovePMode(libirc::SingleMode mode);
+            void RemovePMode(ChannelPMode mode);
+            void SetPMode(ChannelPMode mode);
             CMode GetMode();
             void SetMode(QString mode);
             void Part();
@@ -57,6 +62,8 @@ namespace libircclient
             void Event_UserRemoved(QString user);
             void Event_NickChanged(QString old_nick, QString new_nick); */
         protected:
+            QList<ChannelPMode> filteredList(char filter);
+            QList<ChannelPMode> _localPModes;
             CMode _localMode;
             QDateTime _localModeDateTime;
             QHash<QString, User*> _users;

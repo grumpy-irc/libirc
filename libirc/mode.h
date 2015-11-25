@@ -26,14 +26,16 @@ namespace libirc
             static QList<SingleMode> ToModeList(QString mode_string, QList<QString> parameters, QList<char> parameter_modes);
 
             SingleMode(QString mode);
+            SingleMode(QHash<QString, QVariant> hash);
             virtual ~SingleMode();
             bool IsIncluding();
+            bool IsValid();
             char Get();
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
             QString Parameter;
 
-        private:
+        protected:
             bool including;
             bool valid;
             char mode;

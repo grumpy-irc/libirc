@@ -100,6 +100,14 @@ void Channel::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::Channel::LoadHash(hash);
     UNSERIALIZE_DATETIME(_localModeDateTime);
+    if (hash.contains("_localPModes"))
+    {
+        QList<QVariant> mode_list = hash["_localPModes"].toList();
+        foreach (QVariant mode, mode_list)
+        {
+            this->_localPModes.append(ChannelPMode(mode.toHash()));
+        }
+    }
     if (hash.contains("localMode"))
         this->_localMode = CMode(hash["localMode"].toHash());
     if (hash.contains("users"))
@@ -114,7 +122,17 @@ QHash<QString, QVariant> Channel::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::Channel::ToHash();
     SERIALIZE(_localModeDateTime);
+    // IMPORTANT
+    // We don't prefix some of the variables here because they weren't prefixed in previous
+    // versions
     hash.insert("localMode", QVariant(this->_localMode.ToHash()));
+    if (!this->_localPModes.isEmpty())
+    {
+        QList<QVariant> mode_list;
+        foreach (ChannelPMode xx, this->_localPModes)
+            mode_list.append(QVariant(xx.ToHash()));
+        hash.insert("_localPModes", QVariant(mode_list));
+    }
     QHash<QString, QVariant> users_l;
     foreach (QString user, this->_users.keys())
         users_l.insert(user, this->_users[user]->ToHash());
@@ -164,6 +182,49 @@ void Channel::SetMTime(QDateTime tm)
     this->_localModeDateTime = tm;
 }
 
+QList<ChannelPMode> Channel::GetBans()
+{
+    return this->filteredList('b');
+}
+
+QList<ChannelPMode> Channel::GetExceptions()
+{
+    return this->filteredList('e');
+}
+
+void Channel::RemovePMode(libirc::SingleMode mode)
+{
+    int ix = 0;
+    foreach (ChannelPMode mode_, this->_localPModes)
+    {
+        if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
+            this->_localPModes.removeAt(ix);
+        ix++;
+    }
+}
+
+void Channel::RemovePMode(ChannelPMode mode)
+{
+    int ix = 0;
+    foreach (ChannelPMode mode_, this->_localPModes)
+    {
+        if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
+            this->_localPModes.removeAt(ix);
+        ix++;
+    }
+}
+
+void Channel::SetPMode(ChannelPMode mode)
+{
+    // If there is already same mode set, we skip
+    foreach (ChannelPMode mode_, this->_localPModes)
+    {
+        if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
+            return;
+    }
+    this->_localPModes.append(mode);
+}
+
 CMode Channel::GetMode()
 {
     return this->_localMode;
@@ -180,6 +241,17 @@ void Channel::Part()
         this->_net->RequestPart(this);
 }
 
+QList<ChannelPMode> Channel::filteredList(char filter)
+{
+    QList<ChannelPMode> result;
+    foreach(ChannelPMode mode, this->_localPModes)
+    {
+        if (mode.Get() == filter)
+            result.append(mode);
+    }
+    return result;
+}
+
 void Channel::deepCopy(const Channel *source)
 {
     this->_net = source->_net;
@@ -191,5 +263,7 @@ void Channel::deepCopy(const Channel *source)
     this->_localMode = source->_localMode;
     foreach (QString user, source->_users.keys())
         this->_users.insert(user, new User(source->_users[user]));
+    // Modes
+    this->_localPModes = source->_localPModes;
 }
 

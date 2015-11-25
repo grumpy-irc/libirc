@@ -218,6 +218,11 @@ namespace libircclient
             void Event_CreationTime(libircclient::Parser *parser);
             void Event_Welcome(libircclient::Parser *parser);
             void Event_ISUPPORT(libircclient::Parser *parser);
+            void Event_PMode(libircclient::Parser *parser, char mode);
+            void Event_EndOfBans(libircclient::Parser *parser);
+            void Event_EndOfExcepts(libircclient::Parser *parser);
+            void Event_EndOfInvites(libircclient::Parser *parser);
+            void Event_Broken(libircclient::Parser *parser, QString reason);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
@@ -256,6 +261,7 @@ namespace libircclient
             void processTopic(Parser *parser);
             void processKick(Parser *parser, bool self_command);
             void processTopicWhoTime(Parser *parser);
+            void processPMode(Parser *parser, char mode);
             void processMTime(Parser *parser);
             void processJoin(Parser *parser, bool self_command);
             void processNick(Parser *parser, bool self_command);
