@@ -55,6 +55,7 @@ namespace libirc
             void SetMode(QString mode_string, bool reset = false);
             bool Includes(char mode);
             bool Excludes(char mode);
+            bool IsEmpty();
             void IncludeMode(char mode);
             void ExcludeMode(char mode);
             void ResetMode(char mode);

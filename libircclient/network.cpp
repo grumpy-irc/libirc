@@ -646,8 +646,8 @@ void Network::processIncomingRawData(QByteArray data)
             // Process the information about network
             if (parser.GetParameters().count() < 4)
                 break;
-            this->server->SetName(parser.GetParameters()[0]);
-            this->server->SetVersion(parser.GetParameters()[1]);
+            this->server->SetName(parser.GetParameters()[1]);
+            this->server->SetVersion(parser.GetParameters()[2]);
             emit this->Event_MyInfo(&parser);
             break;
 

@@ -95,6 +95,11 @@ bool Mode::Excludes(char mode)
     return this->excluded_modes.contains(mode);
 }
 
+bool Mode::IsEmpty()
+{
+    return (this->excluded_modes.isEmpty() && this->included_modes.isEmpty());
+}
+
 void Mode::IncludeMode(char mode)
 {
     if (this->included_modes.contains(mode))
