@@ -203,7 +203,11 @@ void Channel::RemovePMode(libirc::SingleMode mode)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
         {
+#if QT_VERSION >= 0x050000
             this->_localPModes.remove(mode_);
+#else
+            this->_localPModes.removeAt(ix);
+#endif
             return;
         }
         ix++;

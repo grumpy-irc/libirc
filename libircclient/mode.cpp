@@ -88,5 +88,5 @@ bool libircclient::ChannelPMode::EqualTo(const ChannelPMode& m) const
 
 uint libircclient::qHash(const ChannelPMode & mode, uint seed)
 {
-    return qHash(mode.Parameter, seed) * mode.Get();
+    return qHash(mode.Parameter, seed) ^ mode.Get();
 }
