@@ -15,6 +15,7 @@
 
 #include "libircclient_global.h"
 #include <QString>
+#include <QSet>
 #include <QList>
 #include "mode.h"
 #include "../libirc/channel.h"
@@ -63,7 +64,8 @@ namespace libircclient
             void Event_NickChanged(QString old_nick, QString new_nick); */
         protected:
             QList<ChannelPMode> filteredList(char filter);
-            QList<ChannelPMode> _localPModes;
+            //QList<ChannelPMode> _localPModes;
+            QSet<ChannelPMode> _localPModes;
             CMode _localMode;
             QDateTime _localModeDateTime;
             QHash<QString, User*> _users;

@@ -81,3 +81,12 @@ QHash<QString, QVariant> ChannelPMode::ToHash()
     return hash;
 }
 
+bool libircclient::ChannelPMode::EqualTo(const ChannelPMode& m) const
+{
+    return m.mode == this->mode && m.Parameter == this->Parameter;
+}
+
+uint libircclient::qHash(const ChannelPMode & mode, uint seed)
+{
+    return qHash(mode.Parameter, seed) ^ mode.Get();
+}

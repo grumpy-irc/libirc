@@ -105,7 +105,7 @@ void Channel::LoadHash(QHash<QString, QVariant> hash)
         QList<QVariant> mode_list = hash["_localPModes"].toList();
         foreach (QVariant mode, mode_list)
         {
-            this->_localPModes.append(ChannelPMode(mode.toHash()));
+            this->_localPModes.insert(ChannelPMode(mode.toHash()));
         }
     }
     if (hash.contains("localMode"))
@@ -198,31 +198,42 @@ void Channel::RemovePMode(libirc::SingleMode mode)
     foreach (ChannelPMode mode_, this->_localPModes)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
-            this->_localPModes.removeAt(ix);
+        {
+            this->_localPModes.remove(mode_);
+            return;
+        }
         ix++;
     }
 }
 
 void Channel::RemovePMode(ChannelPMode mode)
 {
-    int ix = 0;
+    if (this->_localPModes.contains(mode))
+        this->_localPModes.remove(mode);
+    /*int ix = 0;
     foreach (ChannelPMode mode_, this->_localPModes)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
             this->_localPModes.removeAt(ix);
         ix++;
-    }
+    }*/
 }
 
 void Channel::SetPMode(ChannelPMode mode)
 {
+    if (this->_localPModes.contains(mode))
+        return;
+
+    this->_localPModes.insert(mode);
+
+    /*
     // If there is already same mode set, we skip
     foreach (ChannelPMode mode_, this->_localPModes)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
             return;
     }
-    this->_localPModes.append(mode);
+    this->_localPModes.append(mode);*/
 }
 
 CMode Channel::GetMode()

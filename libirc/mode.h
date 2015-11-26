@@ -30,7 +30,7 @@ namespace libirc
             virtual ~SingleMode();
             bool IsIncluding();
             bool IsValid();
-            char Get();
+            char Get() const;
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
             QString Parameter;

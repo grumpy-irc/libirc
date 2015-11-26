@@ -57,7 +57,12 @@ namespace libircclient
             char Symbol;
             QDateTime SetOn;
             User SetBy;
+            bool operator==(const ChannelPMode& m) const { return m.EqualTo(*this); }
+            bool operator!=(const ChannelPMode& m) const { return !m.EqualTo(*this); }
+            bool EqualTo(const ChannelPMode& m) const;
     };
+
+    uint qHash(const ChannelPMode& mode, uint seed = 0);
 }
 
 #endif // MODE_H

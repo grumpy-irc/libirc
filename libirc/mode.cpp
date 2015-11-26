@@ -234,7 +234,7 @@ bool SingleMode::IsValid()
     return this->valid;
 }
 
-char SingleMode::Get()
+char SingleMode::Get() const
 {
     return this->mode;
 }
