@@ -64,7 +64,7 @@ namespace libircclient
             void Event_NickChanged(QString old_nick, QString new_nick); */
         protected:
             QList<ChannelPMode> filteredList(char filter);
-#if QT_VERSION >= 0x050000
+#ifdef LIBIRC_HASH
             QSet<ChannelPMode> _localPModes;
 #else
             QList<ChannelPMode> _localPModes;

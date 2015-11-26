@@ -11,6 +11,7 @@
 // Copyright (c) Petr Bena 2015
 
 #include "mode.h"
+#include <QHash>
 #include "user.h"
 
 using namespace libircclient;
@@ -88,5 +89,5 @@ bool libircclient::ChannelPMode::EqualTo(const ChannelPMode& m) const
 
 uint libircclient::qHash(const ChannelPMode & mode, uint seed)
 {
-    return qHash(mode.Parameter, seed) ^ mode.Get();
+    return qHash(QString(mode.Parameter + mode.Get()), seed);
 }

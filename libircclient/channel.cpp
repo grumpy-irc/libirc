@@ -105,7 +105,7 @@ void Channel::LoadHash(QHash<QString, QVariant> hash)
         QList<QVariant> mode_list = hash["_localPModes"].toList();
         foreach (QVariant mode, mode_list)
         {
-#if QT_VERSION >= 0x050000
+#ifdef LIBIRC_HASH
             this->_localPModes.insert(ChannelPMode(mode.toHash()));
 #else
             this->_localPModes.append(ChannelPMode(mode.toHash()));
@@ -203,7 +203,7 @@ void Channel::RemovePMode(libirc::SingleMode mode)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
         {
-#if QT_VERSION >= 0x050000
+#ifdef LIBIRC_HASH
             this->_localPModes.remove(mode_);
 #else
             this->_localPModes.removeAt(ix);
@@ -216,7 +216,7 @@ void Channel::RemovePMode(libirc::SingleMode mode)
 
 void Channel::RemovePMode(ChannelPMode mode)
 {
-#if QT_VERSION >= 0x050000
+#ifdef LIBIRC_HASH
     if (this->_localPModes.contains(mode))
         this->_localPModes.remove(mode);
 #else
@@ -232,7 +232,7 @@ void Channel::RemovePMode(ChannelPMode mode)
 
 void Channel::SetPMode(ChannelPMode mode)
 {
-#if QT_VERSION >= 0x050000
+#ifdef LIBIRC_HASH
     if (this->_localPModes.contains(mode))
         return;
     this->_localPModes.insert(mode);
