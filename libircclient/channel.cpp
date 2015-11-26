@@ -208,32 +208,35 @@ void Channel::RemovePMode(libirc::SingleMode mode)
 
 void Channel::RemovePMode(ChannelPMode mode)
 {
+#if QT_VERSION >= 0x050000
     if (this->_localPModes.contains(mode))
         this->_localPModes.remove(mode);
-    /*int ix = 0;
+#else
+    int ix = 0;
     foreach (ChannelPMode mode_, this->_localPModes)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
             this->_localPModes.removeAt(ix);
         ix++;
-    }*/
+    }
+#endif
 }
 
 void Channel::SetPMode(ChannelPMode mode)
 {
+#if QT_VERSION >= 0x050000
     if (this->_localPModes.contains(mode))
         return;
-
     this->_localPModes.insert(mode);
-
-    /*
+#else
     // If there is already same mode set, we skip
     foreach (ChannelPMode mode_, this->_localPModes)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
             return;
     }
-    this->_localPModes.append(mode);*/
+    this->_localPModes.append(mode);
+#endif
 }
 
 CMode Channel::GetMode()
