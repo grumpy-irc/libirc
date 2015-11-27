@@ -975,7 +975,7 @@ void Network::processMdIn(Parser *parser)
         return;
     }
     channel->SetMode(pl[2]);
-    emit this->Event_ModeInfo(parser);
+    emit this->Event_ModeInfo(parser, channel);
 }
 
 void Network::processTopic(Parser *parser)

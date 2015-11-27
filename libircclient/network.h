@@ -212,7 +212,7 @@ namespace libircclient
             void Event_Disconnected();
             void Event_WHO(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_EndOfWHO(libircclient::Parser *parser);
-            void Event_ModeInfo(libircclient::Parser *parser);
+            void Event_ModeInfo(libircclient::Parser *parser, libircclient::Channel *channel);
             void Event_ChannelModeChanged(libircclient::Parser *parser, libircclient::Channel *channel);
             void Event_ChannelUserModeChanged(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_CreationTime(libircclient::Parser *parser);
