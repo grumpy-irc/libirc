@@ -162,12 +162,15 @@ QString Mode::ToString()
 
 void Mode::LoadHash(QHash<QString, QVariant> hash)
 {
+    if (hash.contains("excluded_modes"))
+    {
+        foreach (QVariant mx, hash["excluded_modes"].toList())
+            this->excluded_modes.append(mx.toChar().toLatin1());
+    }
     if (hash.contains("included_modes"))
     {
         foreach (QVariant mx, hash["included_modes"].toList())
             this->included_modes.append(mx.toChar().toLatin1());
-        foreach (QVariant mx, hash["excluded_modes"].toList())
-            this->excluded_modes.append(mx.toChar().toLatin1());
     }
     UNSERIALIZE_STRING(Parameter);
 }
