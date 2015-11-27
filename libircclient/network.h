@@ -225,6 +225,7 @@ namespace libircclient
             void Event_Broken(libircclient::Parser *parser, QString reason);
             void Event_CPMInserted(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
             void Event_CPMRemoved(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
+            void Event_NetworkFailure(QString reason, int failure);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);

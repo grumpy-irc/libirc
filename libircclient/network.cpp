@@ -329,6 +329,7 @@ void Network::closeError(QString error, int code)
     temp->close();
     temp->deleteLater();
     this->deleteTimers();
+    emit this->Event_NetworkFailure(error, code);
     emit this->Event_Disconnected();
 }
 
