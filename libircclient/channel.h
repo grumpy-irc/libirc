@@ -52,9 +52,9 @@ namespace libircclient
             void SetMTime(QDateTime tm);
             QList<ChannelPMode> GetBans();
             QList<ChannelPMode> GetExceptions();
-            void RemovePMode(libirc::SingleMode mode);
-            void RemovePMode(ChannelPMode mode);
-            void SetPMode(ChannelPMode mode);
+            bool RemovePMode(libirc::SingleMode mode);
+            bool RemovePMode(ChannelPMode mode);
+            bool SetPMode(ChannelPMode mode);
             CMode GetMode();
             void SetMode(QString mode);
             void Part();

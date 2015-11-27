@@ -196,7 +196,7 @@ QList<ChannelPMode> Channel::GetExceptions()
     return this->filteredList('e');
 }
 
-void Channel::RemovePMode(libirc::SingleMode mode)
+bool Channel::RemovePMode(libirc::SingleMode mode)
 {
     int ix = 0;
     foreach (ChannelPMode mode_, this->_localPModes)
@@ -208,42 +208,53 @@ void Channel::RemovePMode(libirc::SingleMode mode)
 #else
             this->_localPModes.removeAt(ix);
 #endif
-            return;
+            return true;
         }
         ix++;
     }
+    return false;
 }
 
-void Channel::RemovePMode(ChannelPMode mode)
+bool Channel::RemovePMode(ChannelPMode mode)
 {
 #ifdef LIBIRC_HASH
     if (this->_localPModes.contains(mode))
+    {
         this->_localPModes.remove(mode);
+        return true;
+    }
+    return false;
 #else
     int ix = 0;
     foreach (ChannelPMode mode_, this->_localPModes)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
+        {
             this->_localPModes.removeAt(ix);
+            return true;
+        }
         ix++;
     }
+    return false;
 #endif
 }
 
-void Channel::SetPMode(ChannelPMode mode)
+bool Channel::SetPMode(ChannelPMode mode)
 {
 #ifdef LIBIRC_HASH
     if (this->_localPModes.contains(mode))
-        return;
+        return false;
     this->_localPModes.insert(mode);
+    return true;
 #else
     // If there is already same mode set, we skip
     foreach (ChannelPMode mode_, this->_localPModes)
     {
         if (mode_.Get() == mode.Get() && mode_.Parameter == mode.Parameter)
-            return;
+            return false;
     }
     this->_localPModes.append(mode);
+    return true;
 #endif
 }
 

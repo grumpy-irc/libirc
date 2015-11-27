@@ -1066,7 +1066,8 @@ void Network::processPMode(Parser *parser, char mode)
     temp.SetBy = User(parameters[3]);
     temp.Parameter = parameters[2];
     temp.SetOn = QDateTime::fromTime_t(parameters[4].toUInt());
-    channel->SetPMode(temp);
+    if (channel->SetPMode(temp))
+        emit this->Event_CPMInserted(parser, temp, channel);
     emit this->Event_PMode(parser, mode);
 }
 
@@ -1148,18 +1149,20 @@ void Network::processMode(Parser *parser)
             } else if (this->CPModes.contains(sm.Get()))
             {
                 // Ban / Exception / Invite
+                ChannelPMode channel_mode(QString(QChar(sm.Get())));
+                if (parser->GetSourceUserInfo())
+                    channel_mode.SetBy = User(parser->GetSourceUserInfo());
+                channel_mode.SetOn = QDateTime::currentDateTime();
+                channel_mode.Parameter = sm.Parameter;
                 if (!sm.IsIncluding())
                 {
                     // Remove existing one
-                    channel->RemovePMode(sm);
+                    if (channel->RemovePMode(channel_mode))
+                        emit this->Event_CPMRemoved(parser, channel_mode, channel);
                 } else
                 {
-                    ChannelPMode channel_mode(QString(QChar(sm.Get())));
-                    if (parser->GetSourceUserInfo())
-                        channel_mode.SetBy = User(parser->GetSourceUserInfo());
-                    channel_mode.SetOn = QDateTime::currentDateTime();
-                    channel_mode.Parameter = sm.Parameter;
-                    channel->SetPMode(channel_mode);
+                    if (channel->SetPMode(channel_mode))
+                        emit this->Event_CPMInserted(parser, channel_mode, channel);
                 }
             }
         }

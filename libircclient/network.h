@@ -223,6 +223,8 @@ namespace libircclient
             void Event_EndOfExcepts(libircclient::Parser *parser);
             void Event_EndOfInvites(libircclient::Parser *parser);
             void Event_Broken(libircclient::Parser *parser, QString reason);
+            void Event_CPMInserted(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
+            void Event_CPMRemoved(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
