@@ -58,6 +58,8 @@ User *Channel::InsertUser(User *user)
         ux->SetHost(user->GetHost());
         ux->SetIdent(user->GetIdent());
         ux->ServerName = user->ServerName;
+        ux->IsAway = user->IsAway;
+        ux->AwayMs = user->AwayMs;
         ux->SetRealname(user->GetRealname());
     }
     else
