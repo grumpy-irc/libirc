@@ -711,7 +711,7 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_Part(&parser, channel);
         }   break;
         case IRC_NUMERIC_KICK:
-            this->processKick(&parser, self_command);
+            this->processKick(&parser);
             break;
         case IRC_NUMERIC_PONG:
             break;
@@ -996,13 +996,14 @@ void Network::processTopic(Parser *parser)
     emit this->Event_TOPIC(parser, channel, topic);
 }
 
-void Network::processKick(Parser *parser, bool self_command)
+void Network::processKick(Parser *parser)
 {
     if (parser->GetParameters().count() < 2)
     {
         qDebug() << "IRC PARSER: Invalid KICK: " + parser->GetRaw();
         return;
     }
+    bool self_command = parser->GetParameters()[0].toLower() == this->GetNick().toLower();
     Channel *channel = this->GetChannel(parser->GetParameters()[0]);
     if (self_command)
     {

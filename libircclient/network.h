@@ -262,7 +262,7 @@ namespace libircclient
             void processMode(Parser *parser);
             void processMdIn(Parser *parser);
             void processTopic(Parser *parser);
-            void processKick(Parser *parser, bool self_command);
+            void processKick(Parser *parser);
             void processTopicWhoTime(Parser *parser);
             void processPMode(Parser *parser, char mode);
             void processMTime(Parser *parser);
