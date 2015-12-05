@@ -71,7 +71,9 @@ namespace libircclient
             virtual void Connect();
             virtual void Reconnect();
             virtual void Disconnect(QString reason = "");
+            bool IsAway() const;
             virtual bool IsConnected();
+            virtual void SetAway(bool away, QString message = "");
             //! This function can be used to change the default nickname that will be requested upon connection to server
             //! subsequent calls of this function while on active IRC connection will be ignored.
             virtual void SetDefaultNick(QString nick);
@@ -81,6 +83,7 @@ namespace libircclient
             virtual QString GetNick();
             virtual QString GetHost();
             virtual QString GetServerVersion();
+            virtual int GetTimeout() const;
             unsigned int GetPort();
             virtual QString GetIdent();
             virtual QString GetServerAddress();
@@ -95,7 +98,6 @@ namespace libircclient
             virtual int SendNotice(QString text, User *user, Priority priority = Priority_Normal);
             virtual int SendNotice(QString text, Channel *channel, Priority priority = Priority_Normal);
             virtual int SendNotice(QString text, QString target, Priority priority = Priority_Normal);
-            virtual int GetTimeout() const;
             virtual int SendCtcp(QString name, QString text, QString target, Priority priority = Priority_Normal);
             virtual void RequestPart(QString channel_name, Priority priority = Priority_Normal);
             virtual void RequestPart(Channel *channel, Priority priority = Priority_Normal);
@@ -226,6 +228,8 @@ namespace libircclient
             void Event_CPMInserted(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
             void Event_CPMRemoved(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
             void Event_NetworkFailure(QString reason, int failure);
+            void Event_UnAway(libircclient::Parser *parser);
+            void Event_NowAway(libircclient::Parser *parser);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
@@ -306,6 +310,8 @@ namespace libircclient
             UMode localUserMode;
             QString alternateNick;
             int alternateNickNumber;
+            QString awayMessage;
+            bool isAway;
             char channelPrefix;
             Server *server;
             QList<User*> users;

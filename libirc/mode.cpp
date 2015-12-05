@@ -237,6 +237,19 @@ bool SingleMode::IsValid()
     return this->valid;
 }
 
+QString libirc::SingleMode::ToString() const
+{
+    QString prefix;
+    if (this->including)
+        prefix = "+";
+    else
+        prefix = "-";
+    QString params;
+    if (!this->Parameter.isEmpty())
+        params = " " + this->Parameter;
+    return prefix + QString(this->mode) + params;
+}
+
 char SingleMode::Get() const
 {
     return this->mode;

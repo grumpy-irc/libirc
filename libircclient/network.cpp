@@ -108,12 +108,30 @@ void Network::Disconnect(QString reason)
     this->freemm();
 }
 
+bool libircclient::Network::IsAway() const
+{
+    return this->isAway;
+}
+
 bool Network::IsConnected()
 {
     if (!this->socket)
         return false;
 
     return this->socket->isOpen();
+}
+
+void libircclient::Network::SetAway(bool away, QString message)
+{
+    this->awayMessage = message;
+    if (!away)
+    {
+        this->TransferRaw("AWAY");
+    }
+    else
+    {
+        this->TransferRaw("AWAY :" + message);
+    }
 }
 
 void Network::SetDefaultNick(QString nick)
@@ -477,6 +495,8 @@ static QVariant serializeList(QList<char> data)
 void Network::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::Network::LoadHash(hash);
+    UNSERIALIZE_STRING(awayMessage);
+    UNSERIALIZE_BOOL(isAway);
     UNSERIALIZE_STRING(hostname);
     UNSERIALIZE_UINT(port);
     UNSERIALIZE_INT(pingTimeout);
@@ -514,6 +534,8 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
 QHash<QString, QVariant> Network::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::Network::ToHash();
+    SERIALIZE(isAway);
+    SERIALIZE(awayMessage);
     SERIALIZE(hostname);
     SERIALIZE(port);
     SERIALIZE(pingTimeout);
@@ -787,6 +809,14 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_ENDOFBANS:
             emit this->Event_EndOfBans(&parser);
+            break;
+        case IRC_NUMERIC_UNAWAY:
+            this->isAway = false;
+            emit this->Event_UnAway(&parser);
+            break;
+        case IRC_NUMERIC_NOWAWAY:
+            this->isAway = true;
+            emit this->Event_NowAway(&parser);
             break;
         default:
             known = false;
@@ -1322,6 +1352,7 @@ void Network::deleteTimers()
 
 void Network::initialize()
 {
+    this->isAway = false;
     this->socket = NULL;
     this->localUser.SetIdent("grumpy");
     this->localUser.SetRealname("GrumpyIRC");
