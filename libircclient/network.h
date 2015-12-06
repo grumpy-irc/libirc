@@ -44,6 +44,7 @@ namespace libircclient
 {
     enum Priority
     {
+        Priority_RealTime = 3,
         Priority_High = 2,
         Priority_Normal = 1,
         Priority_Low = 0

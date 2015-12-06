@@ -1398,6 +1398,14 @@ void Network::freemm()
 
 void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
 {
+    if (priority == Priority_RealTime)
+    {
+        if (!this->socket)
+            return;
+        this->socket->write(data);
+        this->socket->flush();
+        return;
+    }
     this->mutex.lock();
     switch (priority)
     {
@@ -1417,6 +1425,8 @@ void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
 void Network::OnSend()
 {
     if (QDateTime::currentDateTime() < this->senderTime)
+        return;
+    if (!this->socket)
         return;
     QByteArray packet = this->getDataToSend();
     if (packet.isEmpty())
