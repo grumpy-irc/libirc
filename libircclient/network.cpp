@@ -950,7 +950,7 @@ void Network::processWho(Parser *parser)
     user->SetHost(parameters[3]);
     if (user->IsAway != is_away)
     {
-        user->IsAway = true;
+        user->IsAway = is_away;
         emit this->Event_UserAwayStatusChange(parser, channel, user);
     }
     user->ServerName = parameters[4];
