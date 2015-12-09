@@ -26,9 +26,10 @@ namespace libircclient
             User(QString user);
             User(User *user);
             QString GetPrefixedNick();
-            char ChannelPrefix;
+            char GetHighestCUMode();
+            QList<char> ChannelPrefixes;
             QString ServerName;
-            char CUMode;
+            QList<char> CUModes;
             QString AwayMs;
             bool IsAway;
             void LoadHash(QHash<QString, QVariant> hash);

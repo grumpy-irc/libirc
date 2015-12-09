@@ -53,8 +53,8 @@ User *Channel::InsertUser(User *user)
     if (this->_users.contains(luser))
     {
         ux = this->_users[luser];
-        ux->ChannelPrefix = user->ChannelPrefix;
-        ux->CUMode = user->CUMode;
+        ux->ChannelPrefixes = user->ChannelPrefixes;
+        ux->CUModes = user->CUModes;
         ux->SetHost(user->GetHost());
         ux->SetIdent(user->GetIdent());
         ux->ServerName = user->ServerName;

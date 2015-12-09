@@ -38,7 +38,7 @@ Parser::Parser(QString incoming_text)
         // this is an exception though
         if (incoming_text.startsWith("PING :"))
         {
-            this->_numeric = IRC_NUMERIC_PING_CHECK;
+            this->_numeric = IRC_NUMERIC_RAW_PING;
             this->parameterLine = incoming_text.mid(6);
             this->parameters = this->parameterLine.split(" ");
             this->_valid = true;
@@ -94,7 +94,7 @@ void Parser::obtainNumeric()
     int numeric_code = this->command.toInt();
     if (numeric_code == 0)
     {
-        this->_numeric = IRC_NUMERIC_UNKNOWN;
+        this->_numeric = IRC_NUMERIC_INVALID;
     }
     else
     {
@@ -104,29 +104,33 @@ void Parser::obtainNumeric()
 
     // Convert text command to numeric
     if (this->command == "PING")
-        this->_numeric = IRC_NUMERIC_PING_CHECK;
+        this->_numeric = IRC_NUMERIC_RAW_PING;
     else if (this->command == "JOIN")
-        this->_numeric = IRC_NUMERIC_JOIN;
+        this->_numeric = IRC_NUMERIC_RAW_JOIN;
     else if (this->command == "NICK")
-        this->_numeric = IRC_NUMERIC_NICK;
+        this->_numeric = IRC_NUMERIC_RAW_NICK;
     else if (this->command == "PONG")
-        this->_numeric = IRC_NUMERIC_PONG;
+        this->_numeric = IRC_NUMERIC_RAW_PONG;
     else if (this->command == "NOTICE")
-        this->_numeric = IRC_NUMERIC_NOTICE;
+        this->_numeric = IRC_NUMERIC_RAW_NOTICE;
     else if (this->command == "MODE")
-        this->_numeric = IRC_NUMERIC_MODE;
+        this->_numeric = IRC_NUMERIC_RAW_MODE;
     else if (this->command == "PRIVMSG")
-        this->_numeric = IRC_NUMERIC_PRIVMSG;
+        this->_numeric = IRC_NUMERIC_RAW_PRIVMSG;
     else if (this->command == "KICK")
-        this->_numeric = IRC_NUMERIC_KICK;
+        this->_numeric = IRC_NUMERIC_RAW_KICK;
     else if (this->command == "TOPIC")
-        this->_numeric = IRC_NUMERIC_TOPIC;
+        this->_numeric = IRC_NUMERIC_RAW_TOPIC;
     else if (this->command == "PART")
-        this->_numeric = IRC_NUMERIC_PART;
+        this->_numeric = IRC_NUMERIC_RAW_PART;
     else if (this->command == "CTCP")
-        this->_numeric = IRC_NUMERIC_CTCP;
+        this->_numeric = IRC_NUMERIC_RAW_CTCP;
     else if (this->command == "QUIT")
-        this->_numeric = IRC_NUMERIC_QUIT;
+        this->_numeric = IRC_NUMERIC_RAW_QUIT;
+    else if (this->command == "AWAY")
+        this->_numeric = IRC_NUMERIC_RAW_AWAY;
+    else if (this->command == "CAP")
+        this->_numeric = IRC_NUMERIC_RAW_CAP;
 }
 
 bool Parser::IsValid()

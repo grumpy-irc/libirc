@@ -139,6 +139,7 @@ namespace libircclient
             virtual void SetChannelUserPrefixes(QList<char> data);
             virtual void SetCModes(QList<char> data);
             virtual QList<char> GetChannelUserPrefixes();
+            virtual bool HasCap(QString cap);
             virtual QList<char> GetCModes();
             virtual QList<char> GetCPModes();
             virtual void SetCPModes(QList<char> data);
@@ -149,6 +150,8 @@ namespace libircclient
             virtual QList<char> GetCUModes();
             virtual void SetCCModes(QList<char> data);
             virtual UMode GetLocalUserMode();
+            virtual QList<char> ModeHelper_GetSortedChannelPrefixes(QList<char> unsorted_list);
+            virtual QList<char> ModeHelper_GetSortedCUModes(QList<char> unsorted_list);
             QList<char> ParameterModes();
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
@@ -213,9 +216,16 @@ namespace libircclient
             void Event_Timeout();
             void Event_Connected();
             void Event_Disconnected();
+            void Event_CAP(libircclient::Parser *parser);
             void Event_WHO(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_EndOfWHO(libircclient::Parser *parser);
             void Event_ModeInfo(libircclient::Parser *parser, libircclient::Channel *channel);
+            //! When user's channel mode was changed, but the changed mode was lower priority than the one which
+            //! user already possesed.
+            //! This change is very minor and probably doesn't reflect any real change
+
+            //! Exampe: user who had owner ~ and halfop % (effectively being ~%) had halfop removed
+            void Event_ChannelUserSubmodeChanged(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_ChannelModeChanged(libircclient::Parser *parser, libircclient::Channel *channel);
             void Event_ChannelUserModeChanged(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_CreationTime(libircclient::Parser *parser);
@@ -231,6 +241,7 @@ namespace libircclient
             void Event_NetworkFailure(QString reason, int failure);
             void Event_UnAway(libircclient::Parser *parser);
             void Event_NowAway(libircclient::Parser *parser);
+            void Event_AWAY(libircclient::Parser *parser);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
@@ -247,6 +258,9 @@ namespace libircclient
             virtual void closeError(QString error, int code);
             bool usingSSL;
             QTcpSocket *socket;
+            //! These capabilities will be automatically requested from a server if it supports them
+            QList<QString> _requestedCapabilities;
+            QList<QString> _capabilities;
             QString hostname;
             unsigned int port;
             int pingTimeout;
@@ -273,6 +287,8 @@ namespace libircclient
             void processMTime(Parser *parser);
             void processJoin(Parser *parser, bool self_command);
             void processNick(Parser *parser, bool self_command);
+            void processAway(Parser *parser, bool self_command);
+            void processCap(Parser *parser);
             void deleteTimers();
             void initialize();
             void freemm();

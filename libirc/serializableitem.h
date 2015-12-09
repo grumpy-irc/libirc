@@ -21,6 +21,7 @@
 
 #define SERIALIZE(variable_name)          hash.insert(#variable_name, QVariant(variable_name))
 #define SERIALIZE_CCHAR(variable_name)    hash.insert(#variable_name, QVariant(QChar(variable_name)))
+#define SERIALIZE_CHARLIST(variable_name) hash.insert(#variable_name, ::libirc::SerializableItem::CCharListToVariantList(variable_name))
 #define UNSERIALIZE_BOOL(variable_name)       if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toBool(); }
 #define UNSERIALIZE_HASH(variable_name)       if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toHash(); }
 #define UNSERIALIZE_INT(variable_name)        if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toInt(); }
@@ -30,12 +31,18 @@
 #define UNSERIALIZE_CCHAR(variable_name)      if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toChar().toLatin1(); }
 #define UNSERIALIZE_DATETIME(variable_name)   if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toDateTime(); }
 #define UNSERIALIZE_ULONGLONG(variable_name)  if (hash.contains(#variable_name)) { variable_name = hash[#variable_name].toULongLong(); }
+#define UNSERIALIZE_STRINGLIST(list)          if (hash.contains(#list)) { list = ::libirc::SerializableItem::DeserializeList_QString(hash[#list]); }
+#define UNSERIALIZE_CHARLIST(list)            if (hash.contains(#list)) { list = ::libirc::SerializableItem::DeserializeList_char(hash[#list]); }
 
 namespace libirc
 {
     class LIBIRCSHARED_EXPORT SerializableItem
     {
         public:
+            static QList<QString> DeserializeList_QString(QVariant list);
+            static QList<int> DeserializeList_int(QVariant list);
+            static QList<char> DeserializeList_char(QVariant list);
+            static QList<QVariant> CCharListToVariantList(QList<char> list);
             static const unsigned long long LIBIRC_UNKNOWN_RPC_ID;
 
             SerializableItem();
