@@ -16,23 +16,27 @@ using namespace libircclient;
 
 User::User()
 {
+    this->Hops = 0;
     this->IsAway = false;
 }
 
 User::User(QHash<QString, QVariant> hash)
 {
+    this->Hops = 0;
     this->IsAway = false;
     this->LoadHash(hash);
 }
 
 User::User(QString user) : libirc::User(user)
 {
+    this->Hops = 0;
     this->IsAway = false;
 }
 
 User::User(User *user) : libirc::User(user)
 {
     this->IsAway = user->IsAway;
+    this->Hops = user->Hops;
     this->ChannelPrefixes = user->ChannelPrefixes;
     this->CUModes = user->CUModes;
 }
@@ -60,6 +64,7 @@ void User::LoadHash(QHash<QString, QVariant> hash)
     libirc::User::LoadHash(hash);
     UNSERIALIZE_CHARLIST(ChannelPrefixes);
     UNSERIALIZE_STRING(AwayMs);
+    //UNSERIALIZE_INT(Hops);
     UNSERIALIZE_BOOL(IsAway);
     UNSERIALIZE_STRING(ServerName);
     UNSERIALIZE_CHARLIST(CUModes);

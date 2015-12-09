@@ -32,6 +32,7 @@ namespace libircclient
             QList<char> CUModes;
             QString AwayMs;
             bool IsAway;
+            int Hops;
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
 

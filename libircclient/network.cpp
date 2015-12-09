@@ -1021,10 +1021,12 @@ void Network::processInfo(Parser *parser)
 
 void Network::processWho(Parser *parser)
 {
-    // GrumpyUser1 #support grumpy hidden-715465F6.net.upcbroadband.cz hub.tm-irc.org GrumpyUser1 H
+    // GrumpyUser1 #support grumpy hidden-715465F6.net.upcbroadband.cz hub.tm-irc.org GrumpyUser1 H :0 GrumpyUser                    |
+    //             <channel> <user> <host>                             <server>       <nick>     <H|G>[*][@|+] :<hopcount> <real name>
     QStringList parameters = parser->GetParameters();
     bool is_away;
     Channel *channel = NULL;
+    QString gecos;
     User *user = NULL;
     if (parameters.count() < 7)
         goto finish;
@@ -1038,7 +1040,13 @@ void Network::processWho(Parser *parser)
     user = channel->GetUser(parameters[5]);
     if (!user)
         goto finish;
-    user->SetRealname(parser->GetText());
+    gecos = parser->GetText();
+    if (gecos.contains(" "))
+    {
+        user->Hops = gecos.mid(0, gecos.indexOf(" ")).toInt();
+        gecos = gecos.mid(gecos.indexOf(" ") + 1);
+    }
+    user->SetRealname(gecos);
     user->SetIdent(parameters[2]);
     is_away = parameters[6].contains("G");
     user->SetHost(parameters[3]);
