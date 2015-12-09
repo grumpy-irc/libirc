@@ -198,6 +198,7 @@ void Network::TransferRaw(QString raw, libircclient::Priority priority)
     }
     else
     {
+        this->bytesSent += data.size();
         this->socket->write(data);
         this->socket->flush();
     }
@@ -1352,6 +1353,8 @@ void Network::deleteTimers()
 
 void Network::initialize()
 {
+    this->bytesSent = 0;
+    this->bytesRcvd = 0;
     this->isAway = false;
     this->socket = NULL;
     this->localUser.SetIdent("grumpy");
@@ -1402,6 +1405,7 @@ void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
     {
         if (!this->socket)
             return;
+        this->bytesSent += data.size();
         this->socket->write(data);
         this->socket->flush();
         return;
@@ -1435,6 +1439,7 @@ void Network::OnSend()
         return;
     }
     QString line(packet);
+    this->bytesSent += packet.size();
     this->socket->write(packet);
     this->socket->flush();
     this->pseudoSleep(this->MSWait);

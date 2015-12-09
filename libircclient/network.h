@@ -290,6 +290,8 @@ namespace libircclient
             QDateTime senderTime;
             QTimer senderTimer;
             QMutex mutex;
+            unsigned long long bytesSent;
+            unsigned long long bytesRcvd;
             QList<QByteArray> hprFIFO;
             QList<QByteArray> mprFIFO;
             QList<QByteArray> lprFIFO;
