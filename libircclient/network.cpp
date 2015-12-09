@@ -1346,8 +1346,11 @@ void Network::processJoin(Parser *parser, bool self_command)
         DebugInvalid("Malformed JOIN", parser);
         return;
     }
-    // On some servers channel is passed as text and on some as parameter
-    QString channel_name = parser->GetText();
+    QString channel_name;
+    // On some extremely old servers channel is passed as text and on some as parameter
+    // we don't need to do this if we are using IRCv.3 protocol
+    if (!this->_enableCap)
+        channel_name = parser->GetText();
     if (parser->GetParameters().count() > 0)
         channel_name = parser->GetParameters()[0];
     if (!channel_name.startsWith(this->channelPrefix))
@@ -1378,7 +1381,13 @@ join_emit:
         return;
     }
     // Insert this user to a channel
-    User *user = channel_p->InsertUser(parser->GetSourceUserInfo());
+    User *temp = parser->GetSourceUserInfo();
+    if (this->_enableCap && !parser->GetText().isEmpty())
+    {
+        // We can use some features of IRCv3 to prefill the user name
+        temp->SetRealname(parser->GetText());
+    }
+    User *user = channel_p->InsertUser(temp);
     emit this->Event_Join(parser, user, channel_p);
 }
 
@@ -1611,7 +1620,7 @@ void Network::resetCap()
     this->_capabilitiesRequested.clear();
     this->_capabilitiesSubscribed.clear();
     this->_capabilitiesSupported.clear();
-    this->_capabilitiesRequested << "away-notify" << "multi-prefix";
+    this->_capabilitiesRequested << "away-notify" << "extended-join" << "multi-prefix";
 }
 
 void Network::processAutoCap()
