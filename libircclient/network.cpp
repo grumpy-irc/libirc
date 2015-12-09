@@ -274,6 +274,16 @@ void Network::Identify(QString Nickname, QString Password, Priority priority)
     this->TransferRaw(ident_line, priority);
 }
 
+void Network::EnableIRCv3Support()
+{
+    this->_enableCap = true;
+}
+
+void Network::DisableIRCv3Support()
+{
+    this->_enableCap = false;
+}
+
 QString Network::GetServerAddress()
 {
     return this->hostname;
@@ -323,6 +333,16 @@ void Network::SetPassword(QString Password)
 void Network::OnPingSend()
 {
     this->TransferRaw("PING :" + this->GetServerAddress(), libircclient::Priority_High);
+}
+
+void Network::OnCapSupportTimeout()
+{
+    // Prevent this from running multiple times
+    this->capTimeout.stop();
+    emit this->Event_CAP_Timeout();
+    this->DisableIRCv3Support();
+    if (this->IsConnected())
+        this->standardLogin();
 }
 
 void Network::OnReceive(QByteArray data)
@@ -421,7 +441,7 @@ QList<char> Network::GetChannelUserPrefixes()
 
 bool Network::HasCap(QString cap)
 {
-    return this->_capabilities.contains(cap);
+    return this->_capabilitiesSupported.contains(cap);
 }
 
 QList<char> Network::GetCModes()
@@ -536,6 +556,7 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
     UNSERIALIZE_CHARLIST(CUModes);
     UNSERIALIZE_CHARLIST(CPModes);
     UNSERIALIZE_CHARLIST(CRModes);
+    UNSERIALIZE_BOOL(_enableCap);
     UNSERIALIZE_CHARLIST(channelUserPrefixes);
     UNSERIALIZE_STRING(password);
     UNSERIALIZE_STRING(alternateNick);
@@ -555,8 +576,9 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
         this->localUserMode = UMode(hash["localUserMode"].toHash());
     if (hash.contains("localUser"))
         this->localUser = User(hash["localUser"].toHash());
-    UNSERIALIZE_STRINGLIST(_requestedCapabilities);
-    UNSERIALIZE_STRINGLIST(_capabilities);
+    UNSERIALIZE_STRINGLIST(_capabilitiesSubscribed);
+    UNSERIALIZE_STRINGLIST(_capabilitiesRequested);
+    UNSERIALIZE_STRINGLIST(_capabilitiesSupported);
 }
 
 QHash<QString, QVariant> Network::ToHash()
@@ -569,13 +591,15 @@ QHash<QString, QVariant> Network::ToHash()
     SERIALIZE(pingTimeout);
     SERIALIZE(pingRate);
     SERIALIZE(defaultQuit);
+    SERIALIZE(_enableCap);
     SERIALIZE(autoRejoin);
     SERIALIZE(autoIdentify);
     SERIALIZE(identifyString);
     SERIALIZE(password);
     SERIALIZE(alternateNick);
-    SERIALIZE(_requestedCapabilities);
-    SERIALIZE(_capabilities);
+    SERIALIZE(_capabilitiesSupported);
+    SERIALIZE(_capabilitiesSubscribed);
+    SERIALIZE(_capabilitiesRequested);
     hash.insert("CCModes", serializeList(this->CCModes));
     hash.insert("CModes", serializeList(this->CModes));
     hash.insert("CPModes", serializeList(this->CPModes));
@@ -652,15 +676,23 @@ Channel *Network::_st_InsertChannel(Channel *channel)
 void Network::OnConnected()
 {
     // We just connected to an IRC network
-    this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
-    this->TransferRaw("NICK " + this->localUser.GetNick());
-    this->lastPing = QDateTime::currentDateTime();
-    this->timerPingSend = new QTimer(this);
-    connect(this->timerPingSend, SIGNAL(timeout()), this, SLOT(OnPingSend()));
-    this->timerPingTimeout = new QTimer(this);
-    this->timerPingSend->start(this->pingRate);
-    connect(this->timerPingTimeout, SIGNAL(timeout()), this, SLOT(OnPing()));
-    this->timerPingTimeout->start(2000);
+    if (this->_enableCap)
+    {
+        // IRCv3 protocol is enabled, let's verify if ircd supports it
+        this->resetCap();
+        this->capTimeout.start(this->_capGraceTime * 1000);
+        // There is one issue with this command though. For whatever reasons IRCv3 people believe that client should
+        // send CAP END to finish negotiation, and unless client does that, it isn't allowed to login to network.
+
+        // That would be fine if CAP was actually any IRC standard, which it isn't, so any ircd server may not support it.
+        // Standards allow ircd's to ignore unknown commands, which means that in extreme case, we send CAP to ircd
+        // which never respond and we are waiting forever. In order to prevent this capTimeout is implemented with its
+        // own timer that disable IRCv3 support on server in case that it fails to respons within given grace time.
+        this->TransferRaw("CAP LS");
+    } else
+    {
+        this->standardLogin();
+    }
 }
 
 static void DebugInvalid(QString message, Parser *parser)
@@ -853,6 +885,28 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_RAW_AWAY:
             this->processAway(&parser, self_command);
+            break;
+        case IRC_NUMERIC_ERR_INVALIDCAPCMD:
+            // If we are negotiating cap handshake right now, the ircd is clearly broken
+            // let's disable it
+            if (this->capTimeout.isActive())
+            {
+                this->capTimeout.stop();
+                this->DisableIRCv3Support();
+                // This may not work but we really should finish negotiation right here
+                this->TransferRaw("CAP END");
+                this->standardLogin();
+            }
+            break;
+        case IRC_NUMERIC_UNKNOWN:
+            // If we are negotiating cap handshake, server doesn't support it
+            if (this->capTimeout.isActive())
+            {
+                this->capTimeout.stop();
+                this->DisableIRCv3Support();
+                this->standardLogin();
+            }
+            emit this->Event_NUMERIC_UNKNOWN(&parser);
             break;
         default:
             known = false;
@@ -1390,21 +1444,65 @@ void Network::processAway(Parser *parser, bool self_command)
 
 void Network::processCap(Parser *parser)
 {
-    if (parser->GetParameters().size() < 2)
+    QStringList params = parser->GetParameters();
+    if (params.size() < 2)
     {
         DebugInvalid("Wrong number of parameters for CAP message", parser);
         return;
     }
-    if (parser->GetParameters()[0] == "*")
+    QString cap = params[1].toUpper();
+    if (cap == "LS")
     {
-        QString cap = parser->GetParameters()[1];
-        if (cap == "LS")
+        if (params.size() > 2 && params[2] == "*")
+            this->capProcessingMultilineLS = true;
+        else
+            this->capProcessingMultilineLS = false;
+        // List of supported caps
+        this->_capabilitiesSupported = Generic::UniqueMerge(this->_capabilitiesSupported, parser->GetText().split(" "));
+        if (!this->capProcessingMultilineLS && !this->capAutoRequestFinished)
+            this->processAutoCap();
+    } else if (cap == "ACK" || cap == "NAK")
+    {
+        if (cap == "ACK")
         {
-            // List of supported caps
-            this->_capabilities = parser->GetText().split(" ");
+            this->_capabilitiesSubscribed = Generic::UniqueMerge(this->_capabilitiesSubscribed, parser->GetText().split(" "));
+            emit this->Event_CAP_ACK(parser);
+        }
+        else
+        {
+            emit this->Event_CAP_NAK(parser);
+        }
+
+        // We don't really care if server approved or rejected the change, we just continue here
+        if (this->capProcessingChangeRequest)
+        {
+            this->capProcessingChangeRequest = false;
+
+            if (!this->capAutoRequestFinished)
+            {
+                this->capAutoRequestFinished = true;
+                // finish the login
+                this->TransferRaw("CAP END");
+                this->standardLogin();
+            }
         }
     }
     emit this->Event_CAP(parser);
+}
+
+void Network::standardLogin()
+{
+    this->capTimeout.stop();
+    this->_loggedIn = true;
+    this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
+    this->TransferRaw("NICK " + this->localUser.GetNick());
+    this->lastPing = QDateTime::currentDateTime();
+    this->timerPingSend = new QTimer(this);
+    connect(this->timerPingSend, SIGNAL(timeout()), this, SLOT(OnPingSend()));
+    this->timerPingTimeout = new QTimer(this);
+    this->timerPingSend->start(this->pingRate);
+    connect(this->timerPingTimeout, SIGNAL(timeout()), this, SLOT(OnPing()));
+    this->timerPingTimeout->start(2000);
 }
 
 void Network::process433(Parser *parser)
@@ -1450,14 +1548,18 @@ void Network::deleteTimers()
         this->timerPingTimeout->deleteLater();
         this->timerPingTimeout = NULL;
     }
+    this->capTimeout.stop();
     this->senderTimer.stop();
 }
 
 void Network::initialize()
 {
+    this->_loggedIn = false;
     this->isAway = false;
     this->socket = NULL;
-    this->_requestedCapabilities << "away-notify" << "multi-prefix";
+    this->resetCap();
+    this->_enableCap = true;
+    this->_capGraceTime = 20;
     this->localUser.SetIdent("grumpy");
     this->localUser.SetRealname("GrumpyIRC");
     this->pingTimeout = 60;
@@ -1478,13 +1580,14 @@ void Network::initialize()
     this->channelUserPrefixes << '@' << '+';
     this->CUModes << 'o' << 'v';
     this->CModes << 'i' << 'm';
+    connect(&this->capTimeout, SIGNAL(timeout()), this, SLOT(OnCapSupportTimeout()));
+    connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
     this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
     this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
     this->MSDelayOnEmpty = 300;
     this->MSDelayOnOpen = 2000;
     this->MSWait = 800;
     this->senderTime = QDateTime::currentDateTime();
-    connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
 }
 
 void Network::freemm()
@@ -1498,6 +1601,54 @@ void Network::freemm()
     this->mprFIFO.clear();
     this->hprFIFO.clear();
     this->mutex.unlock();
+}
+
+void Network::resetCap()
+{
+    this->capAutoRequestFinished = false;
+    this->capProcessingChangeRequest = false;
+    this->capProcessingMultilineLS = false;
+    this->_capabilitiesRequested.clear();
+    this->_capabilitiesSubscribed.clear();
+    this->_capabilitiesSupported.clear();
+    this->_capabilitiesRequested << "away-notify" << "multi-prefix";
+}
+
+void Network::processAutoCap()
+{
+    if (!this->_enableCap)
+    {
+        if (!this->loggedIn)
+        {
+            this->TransferRaw("CAP END");
+            this->standardLogin();
+        }
+        return;
+    }
+    // We finished processing LS of all caps, so let's subscribe to all these that we want to have
+    QString requested_list;
+    foreach (QString capability, this->_capabilitiesRequested)
+    {
+        if (!this->HasCap(capability))
+        {
+            emit this->Event_CAP_RequestedCapNotSupported(capability);
+            continue;
+        }
+        // Request the capability
+        requested_list += capability + " ";
+    }
+    requested_list = requested_list.trimmed();
+    if (requested_list.isEmpty())
+    {
+        // There is nothing to request, finish the request and connect to network
+        this->TransferRaw("CAP END");
+        this->standardLogin();
+    } else
+    {
+        // Request the caps
+        this->TransferRaw("CAP REQ :" + requested_list);
+        this->capProcessingChangeRequest = true;
+    }
 }
 
 void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)

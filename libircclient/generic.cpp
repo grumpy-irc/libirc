@@ -69,3 +69,14 @@ QString libircclient::Generic::ErrorCode2String(QAbstractSocket::SocketError typ
     }
     return "Unknown";
 }
+
+QList<QString> libircclient::Generic::UniqueMerge(QList<QString> a, QList<QString> b)
+{
+    QList<QString> x = a;
+    foreach (QString item, b)
+    {
+        if (!x.contains(item))
+            x.append(item);
+    }
+    return x;
+}

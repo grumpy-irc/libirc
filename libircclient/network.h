@@ -104,6 +104,8 @@ namespace libircclient
             virtual void RequestPart(Channel *channel, Priority priority = Priority_Normal);
             virtual void RequestNick(QString nick, Priority priority = Priority_Normal);
             virtual void Identify(QString Nickname = "", QString Password = "", Priority priority = Priority_Normal);
+            virtual void EnableIRCv3Support();
+            virtual void DisableIRCv3Support();
             virtual bool ContainsChannel(QString channel_name);
             //////////////////////////////////////////////////////////////////////////////////////////
             // Synchronization tools
@@ -167,12 +169,25 @@ namespace libircclient
             QHash<char, QString> UserModeHelp;
 
         signals:
+            // Primitives
             void Event_RawOutgoing(QByteArray data);
             void Event_RawIncoming(QByteArray data);
             void Event_Invalid(QByteArray data);
             void Event_ConnectionFailure(QAbstractSocket::SocketError reason);
             void Event_ConnectionError(QString error, int code);
             void Event_Parse(libircclient::Parser *parser);
+            void Event_SSLFailure(QList<QSslError> error_l, bool *fail);
+            //! Server gave us some unknown command
+            void Event_Unknown(libircclient::Parser *parser);
+            void Event_Timeout();
+            void Event_Connected();
+            void Event_Disconnected();
+            void Event_Broken(libircclient::Parser *parser, QString reason);
+            void Event_NetworkFailure(QString reason, int failure);
+            //! Emitted when server sent us IRC_NUMERIC_UNKNOWN
+            void Event_NUMERIC_UNKNOWN(libircclient::Parser *parser);
+
+            // Channel related
             void Event_SelfJoin(libircclient::Channel *chan);
             void Event_Join(libircclient::Parser *parser, libircclient::User *user, libircclient::Channel *chan);
             /*!
@@ -188,37 +203,11 @@ namespace libircclient
             void Event_Part(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_SelfKick(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_Kick(libircclient::Parser *parser, libircclient::Channel *chan);
-            void Event_ServerMode(libircclient::Parser *parser);
-            void Event_MOTDEnd(libircclient::Parser *parser);
-            void Event_MOTDBegin(libircclient::Parser *parser);
-            void Event_MOTD(libircclient::Parser *parser);
-            void Event_Mode(libircclient::Parser *parser);
-            void Event_NickCollision(libircclient::Parser *parser);
-            void Event_WhoisInfo(libircclient::Parser *parser);
-            void Event_INFO(libircclient::Parser *parser);
-            void Event_PRIVMSG(libircclient::Parser *parser);
-            void Event_CTCP(libircclient::Parser *parser, QString ctcp, QString parameters);
-            void Event_EndOfNames(libircclient::Parser *parser);
-            void Event_NOTICE(libircclient::Parser *parser);
-            void Event_UserAwayStatusChange(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
-            void Event_NICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
-            void Event_SelfNICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
-            //! IRC_NUMERIC_MYINFO
-            void Event_MyInfo(libircclient::Parser *parser);
             //! Emitted when someone changes the topic
             void Event_TOPIC(libircclient::Parser *parser, libircclient::Channel * chan, QString old_topic);
             //! Retrieved after channel is joined as part of info
             void Event_TOPICInfo(libircclient::Parser *parser, libircclient::Channel *chan);
             void Event_TOPICWhoTime(libircclient::Parser *parser, libircclient::Channel *chan);
-            void Event_SSLFailure(QList<QSslError> error_l, bool *fail);
-            //! Server gave us some unknown command
-            void Event_Unknown(libircclient::Parser *parser);
-            void Event_Timeout();
-            void Event_Connected();
-            void Event_Disconnected();
-            void Event_CAP(libircclient::Parser *parser);
-            void Event_WHO(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
-            void Event_EndOfWHO(libircclient::Parser *parser);
             void Event_ModeInfo(libircclient::Parser *parser, libircclient::Channel *channel);
             //! When user's channel mode was changed, but the changed mode was lower priority than the one which
             //! user already possesed.
@@ -229,19 +218,49 @@ namespace libircclient
             void Event_ChannelModeChanged(libircclient::Parser *parser, libircclient::Channel *channel);
             void Event_ChannelUserModeChanged(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
             void Event_CreationTime(libircclient::Parser *parser);
-            void Event_Welcome(libircclient::Parser *parser);
-            void Event_ISUPPORT(libircclient::Parser *parser);
-            void Event_PMode(libircclient::Parser *parser, char mode);
             void Event_EndOfBans(libircclient::Parser *parser);
             void Event_EndOfExcepts(libircclient::Parser *parser);
             void Event_EndOfInvites(libircclient::Parser *parser);
-            void Event_Broken(libircclient::Parser *parser, QString reason);
             void Event_CPMInserted(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
             void Event_CPMRemoved(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
-            void Event_NetworkFailure(QString reason, int failure);
+
+            // Server related
+            void Event_EndOfNames(libircclient::Parser *parser);
+            void Event_ServerMode(libircclient::Parser *parser);
+            void Event_MOTDEnd(libircclient::Parser *parser);
+            void Event_MOTDBegin(libircclient::Parser *parser);
+            void Event_MOTD(libircclient::Parser *parser);
+            void Event_Mode(libircclient::Parser *parser);
+            void Event_NickCollision(libircclient::Parser *parser);
+            void Event_WhoisInfo(libircclient::Parser *parser);
+            void Event_INFO(libircclient::Parser *parser);
+            //! IRC_NUMERIC_MYINFO
+            void Event_MyInfo(libircclient::Parser *parser);
+            void Event_Welcome(libircclient::Parser *parser);
+            void Event_ISUPPORT(libircclient::Parser *parser);
+
+            // Messaging
+            void Event_PRIVMSG(libircclient::Parser *parser);
+            void Event_CTCP(libircclient::Parser *parser, QString ctcp, QString parameters);
+            void Event_NOTICE(libircclient::Parser *parser);
+
+            // Users
+            void Event_UserAwayStatusChange(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
+            void Event_NICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
+            void Event_SelfNICK(libircclient::Parser *parser, QString old_nick, QString new_nick);
+            void Event_WHO(libircclient::Parser *parser, libircclient::Channel *channel, libircclient::User *user);
+            void Event_EndOfWHO(libircclient::Parser *parser);
+            void Event_PMode(libircclient::Parser *parser, char mode);
             void Event_UnAway(libircclient::Parser *parser);
             void Event_NowAway(libircclient::Parser *parser);
             void Event_AWAY(libircclient::Parser *parser);
+
+            // IRCv3
+            void Event_CAP(libircclient::Parser *parser);
+            void Event_CAP_ACK(libircclient::Parser *parser);
+            void Event_CAP_NAK(libircclient::Parser *parser);
+            void Event_CAP_Timeout();
+            void Event_CAP_RequestedCapNotSupported(QString name);
 
         protected slots:
             virtual void OnSslHandshakeFailure(QList<QSslError> errors);
@@ -252,6 +271,7 @@ namespace libircclient
             virtual void OnSend();
             virtual void OnPing();
             virtual void OnPingSend();
+            virtual void OnCapSupportTimeout();
 
         protected:
             virtual void OnReceive(QByteArray data);
@@ -259,8 +279,12 @@ namespace libircclient
             bool usingSSL;
             QTcpSocket *socket;
             //! These capabilities will be automatically requested from a server if it supports them
-            QList<QString> _requestedCapabilities;
-            QList<QString> _capabilities;
+            QList<QString> _capabilitiesRequested;
+            QList<QString> _capabilitiesSupported;
+            QList<QString> _capabilitiesSubscribed;
+            bool _loggedIn;
+            int _capGraceTime;
+            bool _enableCap;
             QString hostname;
             unsigned int port;
             int pingTimeout;
@@ -289,9 +313,12 @@ namespace libircclient
             void processNick(Parser *parser, bool self_command);
             void processAway(Parser *parser, bool self_command);
             void processCap(Parser *parser);
+            void standardLogin();
             void deleteTimers();
             void initialize();
             void freemm();
+            void resetCap();
+            void processAutoCap();
             void pseudoSleep(unsigned int msec);
             QByteArray getDataToSend();
             void scheduleDelivery(QByteArray data, libircclient::Priority priority);
@@ -301,6 +328,10 @@ namespace libircclient
             unsigned int MSDelayOnEmpty;
             unsigned int MSDelayOnOpen;
             unsigned int MSWait;
+            QTimer capTimeout;
+            bool capProcessingMultilineLS;
+            bool capProcessingChangeRequest;
+            bool capAutoRequestFinished;
             bool loggedIn;
             bool scheduling;
             QDateTime senderTime;
