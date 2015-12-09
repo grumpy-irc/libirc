@@ -275,6 +275,16 @@ void Network::Identify(QString Nickname, QString Password, Priority priority)
     this->TransferRaw(ident_line, priority);
 }
 
+void Network::EnableIRCv3Support()
+{
+    this->_enableCap = true;
+}
+
+void Network::DisableIRCv3Support()
+{
+    this->_enableCap = false;
+}
+
 QString Network::GetServerAddress()
 {
     return this->hostname;
@@ -324,6 +334,16 @@ void Network::SetPassword(QString Password)
 void Network::OnPingSend()
 {
     this->TransferRaw("PING :" + this->GetServerAddress(), libircclient::Priority_High);
+}
+
+void Network::OnCapSupportTimeout()
+{
+    // Prevent this from running multiple times
+    this->capTimeout.stop();
+    emit this->Event_CAP_Timeout();
+    this->DisableIRCv3Support();
+    if (this->IsConnected())
+        this->standardLogin();
 }
 
 void Network::OnReceive(QByteArray data)
@@ -420,6 +440,11 @@ QList<char> Network::GetChannelUserPrefixes()
     return this->channelUserPrefixes;
 }
 
+bool Network::HasCap(QString cap)
+{
+    return this->_capabilitiesSupported.contains(cap);
+}
+
 QList<char> Network::GetCModes()
 {
     return this->CModes;
@@ -460,6 +485,38 @@ UMode Network::GetLocalUserMode()
     return this->localUserMode;
 }
 
+//! This function performs a sort of a list of random chars using a mask list, that contains these chars that are sorted
+//! it removes duplicates
+static QList<char> SortingHelper(QList<char> mask, QList<char> list)
+{
+    // Hash sort, memory expensive but pretty fast
+    QHash<int, char> hash;
+    foreach (char mode, list)
+    {
+        int index = mask.indexOf(mode);
+        if (hash.contains(index))
+            continue;
+        hash.insert(index, mode);
+    }
+    // Now that we have all modes in a hash table, we can just easily sort them
+    QList<int> unsorted_ints = hash.keys();
+    qSort(unsorted_ints);
+    QList<char> sorted_list;
+    foreach (int mode, unsorted_ints)
+        sorted_list.append(mask[mode]);
+    return sorted_list;
+}
+
+QList<char> Network::ModeHelper_GetSortedChannelPrefixes(QList<char> unsorted_list)
+{
+    return SortingHelper(this->channelUserPrefixes, unsorted_list);
+}
+
+QList<char> Network::ModeHelper_GetSortedCUModes(QList<char> unsorted_list)
+{
+    return SortingHelper(this->CUModes, unsorted_list);
+}
+
 QList<char> Network::ParameterModes()
 {
     QList<char> results;
@@ -472,17 +529,6 @@ QList<char> Network::ParameterModes()
 QList<char> Network::GetCCModes()
 {
     return this->CCModes;
-}
-
-#define UNSERIALIZE_CHARLIST(list) if (hash.contains(#list)) { list = deserializeList(hash[#list]); }
-
-static QList<char> deserializeList(QVariant hash)
-{
-    QList<char> list;
-    foreach (QVariant x, hash.toList())
-        list.append(x.toChar().toLatin1());
-    // here we go
-    return list;
 }
 
 static QVariant serializeList(QList<char> data)
@@ -511,6 +557,7 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
     UNSERIALIZE_CHARLIST(CUModes);
     UNSERIALIZE_CHARLIST(CPModes);
     UNSERIALIZE_CHARLIST(CRModes);
+    UNSERIALIZE_BOOL(_enableCap);
     UNSERIALIZE_CHARLIST(channelUserPrefixes);
     UNSERIALIZE_STRING(password);
     UNSERIALIZE_STRING(alternateNick);
@@ -530,6 +577,9 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
         this->localUserMode = UMode(hash["localUserMode"].toHash());
     if (hash.contains("localUser"))
         this->localUser = User(hash["localUser"].toHash());
+    UNSERIALIZE_STRINGLIST(_capabilitiesSubscribed);
+    UNSERIALIZE_STRINGLIST(_capabilitiesRequested);
+    UNSERIALIZE_STRINGLIST(_capabilitiesSupported);
 }
 
 QHash<QString, QVariant> Network::ToHash()
@@ -542,11 +592,15 @@ QHash<QString, QVariant> Network::ToHash()
     SERIALIZE(pingTimeout);
     SERIALIZE(pingRate);
     SERIALIZE(defaultQuit);
+    SERIALIZE(_enableCap);
     SERIALIZE(autoRejoin);
     SERIALIZE(autoIdentify);
     SERIALIZE(identifyString);
     SERIALIZE(password);
     SERIALIZE(alternateNick);
+    SERIALIZE(_capabilitiesSupported);
+    SERIALIZE(_capabilitiesSubscribed);
+    SERIALIZE(_capabilitiesRequested);
     hash.insert("CCModes", serializeList(this->CCModes));
     hash.insert("CModes", serializeList(this->CModes));
     hash.insert("CPModes", serializeList(this->CPModes));
@@ -623,15 +677,23 @@ Channel *Network::_st_InsertChannel(Channel *channel)
 void Network::OnConnected()
 {
     // We just connected to an IRC network
-    this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
-    this->TransferRaw("NICK " + this->localUser.GetNick());
-    this->lastPing = QDateTime::currentDateTime();
-    this->timerPingSend = new QTimer(this);
-    connect(this->timerPingSend, SIGNAL(timeout()), this, SLOT(OnPingSend()));
-    this->timerPingTimeout = new QTimer(this);
-    this->timerPingSend->start(this->pingRate);
-    connect(this->timerPingTimeout, SIGNAL(timeout()), this, SLOT(OnPing()));
-    this->timerPingTimeout->start(2000);
+    if (this->_enableCap)
+    {
+        // IRCv3 protocol is enabled, let's verify if ircd supports it
+        this->resetCap();
+        this->capTimeout.start(this->_capGraceTime * 1000);
+        // There is one issue with this command though. For whatever reasons IRCv3 people believe that client should
+        // send CAP END to finish negotiation, and unless client does that, it isn't allowed to login to network.
+
+        // That would be fine if CAP was actually any IRC standard, which it isn't, so any ircd server may not support it.
+        // Standards allow ircd's to ignore unknown commands, which means that in extreme case, we send CAP to ircd
+        // which never respond and we are waiting forever. In order to prevent this capTimeout is implemented with its
+        // own timer that disable IRCv3 support on server in case that it fails to respons within given grace time.
+        this->TransferRaw("CAP LS");
+    } else
+    {
+        this->standardLogin();
+    }
 }
 
 static void DebugInvalid(QString message, Parser *parser)
@@ -660,7 +722,7 @@ void Network::processIncomingRawData(QByteArray data)
     bool known = true;
     switch (parser.GetNumeric())
     {
-        case IRC_NUMERIC_PING_CHECK:
+        case IRC_NUMERIC_RAW_PING:
             if (parser.GetParameters().count() == 0)
                 this->TransferRaw("PONG", Priority_High);
             else
@@ -675,23 +737,23 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_MyInfo(&parser);
             break;
 
-        case IRC_NUMERIC_JOIN:
+        case IRC_NUMERIC_RAW_JOIN:
             this->processJoin(&parser, self_command);
             break;
 
-        case IRC_NUMERIC_PRIVMSG:
+        case IRC_NUMERIC_RAW_PRIVMSG:
             this->processPrivMsg(&parser);
             break;
 
-        case IRC_NUMERIC_NOTICE:
+        case IRC_NUMERIC_RAW_NOTICE:
             emit this->Event_NOTICE(&parser);
             break;
 
-        case IRC_NUMERIC_NICK:
+        case IRC_NUMERIC_RAW_NICK:
             this->processNick(&parser, self_command);
             break;
 
-        case IRC_NUMERIC_QUIT:
+        case IRC_NUMERIC_RAW_QUIT:
         {
             // Remove the user from all channels
             foreach (Channel *channel, this->channels)
@@ -704,7 +766,7 @@ void Network::processIncomingRawData(QByteArray data)
             }
             emit this->Event_Quit(&parser);
         }   break;
-        case IRC_NUMERIC_PART:
+        case IRC_NUMERIC_RAW_PART:
         {
             if (parser.GetParameters().count() < 1)
             {
@@ -733,12 +795,12 @@ void Network::processIncomingRawData(QByteArray data)
             }
             emit this->Event_Part(&parser, channel);
         }   break;
-        case IRC_NUMERIC_KICK:
+        case IRC_NUMERIC_RAW_KICK:
             this->processKick(&parser);
             break;
-        case IRC_NUMERIC_PONG:
+        case IRC_NUMERIC_RAW_PONG:
             break;
-        case IRC_NUMERIC_MODE:
+        case IRC_NUMERIC_RAW_MODE:
             this->processMode(&parser);
             break;
         case IRC_NUMERIC_ISUPPORT:
@@ -750,7 +812,7 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_ENDOFNAMES:
             emit this->Event_EndOfNames(&parser);
             break;
-        case IRC_NUMERIC_TOPIC:
+        case IRC_NUMERIC_RAW_TOPIC:
             this->processTopic(&parser);
             break;
         case IRC_NUMERIC_TOPICINFO:
@@ -819,6 +881,34 @@ void Network::processIncomingRawData(QByteArray data)
             this->isAway = true;
             emit this->Event_NowAway(&parser);
             break;
+        case IRC_NUMERIC_RAW_CAP:
+            this->processCap(&parser);
+            break;
+        case IRC_NUMERIC_RAW_AWAY:
+            this->processAway(&parser, self_command);
+            break;
+        case IRC_NUMERIC_ERR_INVALIDCAPCMD:
+            // If we are negotiating cap handshake right now, the ircd is clearly broken
+            // let's disable it
+            if (this->capTimeout.isActive())
+            {
+                this->capTimeout.stop();
+                this->DisableIRCv3Support();
+                // This may not work but we really should finish negotiation right here
+                this->TransferRaw("CAP END");
+                this->standardLogin();
+            }
+            break;
+        case IRC_NUMERIC_UNKNOWN:
+            // If we are negotiating cap handshake, server doesn't support it
+            if (this->capTimeout.isActive())
+            {
+                this->capTimeout.stop();
+                this->DisableIRCv3Support();
+                this->standardLogin();
+            }
+            emit this->Event_NUMERIC_UNKNOWN(&parser);
+            break;
         default:
             known = false;
             break;
@@ -830,7 +920,7 @@ void Network::processIncomingRawData(QByteArray data)
 
 void Network::processNamrpl(Parser *parser)
 {
-    // 353 GrumpyUser = #support :GrumpyUser petan|home @petan %wm-bot &OperBot
+    // 353 GrumpyUser = #support :GrumpyUser petan|home @+petan %wm-bot &OperBot
     // Server sent us an initial list of users that are in the channel
     if (parser->GetParameters().size() < 3)
     {
@@ -852,16 +942,20 @@ void Network::processNamrpl(Parser *parser)
         if (user.isEmpty())
             continue;
         char cumode = this->StartsWithCUPrefix(user);
-        char prefix = 0;
-        if (cumode != 0)
+        QList<char> cumodes;
+        QList<char> prefixes;
+        while (cumode != 0)
         {
-            prefix = user[0].toLatin1();
+            char prefix = user[0].toLatin1();
+            cumodes << cumode;
+            prefixes << prefix;
             user = user.mid(1);
+            cumode = this->StartsWithCUPrefix(user);
         }
         User ux;
         ux.SetNick(user);
-        ux.CUMode = cumode;
-        ux.ChannelPrefix = prefix;
+        ux.CUModes = cumodes;
+        ux.ChannelPrefixes = prefixes;
         channel->InsertUser(&ux);
     }
 }
@@ -928,10 +1022,12 @@ void Network::processInfo(Parser *parser)
 
 void Network::processWho(Parser *parser)
 {
-    // GrumpyUser1 #support grumpy hidden-715465F6.net.upcbroadband.cz hub.tm-irc.org GrumpyUser1 H
+    // GrumpyUser1 #support grumpy hidden-715465F6.net.upcbroadband.cz hub.tm-irc.org GrumpyUser1 H :0 GrumpyUser                    |
+    //             <channel> <user> <host>                             <server>       <nick>     <H|G>[*][@|+] :<hopcount> <real name>
     QStringList parameters = parser->GetParameters();
     bool is_away;
     Channel *channel = NULL;
+    QString gecos;
     User *user = NULL;
     if (parameters.count() < 7)
         goto finish;
@@ -945,13 +1041,19 @@ void Network::processWho(Parser *parser)
     user = channel->GetUser(parameters[5]);
     if (!user)
         goto finish;
-    user->SetRealname(parser->GetText());
+    gecos = parser->GetText();
+    if (gecos.contains(" "))
+    {
+        user->Hops = gecos.mid(0, gecos.indexOf(" ")).toInt();
+        gecos = gecos.mid(gecos.indexOf(" ") + 1);
+    }
+    user->SetRealname(gecos);
     user->SetIdent(parameters[2]);
     is_away = parameters[6].contains("G");
     user->SetHost(parameters[3]);
     if (user->IsAway != is_away)
     {
-        user->IsAway = true;
+        user->IsAway = is_away;
         emit this->Event_UserAwayStatusChange(parser, channel, user);
     }
     user->ServerName = parameters[4];
@@ -1154,31 +1256,50 @@ void Network::processMode(Parser *parser)
                     qDebug() << "IRC PARSER: Invalid user: " + parser->GetRaw();
                     continue;
                 }
+                // User mode was changed, the trick here is that some irc daemons allow users to have multiple modes
+                // so we need to figure if this user mode is higher level mode than mode that user currently posses
+                char current_mode = user->GetHighestCUMode();
                 if (sm.IsIncluding())
                 {
-                    // User mode was changed, the trick here is that some irc daemons allow users to have multiple modes
-                    // so we need to figure if this user mode is higher level mode than mode that user currently posses
-                    char current_mode = user->CUMode;
-                    if (!this->CUModes.contains(current_mode) || this->CUModes.indexOf(current_mode) > this->CUModes.indexOf(sm.Get()))
+                    if (!current_mode || !this->CUModes.contains(current_mode) || this->CUModes.indexOf(current_mode) > this->CUModes.indexOf(sm.Get()))
                     {
                         // yes this mode is higher, so let's update their current mode and also change their channel symbol
-                        user->CUMode = sm.Get();
-                        user->ChannelPrefix = this->channelUserPrefixes[this->CUModes.indexOf(sm.Get())];
+                        user->CUModes.insert(0, sm.Get());
+                        user->ChannelPrefixes.insert(0, this->channelUserPrefixes[this->CUModes.indexOf(sm.Get())]);
+                        emit this->Event_ChannelUserModeChanged(parser, channel, user);
+                    } else
+                    {
+                        // this mode is not higher but we still want to track it, however we don't know which index it's meant to be
+                        // which we need to figure out first
+                        QList<char> temp = user->CUModes;
+                        temp << sm.Get();
+                        user->CUModes = this->ModeHelper_GetSortedCUModes(temp);
+                        temp = user->ChannelPrefixes;
+                        temp << this->channelUserPrefixes[this->CUModes.indexOf(sm.Get())];
+                        user->ChannelPrefixes = this->ModeHelper_GetSortedChannelPrefixes(temp);
+                        emit this->Event_ChannelUserSubmodeChanged(parser, channel, user);
                     }
                 } else
                 {
-                    // The mode is revoked, however that matter only if user actually posses the mode, some irc servers
+                    // The mode is revoked, however that matters only if user actually posses the mode, some irc servers
                     // let you revoke mode of user who never even had it
                     // so we check if user actually have that
-                    if (sm.Get() == user->CUMode)
+                    if (sm.Get() == current_mode)
                     {
                         //! \todo Some networks allow users to have more than 1 user mode, although they don't easily actually share
                         //! that information. We should however maintain a list of modes this user posses
-                        user->CUMode = 0;
-                        user->ChannelPrefix = 0;
+                        user->CUModes.removeAt(0);
+                        user->ChannelPrefixes.removeAt(0);
+                        emit this->Event_ChannelUserModeChanged(parser, channel, user);
+                    }
+                    else if (user->CUModes.contains(sm.Get()))
+                    {
+                        // User mode was changed, but not the highest one
+                        user->ChannelPrefixes.removeAll(this->channelUserPrefixes[this->CUModes.indexOf(sm.Get())]);
+                        user->CUModes.removeAll(sm.Get());
+                        emit this->Event_ChannelUserSubmodeChanged(parser, channel, user);
                     }
                 }
-                emit this->Event_ChannelUserModeChanged(parser, channel, user);
             } else if (this->CPModes.contains(sm.Get()))
             {
                 // Ban / Exception / Invite
@@ -1234,8 +1355,11 @@ void Network::processJoin(Parser *parser, bool self_command)
         DebugInvalid("Malformed JOIN", parser);
         return;
     }
-    // On some servers channel is passed as text and on some as parameter
-    QString channel_name = parser->GetText();
+    QString channel_name;
+    // On some extremely old servers channel is passed as text and on some as parameter
+    // we don't need to do this if we are using IRCv.3 protocol
+    if (!this->_enableCap)
+        channel_name = parser->GetText();
     if (parser->GetParameters().count() > 0)
         channel_name = parser->GetParameters()[0];
     if (!channel_name.startsWith(this->channelPrefix))
@@ -1266,7 +1390,13 @@ join_emit:
         return;
     }
     // Insert this user to a channel
-    User *user = channel_p->InsertUser(parser->GetSourceUserInfo());
+    User *temp = parser->GetSourceUserInfo();
+    if (this->_enableCap && !parser->GetText().isEmpty())
+    {
+        // We can use some features of IRCv3 to prefill the user name
+        temp->SetRealname(parser->GetText());
+    }
+    User *user = channel_p->InsertUser(temp);
     emit this->Event_Join(parser, user, channel_p);
 }
 
@@ -1303,6 +1433,94 @@ void Network::processNick(Parser *parser, bool self_command)
     foreach (Channel *channel, this->channels)
         channel->ChangeNick(old_nick, new_nick);
     emit this->Event_NICK(parser, old_nick, new_nick);
+}
+
+void Network::processAway(Parser *parser, bool self_command)
+{
+    bool is_away = !parser->GetText().isEmpty();
+    QString message = parser->GetText();
+    if (self_command)
+    {
+        this->isAway = is_away;
+    }
+    // Update away status for every user in every channel
+    foreach (Channel *channel, this->channels)
+    {
+        if (channel->ContainsUser(parser->GetSourceUserInfo()->GetNick()))
+        {
+            User *user = channel->GetUser(parser->GetSourceUserInfo()->GetNick());
+            if (user->IsAway != is_away)
+            {
+                user->IsAway = is_away;
+                user->AwayMs = message;
+                emit this->Event_UserAwayStatusChange(parser, channel, user);
+            }
+        }
+    }
+    emit this->Event_AWAY(parser);
+}
+
+void Network::processCap(Parser *parser)
+{
+    QStringList params = parser->GetParameters();
+    if (params.size() < 2)
+    {
+        DebugInvalid("Wrong number of parameters for CAP message", parser);
+        return;
+    }
+    QString cap = params[1].toUpper();
+    if (cap == "LS")
+    {
+        if (params.size() > 2 && params[2] == "*")
+            this->capProcessingMultilineLS = true;
+        else
+            this->capProcessingMultilineLS = false;
+        // List of supported caps
+        this->_capabilitiesSupported = Generic::UniqueMerge(this->_capabilitiesSupported, parser->GetText().split(" "));
+        if (!this->capProcessingMultilineLS && !this->capAutoRequestFinished)
+            this->processAutoCap();
+    } else if (cap == "ACK" || cap == "NAK")
+    {
+        if (cap == "ACK")
+        {
+            this->_capabilitiesSubscribed = Generic::UniqueMerge(this->_capabilitiesSubscribed, parser->GetText().split(" "));
+            emit this->Event_CAP_ACK(parser);
+        }
+        else
+        {
+            emit this->Event_CAP_NAK(parser);
+        }
+
+        // We don't really care if server approved or rejected the change, we just continue here
+        if (this->capProcessingChangeRequest)
+        {
+            this->capProcessingChangeRequest = false;
+
+            if (!this->capAutoRequestFinished)
+            {
+                this->capAutoRequestFinished = true;
+                // finish the login
+                this->TransferRaw("CAP END");
+                this->standardLogin();
+            }
+        }
+    }
+    emit this->Event_CAP(parser);
+}
+
+void Network::standardLogin()
+{
+    this->capTimeout.stop();
+    this->_loggedIn = true;
+    this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
+    this->TransferRaw("NICK " + this->localUser.GetNick());
+    this->lastPing = QDateTime::currentDateTime();
+    this->timerPingSend = new QTimer(this);
+    connect(this->timerPingSend, SIGNAL(timeout()), this, SLOT(OnPingSend()));
+    this->timerPingTimeout = new QTimer(this);
+    this->timerPingSend->start(this->pingRate);
+    connect(this->timerPingTimeout, SIGNAL(timeout()), this, SLOT(OnPing()));
+    this->timerPingTimeout->start(2000);
 }
 
 void Network::process433(Parser *parser)
@@ -1348,6 +1566,7 @@ void Network::deleteTimers()
         this->timerPingTimeout->deleteLater();
         this->timerPingTimeout = NULL;
     }
+    this->capTimeout.stop();
     this->senderTimer.stop();
 }
 
@@ -1355,8 +1574,12 @@ void Network::initialize()
 {
     this->bytesSent = 0;
     this->bytesRcvd = 0;
+    this->_loggedIn = false;
     this->isAway = false;
     this->socket = NULL;
+    this->resetCap();
+    this->_enableCap = true;
+    this->_capGraceTime = 20;
     this->localUser.SetIdent("grumpy");
     this->localUser.SetRealname("GrumpyIRC");
     this->pingTimeout = 60;
@@ -1377,13 +1600,14 @@ void Network::initialize()
     this->channelUserPrefixes << '@' << '+';
     this->CUModes << 'o' << 'v';
     this->CModes << 'i' << 'm';
+    connect(&this->capTimeout, SIGNAL(timeout()), this, SLOT(OnCapSupportTimeout()));
+    connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
     this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
     this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
     this->MSDelayOnEmpty = 300;
     this->MSDelayOnOpen = 2000;
     this->MSWait = 800;
     this->senderTime = QDateTime::currentDateTime();
-    connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
 }
 
 void Network::freemm()
@@ -1397,6 +1621,54 @@ void Network::freemm()
     this->mprFIFO.clear();
     this->hprFIFO.clear();
     this->mutex.unlock();
+}
+
+void Network::resetCap()
+{
+    this->capAutoRequestFinished = false;
+    this->capProcessingChangeRequest = false;
+    this->capProcessingMultilineLS = false;
+    this->_capabilitiesRequested.clear();
+    this->_capabilitiesSubscribed.clear();
+    this->_capabilitiesSupported.clear();
+    this->_capabilitiesRequested << "away-notify" << "extended-join" << "multi-prefix";
+}
+
+void Network::processAutoCap()
+{
+    if (!this->_enableCap)
+    {
+        if (!this->loggedIn)
+        {
+            this->TransferRaw("CAP END");
+            this->standardLogin();
+        }
+        return;
+    }
+    // We finished processing LS of all caps, so let's subscribe to all these that we want to have
+    QString requested_list;
+    foreach (QString capability, this->_capabilitiesRequested)
+    {
+        if (!this->HasCap(capability))
+        {
+            emit this->Event_CAP_RequestedCapNotSupported(capability);
+            continue;
+        }
+        // Request the capability
+        requested_list += capability + " ";
+    }
+    requested_list = requested_list.trimmed();
+    if (requested_list.isEmpty())
+    {
+        // There is nothing to request, finish the request and connect to network
+        this->TransferRaw("CAP END");
+        this->standardLogin();
+    } else
+    {
+        // Request the caps
+        this->TransferRaw("CAP REQ :" + requested_list);
+        this->capProcessingChangeRequest = true;
+    }
 }
 
 void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)

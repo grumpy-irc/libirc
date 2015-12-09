@@ -20,6 +20,42 @@ unsigned long long SerializableItem::__rpc_currentID = 0;
 QMutex SerializableItem::__rpc_lock;
 QHash<unsigned long long, SerializableItem*> SerializableItem::__rpc_cache;
 
+QList<int> SerializableItem::DeserializeList_int(QVariant list)
+{
+    QList<int> tmp;
+    foreach(QVariant x, list.toList())
+        tmp.append(x.toInt());
+    // here we go
+    return tmp;
+}
+
+QList<QString> SerializableItem::DeserializeList_QString(QVariant list)
+{
+    QList<QString> tmp;
+    foreach(QVariant x, list.toList())
+        tmp.append(x.toString());
+    // here we go
+    return tmp;
+}
+
+QList<char> SerializableItem::DeserializeList_char(QVariant list)
+{
+    QList<char> tmp;
+    foreach(QVariant x, list.toList())
+        tmp.append(x.toChar().toLatin1());
+    // here we go
+    return tmp;
+}
+
+QList<QVariant> SerializableItem::CCharListToVariantList(QList<char> list)
+{
+    QList<QVariant> tmp;
+    foreach(char item, list)
+        tmp.append(QVariant(QChar(item)));
+
+    return tmp;
+}
+
 SerializableItem::SerializableItem()
 {
     this->__rpc_id = LIBIRC_UNKNOWN_RPC_ID;

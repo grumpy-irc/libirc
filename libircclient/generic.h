@@ -23,6 +23,8 @@ namespace libircclient
     namespace Generic
     {
         LIBIRCCLIENTSHARED_EXPORT QString ErrorCode2String(QAbstractSocket::SocketError type);
+        //! Merge unique items in 2 lists
+        LIBIRCCLIENTSHARED_EXPORT QList<QString> UniqueMerge(QList<QString> a, QList<QString> b);
     }
 }
 

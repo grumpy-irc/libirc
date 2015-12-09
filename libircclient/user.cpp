@@ -16,59 +16,67 @@ using namespace libircclient;
 
 User::User()
 {
-    this->ChannelPrefix = 0;
-    this->CUMode = 0;
+    this->Hops = 0;
     this->IsAway = false;
 }
 
 User::User(QHash<QString, QVariant> hash)
 {
-    this->ChannelPrefix = 0;
+    this->Hops = 0;
     this->IsAway = false;
-    this->CUMode = 0;
     this->LoadHash(hash);
 }
 
 User::User(QString user) : libirc::User(user)
 {
+    this->Hops = 0;
     this->IsAway = false;
-    this->ChannelPrefix = 0;
-    this->CUMode = 0;
 }
 
 User::User(User *user) : libirc::User(user)
 {
     this->IsAway = user->IsAway;
-    this->ChannelPrefix = user->ChannelPrefix;
-    this->CUMode = user->CUMode;
+    this->Hops = user->Hops;
+    this->ChannelPrefixes = user->ChannelPrefixes;
+    this->CUModes = user->CUModes;
 }
 
 QString User::GetPrefixedNick()
 {
     QString nick = this->GetNick();
-    if (this->ChannelPrefix != 0)
-        nick = QChar(this->ChannelPrefix) + nick;
+    if (!this->ChannelPrefixes.isEmpty())
+        nick = QChar(this->ChannelPrefixes[0]) + nick;
 
     return nick;
+}
+
+char User::GetHighestCUMode()
+{
+    if (this->CUModes.isEmpty())
+        return 0;
+
+    // Get a mode with index 0 as that is meant to be highest
+    return this->CUModes[0];
 }
 
 void User::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::User::LoadHash(hash);
-    UNSERIALIZE_CCHAR(ChannelPrefix);
+    UNSERIALIZE_CHARLIST(ChannelPrefixes);
     UNSERIALIZE_STRING(AwayMs);
+    //UNSERIALIZE_INT(Hops);
     UNSERIALIZE_BOOL(IsAway);
     UNSERIALIZE_STRING(ServerName);
-    UNSERIALIZE_CCHAR(CUMode);
+    UNSERIALIZE_CHARLIST(CUModes);
 }
 
 QHash<QString, QVariant> User::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::User::ToHash();
-    SERIALIZE_CCHAR(ChannelPrefix);
+    SERIALIZE_CHARLIST(ChannelPrefixes);
+    SERIALIZE_CHARLIST(CUModes);
     SERIALIZE(ServerName);
     SERIALIZE(IsAway);
-    SERIALIZE_CCHAR(CUMode);
     SERIALIZE(AwayMs);
     return hash;
 }
