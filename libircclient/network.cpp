@@ -100,10 +100,14 @@ void Network::Disconnect(QString reason)
     {
         this->scheduling = false;
         this->TransferRaw("QUIT :" + reason);
-        this->socket->close();
+        if (this->socket)
+            this->socket->close();
     }
-    this->socket->deleteLater();
-    this->socket = NULL;
+    if (this->socket)
+    {
+        this->socket->deleteLater();
+        this->socket = NULL;
+    }
     this->deleteTimers();
     this->freemm();
 }
