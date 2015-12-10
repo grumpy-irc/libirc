@@ -1357,7 +1357,7 @@ void Network::processJoin(Parser *parser, bool self_command)
     }
     // On some extremely old servers channel is passed as text and on some as parameter
     // we don't need to do this if we are using IRCv.3 protocol
-    QString channel_name = channel_name = parser->GetText();;
+    QString channel_name = parser->GetText();
     if (parser->GetParameters().count() > 0)
         channel_name = parser->GetParameters()[0];
     if (!channel_name.startsWith(this->channelPrefix))
