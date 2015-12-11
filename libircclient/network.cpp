@@ -1161,7 +1161,7 @@ void Network::processKick(Parser *parser)
         qDebug() << "IRC PARSER: Invalid KICK: " + parser->GetRaw();
         return;
     }
-    bool self_command = parser->GetParameters()[0].toLower() == this->GetNick().toLower();
+    bool self_command = parser->GetParameters()[1].toLower() == this->GetNick().toLower();
     Channel *channel = this->GetChannel(parser->GetParameters()[0]);
     if (self_command)
     {
