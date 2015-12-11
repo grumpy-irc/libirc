@@ -296,6 +296,7 @@ namespace libircclient
             QString password;
 
         private:
+            void updateSelfAway(Parser *parser, bool status, QString text);
             void processIncomingRawData(QByteArray data);
             void processNamrpl(Parser *parser);
             void process433(Parser *parser);

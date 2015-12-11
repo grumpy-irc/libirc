@@ -376,6 +376,24 @@ void Network::closeError(QString error, int code)
     emit this->Event_Disconnected();
 }
 
+void Network::updateSelfAway(Parser *parser, bool status, QString text)
+{
+    // we need to scan all channels and update the status
+    foreach (Channel *channel, this->channels)
+    {
+        if (channel->ContainsUser(this->GetNick()))
+        {
+            User *user = channel->GetUser(this->GetNick());
+            if (user->IsAway != status)
+            {
+                user->IsAway = status;
+                user->AwayMs = text;
+                emit this->Event_UserAwayStatusChange(parser, channel, user);
+            }
+        }
+    }
+}
+
 void Network::OnError(QAbstractSocket::SocketError er)
 {
     if (this->socket == NULL)
@@ -879,10 +897,13 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_UNAWAY:
             this->isAway = false;
+            // Update the status of our own user in every channel
+            this->updateSelfAway(&parser, false, "");
             emit this->Event_UnAway(&parser);
             break;
         case IRC_NUMERIC_NOWAWAY:
             this->isAway = true;
+            this->updateSelfAway(&parser, true, this->awayMessage);
             emit this->Event_NowAway(&parser);
             break;
         case IRC_NUMERIC_RAW_CAP:
