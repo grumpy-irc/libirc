@@ -104,8 +104,11 @@ namespace libircclient
             virtual void RequestPart(Channel *channel, Priority priority = Priority_Normal);
             virtual void RequestNick(QString nick, Priority priority = Priority_Normal);
             virtual void Identify(QString Nickname = "", QString Password = "", Priority priority = Priority_Normal);
+            // IRCv3
             virtual void EnableIRCv3Support();
             virtual void DisableIRCv3Support();
+            virtual QList<QString> GetSupportedCaps();
+            virtual QList<QString> GetSubscribedCaps();
             virtual bool ContainsChannel(QString channel_name);
             //////////////////////////////////////////////////////////////////////////////////////////
             // Synchronization tools

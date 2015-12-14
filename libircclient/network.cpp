@@ -289,6 +289,16 @@ void Network::DisableIRCv3Support()
     this->_enableCap = false;
 }
 
+QList<QString> Network::GetSupportedCaps()
+{
+    return this->_capabilitiesSupported;
+}
+
+QList<QString> Network::GetSubscribedCaps()
+{
+    return this->_capabilitiesSubscribed;
+}
+
 QString Network::GetServerAddress()
 {
     return this->hostname;
