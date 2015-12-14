@@ -934,6 +934,9 @@ void Network::processIncomingRawData(QByteArray data)
             }
             emit this->Event_NUMERIC_UNKNOWN(&parser);
             break;
+        case IRC_NUMERIC_NICKISNOTAVAILABLE:
+            this->process433(&parser);
+            break;
         default:
             known = false;
             break;

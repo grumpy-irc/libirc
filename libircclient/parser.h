@@ -80,6 +80,7 @@
 #define IRC_NUMERIC_ERR_INVALIDCAPCMD  410
 #define IRC_NUMERIC_UNKNOWN            421
 #define IRC_NUMERIC_NICKUSED           433
+#define IRC_NUMERIC_NICKISNOTAVAILABLE  437
 
 // 353 GrumpyUser = #support :GrumpyUser petan|home @petan %wm-bot &OperBot
 
