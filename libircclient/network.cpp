@@ -289,6 +289,16 @@ void Network::DisableIRCv3Support()
     this->_enableCap = false;
 }
 
+QList<QString> Network::GetSupportedCaps()
+{
+    return this->_capabilitiesSupported;
+}
+
+QList<QString> Network::GetSubscribedCaps()
+{
+    return this->_capabilitiesSubscribed;
+}
+
 QString Network::GetServerAddress()
 {
     return this->hostname;
@@ -1245,7 +1255,10 @@ void Network::processMode(Parser *parser)
     if (entity.toLower() == this->localUser.GetNick().toLower())
     {
         // Someone changed our own UMode
-        this->localUserMode.SetMode(parser->GetText());
+        QString mode = parser->GetText();
+        if (mode.isEmpty() && parser->GetParameters().count() > 1)
+            mode = parser->GetParameters()[1];
+        this->localUserMode.SetMode(mode);
     } else if (entity.startsWith(this->channelPrefix))
     {
         // Someone changed a channel mode
