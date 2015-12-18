@@ -133,6 +133,8 @@ void Parser::obtainNumeric()
         this->_numeric = IRC_NUMERIC_RAW_CAP;
     else if (this->command == "METADATA")
         this->_numeric = IRC_NUMERIC_RAW_METADATA;
+    else if (this->command == "INVITE")
+        this->_numeric = IRC_NUMERIC_RAW_INVITE;
 }
 
 bool Parser::IsValid()

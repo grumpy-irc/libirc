@@ -34,6 +34,7 @@
 #define IRC_NUMERIC_RAW_CAP            -12
 #define IRC_NUMERIC_RAW_AWAY           -13
 #define IRC_NUMERIC_RAW_METADATA       -14
+#define IRC_NUMERIC_RAW_INVITE         -15
 #define IRC_NUMERIC_RAW_PONG           0
 #define IRC_NUMERIC_WELCOME            1
 #define IRC_NUMERIC_YOURHOST           2

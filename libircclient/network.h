@@ -77,18 +77,21 @@ namespace libircclient
             virtual void SetAway(bool away, QString message = "");
             //! This function can be used to change the default nickname that will be requested upon connection to server
             //! subsequent calls of this function while on active IRC connection will be ignored.
-            virtual void SetDefaultNick(QString nick);
-            virtual void SetDefaultIdent(QString ident);
-            virtual void SetDefaultUsername(QString realname);
-            virtual bool IsSSL();
+            virtual void    SetDefaultNick(QString nick);
+            virtual void    SetDefaultIdent(QString ident);
+            virtual void    SetDefaultUsername(QString realname);
+            virtual bool    IsSSL();
             virtual QString GetNick();
             virtual QString GetHost();
             virtual QString GetServerVersion();
-            virtual int GetTimeout() const;
-            unsigned int GetPort();
+            virtual int     GetTimeout() const;
+            unsigned int    GetPort();
             virtual QString GetIdent();
             virtual QString GetServerAddress();
+            virtual User    *GetLocalUserInfo();
             virtual QString GetHelpForMode(char mode, QString missing);
+            virtual Channel *GetChannel(QString channel_name);
+            virtual QList<Channel *> GetChannels();
             virtual void SetPassword(QString Password);
             virtual void TransferRaw(QString raw, Priority priority = Priority_Normal);
             virtual int SendMessage(QString text, Channel *channel, Priority priority = Priority_Normal);
@@ -126,9 +129,6 @@ namespace libircclient
              */
             Channel *_st_InsertChannel(libircclient::Channel *channel);
             //////////////////////////////////////////////////////////////////////////////////////////
-            virtual Channel *GetChannel(QString channel_name);
-            virtual QList<Channel *> GetChannels();
-            virtual User *GetLocalUserInfo();
             /*!
              * \brief StartsWithCUPrefix checks the user name whether it starts with a CUMode prefix (such as @)
              * \param user_name Name of user including the prefix (@channel_op)
@@ -365,7 +365,6 @@ namespace libircclient
             QString alternateNick;
             int alternateNickNumber;
             QString awayMessage;
-            bool isAway;
             char channelPrefix;
             Server *server;
             QList<User*> users;

@@ -114,7 +114,7 @@ void Network::Disconnect(QString reason)
 
 bool libircclient::Network::IsAway() const
 {
-    return this->isAway;
+    return this->localUser.IsAway;
 }
 
 bool Network::IsConnected()
@@ -575,7 +575,6 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
 {
     libirc::Network::LoadHash(hash);
     UNSERIALIZE_STRING(awayMessage);
-    UNSERIALIZE_BOOL(isAway);
     UNSERIALIZE_STRING(hostname);
     UNSERIALIZE_UINT(port);
     UNSERIALIZE_INT(pingTimeout);
@@ -617,7 +616,6 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
 QHash<QString, QVariant> Network::ToHash()
 {
     QHash<QString, QVariant> hash = libirc::Network::ToHash();
-    SERIALIZE(isAway);
     SERIALIZE(awayMessage);
     SERIALIZE(hostname);
     SERIALIZE(port);
@@ -756,9 +754,9 @@ void Network::processIncomingRawData(QByteArray data)
     {
         case IRC_NUMERIC_RAW_PING:
             if (parser.GetParameters().count() == 0)
-                this->TransferRaw("PONG", Priority_High);
+                this->TransferRaw("PONG", Priority_RealTime);
             else
-                this->TransferRaw("PONG :" + parser.GetParameters()[0], Priority_High);
+                this->TransferRaw("PONG :" + parser.GetParameters()[0], Priority_RealTime);
             break;
         case IRC_NUMERIC_MYINFO:
             // Process the information about network
@@ -906,13 +904,13 @@ void Network::processIncomingRawData(QByteArray data)
             emit this->Event_EndOfBans(&parser);
             break;
         case IRC_NUMERIC_UNAWAY:
-            this->isAway = false;
+            this->localUser.IsAway = false;
             // Update the status of our own user in every channel
             this->updateSelfAway(&parser, false, "");
             emit this->Event_UnAway(&parser);
             break;
         case IRC_NUMERIC_NOWAWAY:
-            this->isAway = true;
+            this->localUser.IsAway = true;
             this->updateSelfAway(&parser, true, this->awayMessage);
             emit this->Event_NowAway(&parser);
             break;
@@ -1480,7 +1478,7 @@ void Network::processAway(Parser *parser, bool self_command)
     QString message = parser->GetText();
     if (self_command)
     {
-        this->isAway = is_away;
+        this->localUser.IsAway = is_away;
     }
     // Update away status for every user in every channel
     foreach (Channel *channel, this->channels)
@@ -1614,7 +1612,6 @@ void Network::initialize()
     this->bytesSent = 0;
     this->bytesRcvd = 0;
     this->_loggedIn = false;
-    this->isAway = false;
     this->socket = NULL;
     this->resetCap();
     this->_enableCap = true;
