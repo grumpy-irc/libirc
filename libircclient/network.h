@@ -108,6 +108,7 @@ namespace libircclient
             virtual void RequestNick(QString nick, Priority priority = Priority_Normal);
             virtual void Identify(QString Nickname = "", QString Password = "", Priority priority = Priority_Normal);
             // IRCv3
+            virtual bool SupportsIRCv3() const;
             virtual void EnableIRCv3Support();
             virtual void DisableIRCv3Support();
             virtual QList<QString> GetSupportedCaps();
@@ -226,6 +227,7 @@ namespace libircclient
             void Event_EndOfInvites(libircclient::Parser *parser);
             void Event_CPMInserted(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
             void Event_CPMRemoved(libircclient::Parser *parser, libircclient::ChannelPMode mode, libircclient::Channel *channel);
+            void Event_INVITE(libircclient::Parser *parser);
 
             // Server related
             void Event_EndOfNames(libircclient::Parser *parser);

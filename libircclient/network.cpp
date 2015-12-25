@@ -279,6 +279,11 @@ void Network::Identify(QString Nickname, QString Password, Priority priority)
     this->TransferRaw(ident_line, priority);
 }
 
+bool libircclient::Network::SupportsIRCv3() const
+{
+    return this->_enableCap;
+}
+
 void Network::EnableIRCv3Support()
 {
     this->_enableCap = true;
@@ -944,6 +949,9 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_NICKISNOTAVAILABLE:
             this->process433(&parser);
+            break;
+        case IRC_NUMERIC_RAW_INVITE:
+            emit this->Event_INVITE(&parser);
             break;
         default:
             known = false;
