@@ -169,6 +169,11 @@ QHash<QString, User *> Channel::GetUsers() const
     return this->_users;
 }
 
+int Channel::GetUserCount()
+{
+    return this->_users.count();
+}
+
 User *Channel::GetUser(QString user)
 {
     user = user.toLower();

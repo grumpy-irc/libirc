@@ -47,6 +47,7 @@ namespace libircclient
             void SetNetwork(Network *network);
             void ClearUsers();
             QHash<QString, User *> GetUsers() const;
+            int GetUserCount();
             User *GetUser(QString user);
             QDateTime GetMTime();
             void SetMTime(QDateTime tm);
