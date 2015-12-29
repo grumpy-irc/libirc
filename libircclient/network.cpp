@@ -1571,6 +1571,7 @@ void Network::standardLogin()
     this->timerPingSend->start(this->pingRate);
     connect(this->timerPingTimeout, SIGNAL(timeout()), this, SLOT(OnPing()));
     this->timerPingTimeout->start(2000);
+    emit this->Event_Connected();
 }
 
 void Network::process433(Parser *parser)
