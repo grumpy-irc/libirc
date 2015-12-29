@@ -93,6 +93,7 @@ namespace libircclient
             virtual Channel *GetChannel(QString channel_name);
             virtual QList<Channel *> GetChannels();
             virtual void SetPassword(QString Password);
+            virtual void RequestJoin(QString name, Priority priority = Priority_Normal);
             virtual void TransferRaw(QString raw, Priority priority = Priority_Normal);
             virtual int SendMessage(QString text, Channel *channel, Priority priority = Priority_Normal);
             virtual int SendMessage(QString text, User *user, Priority priority = Priority_Normal);

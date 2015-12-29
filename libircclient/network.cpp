@@ -350,6 +350,11 @@ void Network::SetPassword(QString Password)
     this->password = Password;
 }
 
+void Network::RequestJoin(QString name, Priority priority)
+{
+    this->TransferRaw("JOIN " + name, priority);
+}
+
 void Network::OnPingSend()
 {
     this->TransferRaw("PING :" + this->GetServerAddress(), libircclient::Priority_High);
