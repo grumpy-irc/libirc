@@ -99,7 +99,7 @@ void Network::Disconnect(QString reason)
     if (this->IsConnected())
     {
         this->scheduling = false;
-        this->TransferRaw("QUIT :" + reason);
+        this->TransferRaw("QUIT :" + reason, Priority_RealTime);
         if (this->socket)
             this->socket->close();
     }
