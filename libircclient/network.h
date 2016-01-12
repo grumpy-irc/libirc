@@ -14,6 +14,7 @@
 #define NETWORK_H
 
 #include "../libirc/network.h"
+#include "priority.h"
 #include "user.h"
 #include "mode.h"
 #include <QList>
@@ -42,14 +43,6 @@ namespace libirc
 
 namespace libircclient
 {
-    enum Priority
-    {
-        Priority_RealTime = 3,
-        Priority_High = 2,
-        Priority_Normal = 1,
-        Priority_Low = 0
-    };
-
     enum Encoding
     {
         EncodingUTF8

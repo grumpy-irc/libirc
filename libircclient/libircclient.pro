@@ -30,9 +30,15 @@ HEADERS += user.h\
     server.h \
     network.h \
     parser.h \
-    generic.h
+    generic.h \
+    priority.h
 
 unix {
     target.path = /usr/lib
     INSTALLS += target
 }
+
+unix:!macx: LIBS += -L$$PWD/../build-libirc-Desktop-Debug/ -llibirc
+
+INCLUDEPATH += $$PWD/../build-libirc-Desktop-Debug
+DEPENDPATH += $$PWD/../build-libirc-Desktop-Debug
