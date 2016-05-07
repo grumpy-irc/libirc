@@ -82,6 +82,7 @@ namespace libircclient
             virtual QString GetIdent();
             virtual QString GetServerAddress();
             virtual User    *GetLocalUserInfo();
+            virtual void    SetHelpForMode(char mode, QString message);
             virtual QString GetHelpForMode(char mode, QString missing);
             virtual Channel *GetChannel(QString channel_name);
             virtual QList<Channel *> GetChannels();

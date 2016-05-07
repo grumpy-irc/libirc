@@ -335,6 +335,14 @@ int Network::SendCtcp(QString name, QString text, QString target, Priority prior
     return SUCCESS;
 }
 
+void Network::SetHelpForMode(char mode, QString message)
+{
+    if (this->ChannelModeHelp.contains(mode))
+        this->ChannelModeHelp[mode] = message;
+    else
+        this->ChannelModeHelp.insert(mode, message);
+}
+
 void Network::OnPing()
 {
     // Check ping timeout
