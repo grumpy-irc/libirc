@@ -1655,8 +1655,8 @@ void Network::initialize()
     this->ResolveOnNickConflicts = true;
     this->loggedIn = false;
     // This is overriden for every server that is following IRC standards
-    this->channelUserPrefixes << '@' << '+';
-    this->CUModes << 'o' << 'v';
+    this->channelUserPrefixes << '~' << '&' << '@' << '%' << '+';
+    this->CUModes << 'q' << 'a' << 'o' << 'h' << 'v';
     this->CModes << 'i' << 'm';
     connect(&this->capTimeout, SIGNAL(timeout()), this, SLOT(OnCapSupportTimeout()));
     connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
