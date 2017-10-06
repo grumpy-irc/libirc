@@ -22,7 +22,7 @@ namespace libircclient
         public:
             static IRCEventHandler *EventHandler;
             IRCEventHandler();
-            ~IRCEventHandler();
+            virtual ~IRCEventHandler();
 
     };
 }
