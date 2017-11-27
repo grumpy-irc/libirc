@@ -462,7 +462,11 @@ char Network::StartsWithCUPrefix(QString user_name)
         return 0;
     char first_symbol = user_name[0].toLatin1();
     if (this->channelUserPrefixes.contains(first_symbol))
-        return this->CUModes[this->channelUserPrefixes.indexOf(first_symbol)];
+    {
+        int index = this->channelUserPrefixes.indexOf(first_symbol);
+        if (index < this->CUModes.count())
+            return this->CUModes[index];
+    }
     return 0;
 }
 
