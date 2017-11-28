@@ -17,6 +17,7 @@
 #include "server.h"
 #include "channel.h"
 #include "parser.h"
+#include "networkmodehelp.h"
 #include "generic.h"
 #include "../libirc/serveraddress.h"
 #include "../libirc/error_code.h"
@@ -786,6 +787,8 @@ void Network::processIncomingRawData(QByteArray data)
                 break;
             this->server->SetName(parser.GetParameters()[1]);
             this->server->SetVersion(parser.GetParameters()[2]);
+            this->ChannelModeHelp = NetworkModeHelp::GetChannelModeHelp(this->server->GetVersion());
+            this->UserModeHelp = NetworkModeHelp::GetUserModeHelp(this->server->GetVersion());
             emit this->Event_MyInfo(&parser);
             break;
 
@@ -1664,8 +1667,7 @@ void Network::initialize()
     this->CModes << 'i' << 'm';
     connect(&this->capTimeout, SIGNAL(timeout()), this, SLOT(OnCapSupportTimeout()));
     connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
-    this->ChannelModeHelp.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
-    this->ChannelModeHelp.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
+    this->ChannelModeHelp = NetworkModeHelp::GetChannelModeHelp("unknown");
     this->MSDelayOnEmpty = 300;
     this->MSDelayOnOpen = 2000;
     this->MSWait = 800;
