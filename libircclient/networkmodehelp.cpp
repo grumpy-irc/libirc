@@ -35,26 +35,11 @@ QHash<char, QString> NetworkModeHelp::GetChannelModeHelp(QString ircd)
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan :                       (For more info on extended bantypes, see /HELPOP EXTBANS)
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : e <nick!ident@host> = Overrides a ban for matching users [h]
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : f <floodparams> = Flood protection (for more info see /HELPOP CHMODEF) [o]
-                (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : G = Filters out all Bad words in messages with <censored> [o]
-                (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : i = A user must be invited to join the channel [h]
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : I <nick!ident@host> = Overrides +i for matching users [h]
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : j <joins:sec> = Throttle joins per-user to 'joins' per 'sec' seconds [o]
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : k <key> = Users must specify <key> to join [h]
-                (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : K = /KNOCK is not allowed [o]
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : L <chan2> = Channel link (If +l is full, the next user will auto-join <chan2>) [q]
                 (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : l <number of max users> = Channel may hold at most <number> of users [o]
-                (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : n = Users outside the channel can not send PRIVMSGs to the channel [h]
-                (Tue Nov 28 16:50:00 2017) :hub.tm-irc.org 292 petan : O = IRC Operator only channel (settable by IRCops)
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : p = Private channel [o]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : Q = No kicks allowed [o]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : R = Only registered (+r) users may join the channel [o]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : r = The channel is registered (settable by services only)
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : s = Secret channel [o]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : S = Strips mIRC color codes [o]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : T = No NOTICEs allowed in the channel [o]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : t = Only +hoaq may change the topic [h]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : u = Auditorium mode (/names and /who #channel only show channel ops) [q]
-                (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : V = /INVITE is not allowed [o]
                 (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : z = Only Clients on a Secure Connection (SSL) can join [o]
                 (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan : Z = All users on the channel are on a Secure connection (SSL) [server]
                 (Tue Nov 28 16:50:01 2017) :hub.tm-irc.org 292 petan :     (This mode is set/unset by the server. Only if the channel is also +z)
@@ -69,6 +54,20 @@ QHash<char, QString> NetworkModeHelp::GetChannelModeHelp(QString ircd)
         result['m'] = "Moderated channel (only +vhoaq users may speak) [h]";
         result.insert('M', "Must be using a registered nick (+r), or have voice access to talk [o]");
         result.insert('N', "No Nickname changes are permitted in the channel [o]");
+        result.insert('n', "Users outside the channel can not send PRIVMSGs to the channel [h]");
+        result.insert('O', "IRC Operator only channel (settable by IRCops)");
+        result.insert('p', "Private channel [o]");
+        result.insert('Q', "No kicks allowed [o]");
+        result.insert('R', "Only registered (+r) users may join the channel [o]");
+        result.insert('r', "The channel is registered (settable by services only)");
+        result.insert('s', "Secret channel [o]");
+        result.insert('S', "Strips mIRC color codes [o]");
+        result.insert('T', "No NOTICEs allowed in the channel [o]");
+        result.insert('t', "Only +hoaq may change the topic [h]");
+        result.insert('u', "Auditorium mode (/names and /who #channel only show channel ops) [q]");
+        result.insert('V', "/INVITE is not allowed [o]");
+        result.insert('z', "Only Clients on a Secure Connection (SSL) can join [o]");
+
     } else if (ircd.startsWith("ircd-seven-1"))
     {
         result.insert('n', "No external messages.  Only channel members may talk in the channel.");
