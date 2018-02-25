@@ -21,6 +21,53 @@ QHash<char, QString> NetworkModeHelp::GetUserModeHelp(QString ircd)
     return result;
 }
 
+QHash<char, QString> ircd_seven(QHash<char, QString> result)
+{
+    result.insert('n', "No external messages.  Only channel members may talk in the channel.");
+    result['t'] = "Ops Topic.  Only opped (+o) users may set the topic.";
+    result.insert('s', "Secret.  Channel will not be shown in /whois and /list etc.");
+    result.insert('p', "Private.  Disables /knock to the channel.");
+    result['m'] = "Moderated.  Only opped/voiced users may talk in channel.";
+    result['i'] = "Invite only.  Users need to be /invite'd or match a +I to join the channel.";
+    result.insert('r', "Registered users only.  Only users identified to services may join.");
+    result.insert('c', "No color.  All color codes in messages are stripped.");
+    result.insert('g', "Free invite.  Everyone may invite users.  Significantly weakens +i control.");
+    result.insert('z', "Op moderated.  Messages blocked by +m, +b and +q are instead sent to ops.");
+    result.insert('L', "Large ban list.  Increase maximum number of +beIq entries. Only settable by opers.");
+    result.insert('P', "Permanent.  Channel does not disappear when empty.  Only settable by opers.");
+    result.insert('F', "Free target.  Anyone may set forwards to this (otherwise ops are necessary).");
+    result.insert('Q', "Disable forward.  Users cannot be forwarded to the channel (however, new forwards can still be set subject to +F).");
+    result.insert('C', "Disable CTCP. All CTCP messages to the channel, except ACTION, are disallowed.");
+    return result;
+}
+
+QHash<char, QString> unrealircd4(QHash<char, QString> result)
+{
+    result.insert('c' ,"Block messages containing mIRC color codes [o]");
+    result.insert('C', "No CTCPs allowed in the channel [h]");
+    result.insert('D', "Delays someone's JOIN message until that person speaks. Chanops and higher, opers and ulines/services are exempt.  [o]");
+    result.insert('G', "Filters out all Bad words in messages with <censored> [o]");
+    result['i'] = "A user must be invited to join the channel [h]";
+    result.insert('K', "/KNOCK is not allowed [o]");
+    result['m'] = "Moderated channel (only +vhoaq users may speak) [h]";
+    result.insert('M', "Must be using a registered nick (+r), or have voice access to talk [h]");
+    result.insert('N', "No Nickname changes are permitted in the channel [h]");
+    result.insert('n', "Users outside the channel can not send PRIVMSGs to the channel [h]");
+    result.insert('O', "IRC Operator only channel (settable by IRCops)");
+    result.insert('p', "Private channel [o]");
+    result.insert('Q', "No kicks allowed [o]");
+    result.insert('R', "Only registered (+r) users may join the channel [o]");
+    result.insert('r', "The channel is registered (settable by services only)");
+    result.insert('s', "Secret channel [o]");
+    result.insert('S', "Strips mIRC color codes [o]");
+    result.insert('T', "No NOTICEs allowed in the channel [o]");
+    result.insert('t', "Only +hoaq may change the topic [h]");
+    result.insert('V', "/INVITE is not allowed [o]");
+    result.insert('Z', "All users on the channel are on a Secure connection (SSL) [server] (This mode is set/unset by the server. Only if the channel is also +z)");
+    result.insert('z', "Only Clients on a Secure Connection (SSL) can join [o]");
+    return result;
+}
+
 QHash<char, QString> NetworkModeHelp::GetChannelModeHelp(QString ircd)
 {
     QHash<char, QString> result;
@@ -68,23 +115,12 @@ QHash<char, QString> NetworkModeHelp::GetChannelModeHelp(QString ircd)
         result.insert('V', "/INVITE is not allowed [o]");
         result.insert('z', "Only Clients on a Secure Connection (SSL) can join [o]");
 
+    } else if (ircd.startsWith("UnrealIRCd-4"))
+    {
+        result = unrealircd4(result);
     } else if (ircd.startsWith("ircd-seven-1"))
     {
-        result.insert('n', "No external messages.  Only channel members may talk in the channel.");
-        result['t'] = "Ops Topic.  Only opped (+o) users may set the topic.";
-        result.insert('s', "Secret.  Channel will not be shown in /whois and /list etc.");
-        result.insert('p', "Private.  Disables /knock to the channel.");
-        result['m'] = "Moderated.  Only opped/voiced users may talk in channel.";
-        result['i'] = "Invite only.  Users need to be /invite'd or match a +I to join the channel.";
-        result.insert('r', "Registered users only.  Only users identified to services may join.");
-        result.insert('c', "No color.  All color codes in messages are stripped.");
-        result.insert('g', "Free invite.  Everyone may invite users.  Significantly weakens +i control.");
-        result.insert('z', "Op moderated.  Messages blocked by +m, +b and +q are instead sent to ops.");
-        result.insert('L', "Large ban list.  Increase maximum number of +beIq entries. Only settable by opers.");
-        result.insert('P', "Permanent.  Channel does not disappear when empty.  Only settable by opers.");
-        result.insert('F', "Free target.  Anyone may set forwards to this (otherwise ops are necessary).");
-        result.insert('Q', "Disable forward.  Users cannot be forwarded to the channel (however, new forwards can still be set subject to +F).");
-        result.insert('C', "Disable CTCP. All CTCP messages to the channel, except ACTION, are disallowed.");
+        result = ircd_seven(result);
     }
 
     return result;
