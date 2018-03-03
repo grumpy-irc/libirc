@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2018
 
 #ifndef NETWORK_H
 #define NETWORK_H
@@ -232,12 +232,23 @@ namespace libircclient
             void Event_MOTD(libircclient::Parser *parser);
             void Event_Mode(libircclient::Parser *parser);
             void Event_NickCollision(libircclient::Parser *parser);
-            void Event_WhoisInfo(libircclient::Parser *parser);
             void Event_INFO(libircclient::Parser *parser);
             //! IRC_NUMERIC_MYINFO
             void Event_MyInfo(libircclient::Parser *parser);
             void Event_Welcome(libircclient::Parser *parser);
             void Event_ISUPPORT(libircclient::Parser *parser);
+
+            // Whois
+            void Event_WhoisUser(libircclient::Parser *parser, libircclient::User *user);
+            void Event_WhoisOperator(libircclient::Parser *parser);
+            void Event_WhoisIdle(libircclient::Parser *parser, unsigned int seconds_idle, QDateTime signon_time);
+            void Event_WhoisRegNick(libircclient::Parser *parser);
+            void Event_WhoisChannels(libircclient::Parser *parser);
+            void Event_WhoisServer(libircclient::Parser *parser);
+            void Event_WhoisEnd(libircclient::Parser *parser);
+            void Event_WhoisSpecial(libircclient::Parser *parser);
+            void Event_WhoisAccount(libircclient::Parser *parser);
+            void Event_WhoisSecure(libircclient::Parser *parser);
 
             // Messaging
             void Event_PRIVMSG(libircclient::Parser *parser);
@@ -254,6 +265,7 @@ namespace libircclient
             void Event_UnAway(libircclient::Parser *parser);
             void Event_NowAway(libircclient::Parser *parser);
             void Event_AWAY(libircclient::Parser *parser);
+            void Event_RplAway(libircclient::Parser *parser);
 
             // IRCv3
             void Event_CAP(libircclient::Parser *parser);
@@ -314,6 +326,8 @@ namespace libircclient
             void processNick(Parser *parser, bool self_command);
             void processAway(Parser *parser, bool self_command);
             void processCap(Parser *parser);
+            void processWhoisUser(Parser &parser);
+            void processWhoisIdle(Parser &parser);
             void standardLogin();
             void deleteTimers();
             void initialize();

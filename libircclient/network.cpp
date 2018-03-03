@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2018
 
 #include <QtNetwork>
 #include <QAbstractSocket>
@@ -870,6 +870,39 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_RAW_TOPIC:
             this->processTopic(&parser);
             break;
+        case IRC_NUMERIC_WHOISUSER:
+            this->processWhoisUser(parser);
+            break;
+        case IRC_NUMERIC_WHOISIDLE:
+            this->processWhoisIdle(parser);
+            break;
+        case IRC_NUMERIC_WHOISOPERATOR:
+            emit this->Event_WhoisOperator(&parser);
+            break;
+        case IRC_NUMERIC_WHOISREGNICK:
+            emit this->Event_WhoisRegNick(&parser);
+            break;
+        case IRC_NUMERIC_WHOISCHANNELS:
+            emit this->Event_WhoisChannels(&parser);
+            break;
+        case IRC_NUMERIC_WHOISSERVER:
+            emit this->Event_WhoisServer(&parser);
+            break;
+        case IRC_NUMERIC_ENDOFWHOIS:
+            emit this->Event_WhoisEnd(&parser);
+            break;
+        case IRC_NUMERIC_AWAY:
+            emit this->Event_RplAway(&parser);
+            break;
+        case IRC_NUMERIC_WHOISSECURE:
+            emit this->Event_WhoisSecure(&parser);
+            break;
+        case IRC_NUMERIC_WHOISSPECIAL:
+            emit this->Event_WhoisSpecial(&parser);
+            break;
+        case IRC_NUMERIC_WHOISACCOUNT:
+            emit this->Event_WhoisAccount(&parser);
+            break;
         case IRC_NUMERIC_TOPICINFO:
         {
             if (parser.GetParameters().count() < 2)
@@ -905,7 +938,7 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_WHOREPLY:
             this->processWho(&parser);
             break;
-        case IRC_NUMERIC_WHOEND:
+        case IRC_NUMERIC_ENDOFWHO:
             // 315
             emit this->Event_EndOfWHO(&parser);
             break;
@@ -1571,6 +1604,39 @@ void Network::processCap(Parser *parser)
         }
     }
     emit this->Event_CAP(parser);
+}
+
+void Network::processWhoisUser(Parser &parser)
+{
+    libircclient::User user;
+    QList<QString> parameters = parser.GetParameters();
+    if (parameters.count() > 1)
+        user.SetNick(parameters[1]);
+    if (parameters.count() > 3)
+    {
+        user.SetIdent(parameters[2]);
+        user.SetHost(parameters[3]);
+    }
+    user.SetRealname(parser.GetText());
+    emit this->Event_WhoisUser(&parser, &user);
+}
+
+void Network::processWhoisIdle(Parser &parser)
+{
+    unsigned int idle_time;
+    QDateTime signon_time;
+    QList<QString> parameters = parser.GetParameters();
+
+    if (parameters.count() < 4)
+    {
+        emit this->Event_WhoisIdle(&parser, idle_time, signon_time);
+        return;
+    }
+
+    idle_time = parameters[2].toUInt();
+    signon_time = QDateTime::fromTime_t(parameters[3].toUInt());
+
+    emit this->Event_WhoisIdle(&parser, idle_time, signon_time);
 }
 
 void Network::standardLogin()
