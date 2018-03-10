@@ -45,7 +45,13 @@ namespace libircclient
 {
     enum Encoding
     {
-        EncodingUTF8
+        // Default by Qt
+        EncodingDefault = 0,
+        EncodingASCII = 1,
+        EncodingUTF8 = 2,
+        EncodingUTF16 = 3,
+        //EncodingUTF32 = 4,
+        EncodingLatin = 5
     };
 
     class Server;
@@ -59,7 +65,7 @@ namespace libircclient
         public:
             friend class Network_SenderThread;
 
-            Network(libirc::ServerAddress &server, QString name);
+            Network(libirc::ServerAddress &server, QString name, Encoding enc = EncodingDefault);
             Network(QHash<QString, QVariant> hash);
             virtual ~Network();
             virtual void Connect();
@@ -86,6 +92,7 @@ namespace libircclient
             virtual QString GetHelpForMode(char mode, QString missing);
             virtual Channel *GetChannel(QString channel_name);
             virtual QList<Channel *> GetChannels();
+            virtual Encoding GetEncoding();
             virtual void SetPassword(QString Password);
             virtual void RequestJoin(QString name, Priority priority = Priority_Normal);
             virtual void TransferRaw(QString raw, Priority priority = Priority_Normal);
@@ -379,6 +386,7 @@ namespace libircclient
             char channelPrefix;
             Server *server;
             QList<User*> users;
+            Encoding encoding;
             QList<Channel*> channels;
             User localUser;
             QDateTime lastPing;

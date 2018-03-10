@@ -24,7 +24,7 @@
 
 using namespace libircclient;
 
-Network::Network(libirc::ServerAddress &server, QString name) : libirc::Network(name)
+Network::Network(libirc::ServerAddress &server, QString name, Encoding enc) : libirc::Network(name)
 {
     this->initialize();
     this->hostname = server.GetHost();
@@ -631,6 +631,8 @@ void Network::LoadHash(QHash<QString, QVariant> hash)
         this->localUserMode = UMode(hash["localUserMode"].toHash());
     if (hash.contains("localUser"))
         this->localUser = User(hash["localUser"].toHash());
+    if (hash.contains("encoding"))
+        this->encoding = static_cast<Encoding> (hash["encoding"].toInt());
     UNSERIALIZE_STRINGLIST(_capabilitiesSubscribed);
     UNSERIALIZE_STRINGLIST(_capabilitiesRequested);
     UNSERIALIZE_STRINGLIST(_capabilitiesSupported);
@@ -672,6 +674,7 @@ QHash<QString, QVariant> Network::ToHash()
     foreach (User *user, this->users)
         users_x.append(QVariant(user->ToHash()));
     hash.insert("users", QVariant(users_x));
+    hash.insert("encoding", static_cast<int>(this->encoding));
     return hash;
 }
 
@@ -701,6 +704,11 @@ Channel *Network::GetChannel(QString channel_name)
 QList<Channel *> Network::GetChannels()
 {
     return this->channels;
+}
+
+Encoding Network::GetEncoding()
+{
+    return this->encoding;
 }
 
 QList<char> Network::GetCUModes()
@@ -757,7 +765,27 @@ static void DebugInvalid(QString message, Parser *parser)
 void Network::processIncomingRawData(QByteArray data)
 {
     this->lastPing = QDateTime::currentDateTime();
-    QString l(data);
+    QString l;
+    switch (this->encoding)
+    {
+        case EncodingDefault:
+            l = QString(data);
+            break;
+        case EncodingASCII:
+            l = QString::fromAscii(data.data());
+            break;
+        case EncodingLatin:
+            l = QString::fromLatin1(data.data());
+            break;
+        case EncodingUTF8:
+            l = QString::fromUtf8(data.data());
+            break;
+        case EncodingUTF16:
+        {
+            l = QTextCodec::codecForName("UTF-16")->toUnicode(data);
+        }
+            break;
+    }
     // let's try to parse this IRC command
     Parser parser(l);
     if (!parser.IsValid())
