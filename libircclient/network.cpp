@@ -1853,6 +1853,10 @@ void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
         case Priority_Low:
             this->lprFIFO.append(data);
             break;
+        // This will never happen because we already handled this priority level in top of this
+        // it's here just to silence clang
+        case Priority_RealTime:
+            break;
     }
     this->mutex.unlock();
 }
