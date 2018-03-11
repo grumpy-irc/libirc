@@ -386,7 +386,7 @@ namespace libircclient
             char channelPrefix;
             Server *server;
             QList<User*> users;
-            Encoding encoding;
+            Encoding encoding = EncodingDefault;
             QList<Channel*> channels;
             User localUser;
             QDateTime lastPing;
