@@ -772,8 +772,6 @@ void Network::processIncomingRawData(QByteArray data)
             l = QString(data);
             break;
         case EncodingASCII:
-            l = QString::fromAscii(data.data());
-            break;
         case EncodingLatin:
             l = QString::fromLatin1(data.data());
             break;
