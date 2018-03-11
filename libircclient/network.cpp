@@ -366,7 +366,7 @@ void Network::RequestJoin(QString name, Priority priority)
 
 void Network::OnPingSend()
 {
-    this->TransferRaw("PING :" + this->GetServerAddress(), libircclient::Priority_High);
+    this->TransferRaw("PING :" + QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()), libircclient::Priority_RealTime);
 }
 
 void Network::OnCapSupportTimeout()
@@ -721,6 +721,11 @@ bool Network::ContainsChannel(QString channel_name)
     return this->GetChannel(channel_name) != NULL;
 }
 
+long long Network::GetLag()
+{
+    return this->lastPingResponseTimeInMs;
+}
+
 void Network::_st_ClearChannels()
 {
     qDeleteAll(this->channels);
@@ -883,6 +888,21 @@ void Network::processIncomingRawData(QByteArray data)
             this->processKick(&parser);
             break;
         case IRC_NUMERIC_RAW_PONG:
+        {
+            // Get the parameters and check how long it took
+            bool ok = true;
+            qint64 last_ping = parser.GetParameterLine().toLongLong(&ok);
+            if (!ok)
+            {
+                // The signal is emitted only once we are done with calculations, or in case calculation fails
+                // otherwise it wouldn't be precise enough
+                emit this->Event_PONG(&parser);
+                break;
+            }
+            QDateTime lpdt = QDateTime::fromMSecsSinceEpoch(last_ping);
+            this->lastPingResponseTimeInMs = lpdt.msecsTo(QDateTime::currentDateTime());
+            emit this->Event_PONG(&parser);
+        }
             break;
         case IRC_NUMERIC_RAW_MODE:
             this->processMode(&parser);

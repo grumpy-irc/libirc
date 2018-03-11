@@ -116,6 +116,8 @@ namespace libircclient
             virtual QList<QString> GetSupportedCaps();
             virtual QList<QString> GetSubscribedCaps();
             virtual bool ContainsChannel(QString channel_name);
+            //! Returns a network lag in MS, measured from last PONG response
+            virtual long long GetLag();
             //////////////////////////////////////////////////////////////////////////////////////////
             // Synchronization tools
             //! This will update the nick in operating memory, it will not request it from server and may cause troubles
@@ -232,6 +234,7 @@ namespace libircclient
             void Event_INVITE(libircclient::Parser *parser);
 
             // Server related
+            void Event_PONG(libircclient::Parser *parser);
             void Event_EndOfNames(libircclient::Parser *parser);
             void Event_ServerMode(libircclient::Parser *parser);
             void Event_MOTDEnd(libircclient::Parser *parser);
@@ -392,6 +395,7 @@ namespace libircclient
             QDateTime lastPing;
             QTimer *timerPingTimeout;
             QTimer *timerPingSend;
+            long long lastPingResponseTimeInMs = 0;
     };
 }
 
