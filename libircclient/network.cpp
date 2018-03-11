@@ -783,6 +783,9 @@ void Network::processIncomingRawData(QByteArray data)
             l = QTextCodec::codecForName("UTF-16")->toUnicode(data);
         }
             break;
+        default:
+            l = QString(data);
+            break;
     }
     // let's try to parse this IRC command
     Parser parser(l);
