@@ -891,7 +891,7 @@ void Network::processIncomingRawData(QByteArray data)
         {
             // Get the parameters and check how long it took
             bool ok = true;
-            qint64 last_ping = parser.GetParameterLine().toLongLong(&ok);
+            qint64 last_ping = parser.GetText().toLongLong(&ok);
             if (!ok)
             {
                 // The signal is emitted only once we are done with calculations, or in case calculation fails
