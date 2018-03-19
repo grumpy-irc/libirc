@@ -249,6 +249,8 @@ namespace libircclient
             void Event_ISUPPORT(libircclient::Parser *parser);
 
             // Whois
+            //! Emitted for all WHOIS events, in case you don't want to attach to individual replies
+            void Event_WhoisGeneric(libircclient::Parser *parser);
             void Event_WhoisUser(libircclient::Parser *parser, libircclient::User *user);
             void Event_WhoisOperator(libircclient::Parser *parser);
             void Event_WhoisIdle(libircclient::Parser *parser, unsigned int seconds_idle, QDateTime signon_time);
@@ -259,6 +261,8 @@ namespace libircclient
             void Event_WhoisSpecial(libircclient::Parser *parser);
             void Event_WhoisAccount(libircclient::Parser *parser);
             void Event_WhoisSecure(libircclient::Parser *parser);
+            void Event_WhoisHost(libircclient::Parser *parser);
+            void Event_WhoisModes(libircclient::Parser *parser);
 
             // Messaging
             void Event_PRIVMSG(libircclient::Parser *parser);

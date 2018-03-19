@@ -920,36 +920,54 @@ void Network::processIncomingRawData(QByteArray data)
             this->processTopic(&parser);
             break;
         case IRC_NUMERIC_WHOISUSER:
+            emit this->Event_WhoisGeneric(&parser);
             this->processWhoisUser(parser);
             break;
         case IRC_NUMERIC_WHOISIDLE:
+            emit this->Event_WhoisGeneric(&parser);
             this->processWhoisIdle(parser);
             break;
         case IRC_NUMERIC_WHOISOPERATOR:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisOperator(&parser);
             break;
         case IRC_NUMERIC_WHOISREGNICK:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisRegNick(&parser);
             break;
         case IRC_NUMERIC_WHOISCHANNELS:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisChannels(&parser);
             break;
         case IRC_NUMERIC_WHOISSERVER:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisServer(&parser);
             break;
         case IRC_NUMERIC_ENDOFWHOIS:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisEnd(&parser);
             break;
         case IRC_NUMERIC_AWAY:
             emit this->Event_RplAway(&parser);
             break;
         case IRC_NUMERIC_WHOISSECURE:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisSecure(&parser);
             break;
         case IRC_NUMERIC_WHOISSPECIAL:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisSpecial(&parser);
             break;
+        case IRC_NUMERIC_WHOISHOST:
+            emit this->Event_WhoisGeneric(&parser);
+            emit this->Event_WhoisHost(&parser);
+            break;
+        case IRC_NUMERIC_WHOISMODES:
+            emit this->Event_WhoisGeneric(&parser);
+            emit this->Event_WhoisModes(&parser);
+            break;
         case IRC_NUMERIC_WHOISACCOUNT:
+            emit this->Event_WhoisGeneric(&parser);
             emit this->Event_WhoisAccount(&parser);
             break;
         case IRC_NUMERIC_TOPICINFO:
