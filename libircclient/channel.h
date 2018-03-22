@@ -13,6 +13,11 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
+// This feature is extremely experimental and known to be bugged due to some internal bugs in Qt
+#ifdef LIBIRC_HASH
+#undef LIBIRC_HASH
+#endif
+
 #include "libircclient_global.h"
 #include <QString>
 #include <QSet>
