@@ -74,6 +74,9 @@ QHash<char, QString> NetworkModeHelp::GetChannelModeHelp(QString ircd)
     result.insert('m', "Moderated - will suppress all messages from people who don't have voice (+v) or higher.");
     result.insert('t', "Topic changes restricted - only allow privileged users to change the topic.");
     result.insert('i', "A user must be invited to join the channel");
+    result.insert('n', "Users cannot send messages to the channel externally");
+    result.insert('s', "Secret channel—not shown in channel list or user whois except to users already on the channel");
+    result.insert('p', "Private channel—listed in channel list as prv according to RFC 1459");
 
     if (ircd.startsWith("Unreal3"))
     {
