@@ -34,6 +34,16 @@ Network::Network(libirc::ServerAddress &server, QString name, Encoding enc) : li
         this->localUser.SetNick(server.GetNick());
     this->usingSSL = server.UsingSSL();
     this->port = server.GetPort();
+    this->channelsToJoin.clear();
+    if (!server.GetSuffix().isEmpty())
+    {
+        QList<QString> channels_join = server.GetSuffix().split(",");
+        foreach (QString channel, channels_join)
+        {
+            if (channel.startsWith("#") && !channel.contains(" ") && !this->channelsToJoin.contains(channel))
+                this->channelsToJoin.append(channel);
+        }
+    }
 }
 
 Network::Network(QHash<QString, QVariant> hash) : libirc::Network("")
@@ -823,6 +833,7 @@ void Network::processIncomingRawData(QByteArray data)
             this->server->SetVersion(parser.GetParameters()[2]);
             this->ChannelModeHelp = NetworkModeHelp::GetChannelModeHelp(this->server->GetVersion());
             this->UserModeHelp = NetworkModeHelp::GetUserModeHelp(this->server->GetVersion());
+            this->autoJoin();
             emit this->Event_MyInfo(&parser);
             break;
 
@@ -1897,6 +1908,15 @@ void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
             break;
     }
     this->mutex.unlock();
+}
+
+void Network::autoJoin()
+{
+    while(!this->channelsToJoin.isEmpty())
+    {
+        this->RequestJoin(this->channelsToJoin.at(0), Priority_Low);
+        this->channelsToJoin.removeAt(0);
+    }
 }
 
 void Network::OnSend()

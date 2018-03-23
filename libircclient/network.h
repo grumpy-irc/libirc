@@ -351,6 +351,7 @@ namespace libircclient
             void pseudoSleep(unsigned int msec);
             QByteArray getDataToSend();
             void scheduleDelivery(QByteArray data, libircclient::Priority priority);
+            void autoJoin();
 
             /////////////////////////////////////
             // This probably doesn't need syncing
@@ -399,6 +400,8 @@ namespace libircclient
             QDateTime lastPing;
             QTimer *timerPingTimeout;
             QTimer *timerPingSend;
+            //! List of channels to join after connection to network
+            QList<QString> channelsToJoin;
             long long lastPingResponseTimeInMs = 0;
     };
 }
