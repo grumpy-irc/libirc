@@ -385,8 +385,6 @@ void Network::OnCapSupportTimeout()
     this->capTimeout.stop();
     emit this->Event_CAP_Timeout();
     this->DisableIRCv3Support();
-    if (this->IsConnected())
-        this->standardLogin();
 }
 
 void Network::OnReceive(QByteArray data)
@@ -766,10 +764,8 @@ void Network::OnConnected()
         // which never respond and we are waiting forever. In order to prevent this capTimeout is implemented with its
         // own timer that disable IRCv3 support on server in case that it fails to respons within given grace time.
         this->TransferRaw("CAP LS");
-    } else
-    {
-        this->standardLogin();
     }
+    this->standardLogin();
 }
 
 static void DebugInvalid(QString message, Parser *parser)
@@ -1644,6 +1640,10 @@ void Network::processCap(Parser *parser)
         DebugInvalid("Wrong number of parameters for CAP message", parser);
         return;
     }
+    // Obviously this network is supporting IRCv3
+    this->capTimeout.stop();
+    if (!this->SupportsIRCv3())
+        this->EnableIRCv3Support();
     QString cap = params[1].toUpper();
     if (cap == "LS")
     {
@@ -1719,7 +1719,8 @@ void Network::processWhoisIdle(Parser &parser)
 
 void Network::standardLogin()
 {
-    this->capTimeout.stop();
+    if (this->_loggedIn)
+        return;
     this->_loggedIn = true;
     this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
     this->TransferRaw("NICK " + this->localUser.GetNick());
@@ -1788,7 +1789,7 @@ void Network::initialize()
     this->socket = NULL;
     this->resetCap();
     this->_enableCap = true;
-    this->_capGraceTime = 10;
+    this->_capGraceTime = 20;
     this->localUser.SetIdent("libirc");
     this->localUser.SetRealname("https://github.com/grumpy-irc/libirc");
     this->pingTimeout = 60;
