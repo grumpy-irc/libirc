@@ -1790,7 +1790,7 @@ void Network::initialize()
     this->_enableCap = true;
     this->_capGraceTime = 10;
     this->localUser.SetIdent("libirc");
-    this->localUser.SetRealname("GrumpyChat");
+    this->localUser.SetRealname("https://github.com/grumpy-irc/libirc");
     this->pingTimeout = 60;
     this->timerPingTimeout = NULL;
     this->timerPingSend = NULL;
