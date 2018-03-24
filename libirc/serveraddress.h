@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2018
 
 #ifndef SERVERADDRESS_H
 #define SERVERADDRESS_H
@@ -35,6 +35,7 @@ namespace libirc
             QString GetPassword();
             //! Usually a list of channels to join after connect
             QString GetSuffix();
+            void SetSuffix(QString suffix);
             unsigned int GetPort();
             void SetHost(QString host);
             void SetPassword(QString pw);

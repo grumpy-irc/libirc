@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2018
 
 #ifndef LIBIRCNETWORK_H
 #define LIBIRCNETWORK_H
@@ -25,6 +25,7 @@ namespace libirc
 			virtual ~Network() {}
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
+            QString GetNetworkName();
 		protected:
             QString networkName;
     };

@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2018
 
 #include "serveraddress.h"
 #include "irc_standards.h"
@@ -185,6 +185,11 @@ QString ServerAddress::GetPassword()
 QString ServerAddress::GetSuffix()
 {
     return this->_suffix;
+}
+
+void ServerAddress::SetSuffix(QString suffix)
+{
+    this->_suffix = suffix;
 }
 
 bool ServerAddress::IsIPv6()
