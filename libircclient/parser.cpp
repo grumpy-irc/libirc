@@ -135,6 +135,8 @@ void Parser::obtainNumeric()
         this->_numeric = IRC_NUMERIC_RAW_METADATA;
     else if (this->command == "INVITE")
         this->_numeric = IRC_NUMERIC_RAW_INVITE;
+    else if (this->command == "CHGHOST")
+        this->_numeric = IRC_NUMERIC_RAW_CHGHOST;
 }
 
 bool Parser::IsValid()

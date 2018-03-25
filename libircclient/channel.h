@@ -45,6 +45,8 @@ namespace libircclient
             User *InsertUser(User *user);
             void RemoveUser(QString user);
             void ChangeNick(QString old_nick, QString new_nick);
+            //! Changes a hostname or ident of user in channel
+            void ChangeHost(QString nick, QString new_host, QString new_ident);
             bool ContainsUser(QString user);
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();

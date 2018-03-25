@@ -32,6 +32,7 @@
 #define IRC_NUMERIC_RAW_AWAY           -13
 #define IRC_NUMERIC_RAW_METADATA       -14
 #define IRC_NUMERIC_RAW_INVITE         -15
+#define IRC_NUMERIC_RAW_CHGHOST        -16 // CAP https://ircv3.net/specs/extensions/chghost-3.2.html
 
 // Both RFC standard and not standard
 #define IRC_NUMERIC_RAW_PONG           0

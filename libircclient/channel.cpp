@@ -93,6 +93,15 @@ void Channel::ChangeNick(QString old_nick, QString new_nick)
     this->_users.insert(new_nick.toLower(), user);
 }
 
+void Channel::ChangeHost(QString nick, QString new_host, QString new_ident)
+{
+    User *user = this->GetUser(nick);
+    if (!user)
+        return;
+    user->SetHost(new_host);
+    user->SetIdent(new_ident);
+}
+
 bool Channel::ContainsUser(QString user)
 {
     return this->_users.contains(user.toLower());

@@ -896,6 +896,9 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_RAW_KICK:
             this->processKick(&parser);
             break;
+        case IRC_NUMERIC_RAW_CHGHOST:
+            this->processChangeHost(parser);
+            break;
         case IRC_NUMERIC_RAW_PONG:
         {
             // Get the parameters and check how long it took
@@ -1719,6 +1722,35 @@ void Network::processWhoisIdle(Parser &parser)
     emit this->Event_WhoisIdle(&parser, idle_time, signon_time);
 }
 
+void Network::processChangeHost(Parser &parser)
+{
+    QString new_host, new_ident, old_host, old_ident, nick;
+    if (parser.GetParameters().count() < 2)
+    {
+        // wrong amount of parameters
+        qDebug() << "IRC PARSER: Malformed CHGHOST: " + parser.GetRaw();
+        return;
+    }
+
+    new_ident = parser.GetParameters()[0];
+    new_host = parser.GetParameters()[1];
+    old_ident = parser.GetSourceUserInfo()->GetIdent();
+    old_host = parser.GetSourceUserInfo()->GetHost();
+    nick = parser.GetSourceUserInfo()->GetNick();
+
+    if (nick.toLower() == this->GetNick().toLower())
+    {
+        // our own hostname / ident was changed
+        this->localUser.SetIdent(new_ident);
+        this->localUser.SetHost(new_host);
+        emit this->Event_SelfCHGHOST(&parser, old_host, old_ident, new_host, new_ident);
+    }
+    // Change the hosts in every channel this user is in
+    foreach (Channel *channel, this->channels)
+        channel->ChangeHost(nick, new_host, new_ident);
+    emit this->Event_CHGHOST(&parser, old_host, old_ident, new_host, new_ident);
+}
+
 void Network::standardLogin()
 {
     if (this->_loggedIn)
@@ -1842,7 +1874,7 @@ void Network::resetCap()
     this->_capabilitiesRequested.clear();
     this->_capabilitiesSubscribed.clear();
     this->_capabilitiesSupported.clear();
-    this->_capabilitiesRequested << "away-notify" << "extended-join" << "multi-prefix";
+    this->_capabilitiesRequested << "away-notify" << "extended-join" << "multi-prefix" << "chghost";
 }
 
 void Network::processAutoCap()

@@ -280,6 +280,8 @@ namespace libircclient
             void Event_NowAway(libircclient::Parser *parser);
             void Event_AWAY(libircclient::Parser *parser);
             void Event_RplAway(libircclient::Parser *parser);
+            void Event_SelfCHGHOST(libircclient::Parser *parser, QString old_host, QString old_ident, QString new_host, QString new_ident);
+            void Event_CHGHOST(libircclient::Parser *parser, QString old_host, QString old_ident, QString new_host, QString new_ident);
 
             // IRCv3
             void Event_CAP(libircclient::Parser *parser);
@@ -342,6 +344,7 @@ namespace libircclient
             void processCap(Parser *parser);
             void processWhoisUser(Parser &parser);
             void processWhoisIdle(Parser &parser);
+            void processChangeHost(Parser &parser);
             void standardLogin();
             void deleteTimers();
             void initialize();
