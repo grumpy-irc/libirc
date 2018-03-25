@@ -40,7 +40,9 @@ Network::Network(libirc::ServerAddress &server, QString name, Encoding enc) : li
         QList<QString> channels_join = server.GetSuffix().split(",");
         foreach (QString channel, channels_join)
         {
-            if (channel.startsWith("#") && !channel.contains(" ") && !this->channelsToJoin.contains(channel))
+            if (!channel.startsWith("#"))
+                channel = "#" + channel;
+            if (!channel.contains(" ") && !this->channelsToJoin.contains(channel))
                 this->channelsToJoin.append(channel);
         }
     }
