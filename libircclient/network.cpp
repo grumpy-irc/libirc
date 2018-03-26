@@ -770,11 +770,6 @@ void Network::OnConnected()
     this->standardLogin();
 }
 
-static void DebugInvalid(QString message, Parser *parser)
-{
-    qDebug() << "IRC PARSER: " + message + ": " + parser->GetRaw();
-}
-
 void Network::processIncomingRawData(QByteArray data)
 {
     this->lastPing = QDateTime::currentDateTime();
@@ -876,7 +871,7 @@ void Network::processIncomingRawData(QByteArray data)
             {
                 if (!channel)
                 {
-                    DebugInvalid("Channel struct not in memory", &parser);
+                    emit this->Event_Broken(&parser, "Channel struct not in memory");
                 }
                 else
                 {
@@ -992,7 +987,7 @@ void Network::processIncomingRawData(QByteArray data)
             Channel *channel = this->GetChannel(parser.GetParameters()[1]);
             if (!channel)
             {
-                DebugInvalid("Channel struct not in memory", &parser);
+                emit this->Event_Broken(&parser, "Channel struct not in memory");
                 break;
             }
             channel->SetTopic(parser.GetText());
@@ -1100,14 +1095,14 @@ void Network::processNamrpl(Parser *parser)
     // Server sent us an initial list of users that are in the channel
     if (parser->GetParameters().size() < 3)
     {
-        DebugInvalid("Malformed NAMRPL", parser);
+        emit this->Event_Broken(parser, "Malformed NAMRPL");
         return;
     }
 
     Channel *channel = this->GetChannel(parser->GetParameters()[2]);
     if (channel == NULL)
     {
-        DebugInvalid("Unknown channel", parser);
+        emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
 
@@ -1280,7 +1275,7 @@ void Network::processMdIn(Parser *parser)
     Channel *channel = this->GetChannel(pl[1]);
     if (!channel)
     {
-        DebugInvalid("Channel struct not in memory", parser);
+        emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
     channel->SetMode(pl[2]);
@@ -1297,7 +1292,7 @@ void Network::processTopic(Parser *parser)
     Channel *channel = this->GetChannel(parser->GetParameters()[0]);
     if (!channel)
     {
-        DebugInvalid("Channel struct not in memory", parser);
+        emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
     QString topic = channel->GetTopic();
@@ -1318,7 +1313,7 @@ void Network::processKick(Parser *parser)
     {
         if (!channel)
         {
-            DebugInvalid("Channel struct not in memory", parser);
+            emit this->Event_Broken(parser, "Channel struct not in memory");
         }
         else
         {
@@ -1347,7 +1342,7 @@ void Network::processTopicWhoTime(Parser *parser)
     Channel *channel = this->GetChannel(parameters[1]);
     if (!channel)
     {
-        DebugInvalid("Channel struct not in memory", parser);
+        emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
     channel->SetTopicUser(parameters[2]);
@@ -1405,13 +1400,13 @@ void Network::processMode(Parser *parser)
         Channel *channel = this->GetChannel(parameters[0]);
         if (channel == NULL)
         {
-            qDebug() << "IRC PARSER: No channel: " + parser->GetRaw();
+            emit this->Event_Broken(parser, "No channel");
             return;
         }
         parameters.removeFirst();
         if (parameters.isEmpty())
         {
-            qDebug() << "IRC PARSER: Invalid MODE: " + parser->GetRaw();
+            emit this->Event_Broken(parser, "Invalid mode");
             return;
         }
         QString mode = parameters[0];
@@ -1432,7 +1427,7 @@ void Network::processMode(Parser *parser)
                 User *user = channel->GetUser(sm.Parameter);
                 if (user == NULL)
                 {
-                    qDebug() << "IRC PARSER: Invalid user: " + parser->GetRaw();
+                    emit this->Event_Broken(parser, "Invalid user");
                     continue;
                 }
                 // User mode was changed, the trick here is that some irc daemons allow users to have multiple modes
@@ -1512,13 +1507,13 @@ void Network::processMTime(Parser *parser)
     QStringList parameters = parser->GetParameters();
     if (parameters.size() < 3)
     {
-        qDebug() << "IRC PARSER: Invalid MODETIME: " + parser->GetRaw();
+        emit this->Event_Broken(parser, "Invalid MODETIME");
         return;
     }
     Channel *channel = this->GetChannel(parameters[1]);
     if (!channel)
     {
-        DebugInvalid("Channel struct not in memory", parser);
+        emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
     channel->SetMTime(QDateTime::fromTime_t(parameters[2].toUInt()));
@@ -1530,8 +1525,7 @@ void Network::processJoin(Parser *parser, bool self_command)
     Channel *channel_p = NULL;
     if (parser->GetParameters().count() < 1 && parser->GetText().isEmpty())
     {
-        // broken
-        DebugInvalid("Malformed JOIN", parser);
+        emit this->Event_Broken(parser, "Malformed JOIN");
         return;
     }
     // On some extremely old servers channel is passed as text and on some as parameter
@@ -1541,7 +1535,7 @@ void Network::processJoin(Parser *parser, bool self_command)
         channel_name = parser->GetParameters()[0];
     if (!channel_name.startsWith(this->channelPrefix))
     {
-        DebugInvalid("Malformed JOIN", parser);
+        emit this->Event_Broken(parser, "Malformed JOIN");
         return;
     }
     // Check if the person who joined the channel isn't us
@@ -1642,7 +1636,7 @@ void Network::processCap(Parser *parser)
     QStringList params = parser->GetParameters();
     if (params.size() < 2)
     {
-        DebugInvalid("Wrong number of parameters for CAP message", parser);
+        emit this->Event_Broken(parser, "Wrong number of parameters for CAP message");
         return;
     }
     // Obviously this network is supporting IRCv3
