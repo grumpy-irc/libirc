@@ -1700,7 +1700,7 @@ void Network::processWhoisUser(Parser &parser)
 
 void Network::processWhoisIdle(Parser &parser)
 {
-    unsigned int idle_time;
+    unsigned int idle_time = 0;
     QDateTime signon_time;
     QList<QString> parameters = parser.GetParameters();
 
