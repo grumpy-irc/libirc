@@ -1546,13 +1546,13 @@ void Network::processJoin(Parser *parser, bool self_command)
         {
             // what the fuck?? we joined the channel which we are already in
             qDebug() << "Server told us we just joined a channel we are already in: " + channel_name + " network: " + this->GetHost();
-            goto join_emit;
+        } else
+        {
+            channel_p = new Channel(channel_name, this);
+            this->channels.append(channel_p);
+            emit this->Event_SelfJoin(channel_p);
         }
-        channel_p = new Channel(channel_name, this);
-        this->channels.append(channel_p);
-        emit this->Event_SelfJoin(channel_p);
     }
-join_emit:
     if (!channel_p)
         channel_p = this->GetChannel(channel_name);
     if (!channel_p)
