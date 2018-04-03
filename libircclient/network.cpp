@@ -32,6 +32,8 @@ Network::Network(libirc::ServerAddress &server, QString name, Encoding enc) : li
         this->localUser.SetNick("GrumpyUser");
     else
         this->localUser.SetNick(server.GetNick());
+    if (!server.GetRealname().isEmpty())
+        this->localUser.SetRealname(server.GetRealname());
     this->usingSSL = server.UsingSSL();
     this->port = server.GetPort();
     this->channelsToJoin.clear();

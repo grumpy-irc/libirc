@@ -41,6 +41,8 @@ namespace libirc
             void SetPassword(QString pw);
             void SetPort(unsigned int port);
             void SetSSL(bool ssl);
+            void SetRealname(QString name);
+            QString GetRealname();
             void LoadHash(QHash<QString, QVariant> hash);
             QHash<QString, QVariant> ToHash();
         private:
@@ -49,6 +51,7 @@ namespace libirc
             QString _password;
             QString _nick;
             QString _host;
+            QString _realname;
             QString _suffix;
             bool _ssl;
             bool _valid;

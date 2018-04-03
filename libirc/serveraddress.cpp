@@ -134,6 +134,16 @@ void ServerAddress::SetSSL(bool ssl)
     this->_ssl = ssl;
 }
 
+void ServerAddress::SetRealname(QString name)
+{
+    this->_realname = name;
+}
+
+QString ServerAddress::GetRealname()
+{
+    return this->_realname;
+}
+
 void ServerAddress::LoadHash(QHash<QString, QVariant> hash)
 {
     UNSERIALIZE_UINT(_port);
@@ -145,6 +155,7 @@ void ServerAddress::LoadHash(QHash<QString, QVariant> hash)
     UNSERIALIZE_BOOL(_valid);
     UNSERIALIZE_BOOL(_ipv6);
     UNSERIALIZE_STRING(_original);
+    UNSERIALIZE_STRING(_realname);
 }
 
 QHash<QString, QVariant> ServerAddress::ToHash()
@@ -159,6 +170,7 @@ QHash<QString, QVariant> ServerAddress::ToHash()
     SERIALIZE(_valid);
     SERIALIZE(_ipv6);
     SERIALIZE(_original);
+    SERIALIZE(_realname);
     return hash;
 }
 
