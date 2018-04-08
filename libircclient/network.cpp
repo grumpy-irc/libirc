@@ -223,7 +223,7 @@ void Network::TransferRaw(QString raw, libircclient::Priority priority)
     }
 }
 
-#define SEPARATOR QString((char)1)
+#define CTCP_SEPARATOR QString((char)1)
 
 int Network::SendMessage(QString text, QString target, Priority priority)
 {
@@ -238,7 +238,7 @@ int Network::SendAction(QString text, Channel *channel, Priority priority)
 
 int Network::SendAction(QString text, QString target, Priority priority)
 {
-    this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + "ACTION " + text + SEPARATOR, priority);
+    this->TransferRaw(QString("PRIVMSG ") + target + " :" + CTCP_SEPARATOR + "ACTION " + text + CTCP_SEPARATOR, priority);
     return SUCCESS;
 }
 
@@ -344,9 +344,9 @@ int Network::GetTimeout() const
 int Network::SendCtcp(QString name, QString text, QString target, Priority priority)
 {
     if (!text.isEmpty())
-        this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + name + " " + text + SEPARATOR, priority);
+        this->TransferRaw(QString("PRIVMSG ") + target + " :" + CTCP_SEPARATOR + name + " " + text + CTCP_SEPARATOR, priority);
     else
-        this->TransferRaw(QString("PRIVMSG ") + target + " :" + SEPARATOR + name + SEPARATOR, priority);
+        this->TransferRaw(QString("PRIVMSG ") + target + " :" + CTCP_SEPARATOR + name + CTCP_SEPARATOR, priority);
     return SUCCESS;
 }
 
@@ -1244,11 +1244,13 @@ void Network::processPrivMsg(Parser *parser)
     }
 
     QString text = parser->GetText();
-    if (text.startsWith(SEPARATOR))
+
+    // https://tools.ietf.org/id/draft-oakley-irc-ctcp-01.html
+    if (text.startsWith(CTCP_SEPARATOR))
     {
         // This is a CTCP message
         text = text.mid(1);
-        if (text.endsWith(SEPARATOR))
+        if (text.endsWith(CTCP_SEPARATOR))
             text = text.mid(0, text.size() - 1);
 
         // These are usually split by space
