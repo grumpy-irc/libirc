@@ -33,7 +33,7 @@ ADD_DEFINITIONS(-DLIBIRC_LIBRARY -DQT_USE_QSTRINGBUILDER)
 ADD_LIBRARY(irc SHARED ${src} ${hd})
 
 if (QT5_BUILD)
-  qt5_use_modules(irc Core Network)
+    TARGET_LINK_LIBRARIES(irc Qt5::Core Qt5::Network)
 endif()
 
 TARGET_LINK_LIBRARIES(irc ${QT_LIBRARIES})
