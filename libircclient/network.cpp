@@ -738,6 +738,16 @@ long long Network::GetLag()
     return this->lastPingResponseTimeInMs;
 }
 
+long long Network::GetBytesSent()
+{
+    return this->bytesSent;
+}
+
+long long Network::GetBytesReceived()
+{
+    return this->bytesRcvd;
+}
+
 void Network::_st_ClearChannels()
 {
     qDeleteAll(this->channels);

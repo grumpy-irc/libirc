@@ -118,6 +118,8 @@ namespace libircclient
             virtual bool ContainsChannel(QString channel_name);
             //! Returns a network lag in MS, measured from last PONG response
             virtual long long GetLag();
+            virtual long long GetBytesSent();
+            virtual long long GetBytesReceived();
             //////////////////////////////////////////////////////////////////////////////////////////
             // Synchronization tools
             //! This will update the nick in operating memory, it will not request it from server and may cause troubles
