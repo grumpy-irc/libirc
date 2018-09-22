@@ -70,6 +70,7 @@ void Network::Connect()
         return;
     this->deleteTimers();
     this->scheduling = true;
+    this->_loggedIn = false;
     //delete this->network_thread;
     delete this->socket;
 
