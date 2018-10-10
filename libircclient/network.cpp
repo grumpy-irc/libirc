@@ -448,7 +448,10 @@ void Network::OnReceive()
 {
     if (!this->IsConnected())
         return;
-    while (this->socket->canReadLine())
+    // We need to keep checking if socket is not NULL because following calls from
+    // processIncomingRawData can initiate disconnect, which would delete it and change
+    // it to NULL
+    while (this->socket && this->socket->canReadLine())
     {
         QByteArray line = this->socket->readLine();
         if (line.length() == 0)
