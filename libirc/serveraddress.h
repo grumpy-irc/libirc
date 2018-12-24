@@ -22,29 +22,29 @@ namespace libirc
     class LIBIRCSHARED_EXPORT ServerAddress : public SerializableItem
     {
         public:
-            ServerAddress(QString url);
-            ServerAddress(QString Host, bool SSL, unsigned int Port, QString Nick = "", QString Password = "");
-            ServerAddress(QHash<QString, QVariant> hash);
-            virtual ~ServerAddress();
+            ServerAddress(const QString &url);
+            ServerAddress(const QString &Host, bool SSL, unsigned int Port, const QString &Nick = "", const QString &Password = "");
+            ServerAddress(const QHash<QString, QVariant> &hash);
+            ~ServerAddress() override=default;
             bool IsValid();
             bool UsingSSL();
             QString GetHost();
             QString GetOriginal();
-            void SetNick(QString nick);
+            void SetNick(const QString &nick);
             QString GetNick();
             QString GetPassword();
             //! Usually a list of channels to join after connect
             QString GetSuffix();
-            void SetSuffix(QString suffix);
+            void SetSuffix(const QString &suffix);
             unsigned int GetPort();
-            void SetHost(QString host);
-            void SetPassword(QString pw);
+            void SetHost(const QString &host);
+            void SetPassword(const QString &pw);
             void SetPort(unsigned int port);
             void SetSSL(bool ssl);
-            void SetRealname(QString name);
+            void SetRealname(const QString &name);
             QString GetRealname();
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
         private:
             bool IsIPv6();
             unsigned int _port;

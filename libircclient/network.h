@@ -65,20 +65,20 @@ namespace libircclient
         public:
             friend class Network_SenderThread;
 
-            Network(libirc::ServerAddress &server, QString name, Encoding enc = EncodingDefault);
-            Network(QHash<QString, QVariant> hash);
-            virtual ~Network();
+            Network(libirc::ServerAddress &server, const QString &name, const Encoding &enc = EncodingDefault);
+            Network(const QHash<QString, QVariant> &hash);
+             ~Network() override;
             virtual void Connect();
             virtual void Reconnect();
             virtual void Disconnect(QString reason = "");
             bool IsAway() const;
             virtual bool IsConnected();
-            virtual void SetAway(bool away, QString message = "");
+            virtual void SetAway(bool away, const QString &message = "");
             //! This function can be used to change the default nickname that will be requested upon connection to server
             //! subsequent calls of this function while on active IRC connection will be ignored.
-            virtual void    SetDefaultNick(QString nick);
-            virtual void    SetDefaultIdent(QString ident);
-            virtual void    SetDefaultUsername(QString realname);
+            virtual void    SetDefaultNick(const QString &nick);
+            virtual void    SetDefaultIdent(const QString &ident);
+            virtual void    SetDefaultUsername(const QString &realname);
             virtual bool    IsSSL();
             virtual QString GetNick();
             virtual QString GetHost();
@@ -88,26 +88,26 @@ namespace libircclient
             virtual QString GetIdent();
             virtual QString GetServerAddress();
             virtual User    *GetLocalUserInfo();
-            virtual void    SetHelpForMode(char mode, QString message);
+            virtual void    SetHelpForMode(char mode, const QString &message);
             virtual QString GetHelpForMode(char mode, QString missing);
             virtual Channel *GetChannel(QString channel_name);
             virtual QList<Channel *> GetChannels();
             virtual Encoding GetEncoding();
-            virtual void SetPassword(QString Password);
-            virtual void RequestJoin(QString name, Priority priority = Priority_Normal);
+            virtual void SetPassword(const QString &Password);
+            virtual void RequestJoin(const QString &name, Priority priority = Priority_Normal);
             virtual void TransferRaw(QString raw, Priority priority = Priority_Normal);
-            virtual int SendMessage(QString text, Channel *channel, Priority priority = Priority_Normal);
-            virtual int SendMessage(QString text, User *user, Priority priority = Priority_Normal);
-            virtual int SendMessage(QString text, QString target, Priority priority = Priority_Normal);
-            virtual int SendAction(QString text, Channel *channel, Priority priority = Priority_Normal);
-            virtual int SendAction(QString text, QString target, Priority priority = Priority_Normal);
-            virtual int SendNotice(QString text, User *user, Priority priority = Priority_Normal);
-            virtual int SendNotice(QString text, Channel *channel, Priority priority = Priority_Normal);
-            virtual int SendNotice(QString text, QString target, Priority priority = Priority_Normal);
-            virtual int SendCtcp(QString name, QString text, QString target, Priority priority = Priority_Normal);
-            virtual void RequestPart(QString channel_name, Priority priority = Priority_Normal);
+            virtual int SendMessage(const QString &text, Channel *channel, Priority priority = Priority_Normal);
+            virtual int SendMessage(const QString &text, User *user, Priority priority = Priority_Normal);
+            virtual int SendMessage(const QString &text, const QString &target, Priority priority = Priority_Normal);
+            virtual int SendAction(const QString &text, Channel *channel, Priority priority = Priority_Normal);
+            virtual int SendAction(const QString &text, const QString &target, Priority priority = Priority_Normal);
+            virtual int SendNotice(const QString &text, User *user, Priority priority = Priority_Normal);
+            virtual int SendNotice(const QString &text, Channel *channel, Priority priority = Priority_Normal);
+            virtual int SendNotice(const QString &text, const QString &target, Priority priority = Priority_Normal);
+            virtual int SendCtcp(const QString &name, const QString &text, const QString &target, Priority priority = Priority_Normal);
+            virtual void RequestPart(const QString &channel_name, Priority priority = Priority_Normal);
             virtual void RequestPart(Channel *channel, Priority priority = Priority_Normal);
-            virtual void RequestNick(QString nick, Priority priority = Priority_Normal);
+            virtual void RequestNick(const QString &nick, Priority priority = Priority_Normal);
             virtual void Identify(QString Nickname = "", QString Password = "", Priority priority = Priority_Normal);
             // IRCv3
             virtual bool SupportsIRCv3() const;
@@ -115,7 +115,7 @@ namespace libircclient
             virtual void DisableIRCv3Support();
             virtual QList<QString> GetSupportedCaps();
             virtual QList<QString> GetSubscribedCaps();
-            virtual bool ContainsChannel(QString channel_name);
+            virtual bool ContainsChannel(const QString &channel_name);
             //! Returns a network lag in MS, measured from last PONG response
             virtual long long GetLag();
             virtual long long GetBytesSent();
@@ -124,7 +124,7 @@ namespace libircclient
             // Synchronization tools
             //! This will update the nick in operating memory, it will not request it from server and may cause troubles
             //! if not properly called. This is only used for resynchronization.
-            virtual void _st_SetNick(QString nick);
+            virtual void _st_SetNick(const QString &nick);
             //! This will delete all internal memory structures related to channels this user is in.
             //! Use only for synchronization purposes, while implementing something like grumpyd
             //! calling this function on live IRC network connection will have unpredictable result
@@ -148,25 +148,25 @@ namespace libircclient
              * \return
              */
             virtual int PositionOfUCPrefix(char prefix);
-            virtual void SetChannelUserPrefixes(QList<char> data);
-            virtual void SetCModes(QList<char> data);
+            virtual void SetChannelUserPrefixes(const QList<char> &data);
+            virtual void SetCModes(const QList<char> &data);
             virtual QList<char> GetChannelUserPrefixes();
-            virtual bool HasCap(QString cap);
+            virtual bool HasCap(const QString &cap);
             virtual QList<char> GetCModes();
             virtual QList<char> GetCPModes();
-            virtual void SetCPModes(QList<char> data);
-            virtual void SetCRModes(QList<char> data);
+            virtual void SetCPModes(const QList<char> &data);
+            virtual void SetCRModes(const QList<char> &data);
             virtual QList<char> GetCCModes();
             virtual QList<char> GetCRModes();
-            virtual void SetCUModes(QList<char> data);
+            virtual void SetCUModes(const QList<char> &data);
             virtual QList<char> GetCUModes();
-            virtual void SetCCModes(QList<char> data);
+            virtual void SetCCModes(const QList<char> &data);
             virtual UMode GetLocalUserMode();
-            virtual QList<char> ModeHelper_GetSortedChannelPrefixes(QList<char> unsorted_list);
-            virtual QList<char> ModeHelper_GetSortedCUModes(QList<char> unsorted_list);
+            virtual QList<char> ModeHelper_GetSortedChannelPrefixes(const QList<char> &unsorted_list);
+            virtual QList<char> ModeHelper_GetSortedCUModes(const QList<char> &unsorted_list);
             QList<char> ParameterModes();
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
             //! This will automatically fix your own identification data in case they change
             //! For example if server changes your hostname (cloak) system will recognize
             //! the change and update localUser accordingly.
@@ -293,7 +293,7 @@ namespace libircclient
             void Event_CAP_RequestedCapNotSupported(QString name);
 
         protected slots:
-            virtual void OnSslHandshakeFailure(QList<QSslError> errors);
+            virtual void OnSslHandshakeFailure(const QList<QSslError> &errors);
             virtual void OnError(QAbstractSocket::SocketError er);
             virtual void OnReceive();
             virtual void OnDisconnect();
@@ -304,8 +304,8 @@ namespace libircclient
             virtual void OnCapSupportTimeout();
 
         protected:
-            virtual void OnReceive(QByteArray data);
-            virtual void closeError(QString error, int code);
+            virtual void OnReceive(const QByteArray &data);
+            virtual void closeError(const QString &error, int code);
             bool usingSSL;
             QTcpSocket *socket;
             //! These capabilities will be automatically requested from a server if it supports them
@@ -326,7 +326,7 @@ namespace libircclient
             QString password;
 
         private:
-            void updateSelfAway(Parser *parser, bool status, QString text);
+            void updateSelfAway(Parser *parser, bool status, const QString &text);
             void processIncomingRawData(QByteArray data);
             void processNamrpl(Parser *parser);
             void process433(Parser *parser);
@@ -355,7 +355,7 @@ namespace libircclient
             void processAutoCap();
             void pseudoSleep(unsigned int msec);
             QByteArray getDataToSend();
-            void scheduleDelivery(QByteArray data, libircclient::Priority priority);
+            void scheduleDelivery(const QByteArray &data, libircclient::Priority priority);
             void autoJoin();
 
             /////////////////////////////////////

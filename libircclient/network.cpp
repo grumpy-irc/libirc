@@ -24,7 +24,7 @@
 
 using namespace libircclient;
 
-Network::Network(libirc::ServerAddress &server, QString name, Encoding enc) : libirc::Network(name)
+Network::Network(libirc::ServerAddress &server, const QString &name, const Encoding &enc) : libirc::Network(name)
 {
     this->initialize();
     this->hostname = server.GetHost();
@@ -37,6 +37,7 @@ Network::Network(libirc::ServerAddress &server, QString name, Encoding enc) : li
     this->usingSSL = server.UsingSSL();
     this->port = server.GetPort();
     this->channelsToJoin.clear();
+    this->encoding = enc;
     if (!server.GetSuffix().isEmpty())
     {
         QList<QString> channels_join = server.GetSuffix().split(",");
@@ -50,7 +51,7 @@ Network::Network(libirc::ServerAddress &server, QString name, Encoding enc) : li
     }
 }
 
-Network::Network(QHash<QString, QVariant> hash) : libirc::Network("")
+Network::Network(const QHash<QString, QVariant> &hash) : libirc::Network("")
 {
     this->initialize();
     this->LoadHash(hash);
@@ -122,7 +123,7 @@ void Network::Disconnect(QString reason)
     if (this->socket)
     {
         this->socket->deleteLater();
-        this->socket = NULL;
+        this->socket = nullptr;
     }
     this->deleteTimers();
     this->freemm();
@@ -141,7 +142,7 @@ bool Network::IsConnected()
     return this->socket->isOpen();
 }
 
-void libircclient::Network::SetAway(bool away, QString message)
+void libircclient::Network::SetAway(bool away, const QString &message)
 {
     this->awayMessage = message;
     if (!away)
@@ -154,19 +155,19 @@ void libircclient::Network::SetAway(bool away, QString message)
     }
 }
 
-void Network::SetDefaultNick(QString nick)
+void Network::SetDefaultNick(const QString &nick)
 {
     if (!this->IsConnected())
         this->localUser.SetNick(nick);
 }
 
-void Network::SetDefaultIdent(QString ident)
+void Network::SetDefaultIdent(const QString &ident)
 {
     if (!this->IsConnected())
         this->localUser.SetIdent(ident);
 }
 
-void Network::SetDefaultUsername(QString realname)
+void Network::SetDefaultUsername(const QString &realname)
 {
     if (!this->IsConnected())
         this->localUser.SetRealname(realname);
@@ -226,50 +227,50 @@ void Network::TransferRaw(QString raw, libircclient::Priority priority)
 
 #define CTCP_SEPARATOR QString((char)1)
 
-int Network::SendMessage(QString text, QString target, Priority priority)
+int Network::SendMessage(const QString &text, const QString &target, Priority priority)
 {
     this->TransferRaw("PRIVMSG " + target + " :" + text, priority);
     return SUCCESS;
 }
 
-int Network::SendAction(QString text, Channel *channel, Priority priority)
+int Network::SendAction(const QString &text, Channel *channel, Priority priority)
 {
     return this->SendAction(text, channel->GetName(), priority);
 }
 
-int Network::SendAction(QString text, QString target, Priority priority)
+int Network::SendAction(const QString &text, const QString &target, Priority priority)
 {
     this->TransferRaw(QString("PRIVMSG ") + target + " :" + CTCP_SEPARATOR + "ACTION " + text + CTCP_SEPARATOR, priority);
     return SUCCESS;
 }
 
-int Network::SendNotice(QString text, User *user, Priority priority)
+int Network::SendNotice(const QString &text, User *user, Priority priority)
 {
     return this->SendNotice(text, user->GetNick(), priority);
 }
 
-int Network::SendNotice(QString text, Channel *channel, Priority priority)
+int Network::SendNotice(const QString &text, Channel *channel, Priority priority)
 {
     return this->SendNotice(text, channel->GetName(), priority);
 }
 
-int Network::SendNotice(QString text, QString target, Priority priority)
+int Network::SendNotice(const QString &text, const QString &target, Priority priority)
 {
     this->TransferRaw(QString("NOTICE ") + target + " :" + text, priority);
     return SUCCESS;
 }
 
-int Network::SendMessage(QString text, Channel *channel, Priority priority)
+int Network::SendMessage(const QString &text, Channel *channel, Priority priority)
 {
     return this->SendMessage(text, channel->GetName(), priority);
 }
 
-int Network::SendMessage(QString text, User *user, Priority priority)
+int Network::SendMessage(const QString &text, User *user, Priority priority)
 {
     return this->SendMessage(text, user->GetNick(), priority);
 }
 
-void Network::RequestPart(QString channel_name, Priority priority)
+void Network::RequestPart(const QString &channel_name, Priority priority)
 {
     this->TransferRaw("PART " + channel_name, priority);
 }
@@ -279,7 +280,7 @@ void Network::RequestPart(Channel *channel, Priority priority)
     this->TransferRaw("PART " + channel->GetName(), priority);
 }
 
-void Network::RequestNick(QString nick, Priority priority)
+void Network::RequestNick(const QString &nick, Priority priority)
 {
     this->TransferRaw("NICK " + nick, priority);
 }
@@ -332,7 +333,7 @@ QString Network::GetHelpForMode(char mode, QString missing)
     return missing;
 }
 
-void Network::_st_SetNick(QString nick)
+void Network::_st_SetNick(const QString &nick)
 {
     this->localUser.SetNick(nick);
 }
@@ -342,7 +343,7 @@ int Network::GetTimeout() const
     return this->pingTimeout;
 }
 
-int Network::SendCtcp(QString name, QString text, QString target, Priority priority)
+int Network::SendCtcp(const QString &name, const QString &text, const QString &target, Priority priority)
 {
     if (!text.isEmpty())
         this->TransferRaw(QString("PRIVMSG ") + target + " :" + CTCP_SEPARATOR + name + " " + text + CTCP_SEPARATOR, priority);
@@ -351,7 +352,7 @@ int Network::SendCtcp(QString name, QString text, QString target, Priority prior
     return SUCCESS;
 }
 
-void Network::SetHelpForMode(char mode, QString message)
+void Network::SetHelpForMode(char mode, const QString &message)
 {
     if (this->ChannelModeHelp.contains(mode))
         this->ChannelModeHelp[mode] = message;
@@ -369,12 +370,12 @@ void Network::OnPing()
     }
 }
 
-void Network::SetPassword(QString Password)
+void Network::SetPassword(const QString &Password)
 {
     this->password = Password;
 }
 
-void Network::RequestJoin(QString name, Priority priority)
+void Network::RequestJoin(const QString &name, Priority priority)
 {
     this->TransferRaw("JOIN " + name, priority);
 }
@@ -392,7 +393,7 @@ void Network::OnCapSupportTimeout()
     this->DisableIRCv3Support();
 }
 
-void Network::OnReceive(QByteArray data)
+void Network::OnReceive(const QByteArray &data)
 {
     if (data.length() == 0)
         return;
@@ -402,15 +403,15 @@ void Network::OnReceive(QByteArray data)
     this->processIncomingRawData(data);
 }
 
-void Network::closeError(QString error, int code)
+void Network::closeError(const QString &error, int code)
 {
     // Delete the socket first to prevent neverending loop
     // for some reason when you call the destructor Qt emits
     // some errors again causing program to hang
-    if (this->socket == NULL)
+    if (this->socket == nullptr)
         return;
     QTcpSocket *temp = this->socket;
-    this->socket = NULL;
+    this->socket = nullptr;
     temp->close();
     temp->deleteLater();
     this->deleteTimers();
@@ -418,7 +419,7 @@ void Network::closeError(QString error, int code)
     emit this->Event_Disconnected();
 }
 
-void Network::updateSelfAway(Parser *parser, bool status, QString text)
+void Network::updateSelfAway(Parser *parser, bool status, const QString &text)
 {
     // we need to scan all channels and update the status
     foreach (Channel *channel, this->channels)
@@ -438,7 +439,7 @@ void Network::updateSelfAway(Parser *parser, bool status, QString text)
 
 void Network::OnError(QAbstractSocket::SocketError er)
 {
-    if (this->socket == NULL)
+    if (this->socket == nullptr)
         return;
     emit this->Event_ConnectionFailure(er);
     this->closeError(Generic::ErrorCode2String(er), 1);
@@ -496,12 +497,12 @@ int Network::PositionOfUCPrefix(char prefix)
     return this->channelUserPrefixes.indexOf(prefix);
 }
 
-void Network::SetChannelUserPrefixes(QList<char> data)
+void Network::SetChannelUserPrefixes(const QList<char> &data)
 {
     this->channelUserPrefixes = data;
 }
 
-void Network::SetCModes(QList<char> data)
+void Network::SetCModes(const QList<char> &data)
 {
     this->CModes = data;
 }
@@ -511,7 +512,7 @@ QList<char> Network::GetChannelUserPrefixes()
     return this->channelUserPrefixes;
 }
 
-bool Network::HasCap(QString cap)
+bool Network::HasCap(const QString &cap)
 {
     return this->_capabilitiesSupported.contains(cap);
 }
@@ -526,12 +527,12 @@ QList<char> Network::GetCPModes()
     return this->CPModes;
 }
 
-void Network::SetCPModes(QList<char> data)
+void Network::SetCPModes(const QList<char> &data)
 {
     this->CPModes = data;
 }
 
-void Network::SetCRModes(QList<char> data)
+void Network::SetCRModes(const QList<char> &data)
 {
     this->CRModes = data;
 }
@@ -541,12 +542,12 @@ QList<char> Network::GetCRModes()
     return this->CRModes;
 }
 
-void Network::SetCUModes(QList<char> data)
+void Network::SetCUModes(const QList<char> &data)
 {
     this->CUModes = data;
 }
 
-void Network::SetCCModes(QList<char> data)
+void Network::SetCCModes(const QList<char> &data)
 {
     this->CCModes = data;
 }
@@ -578,12 +579,12 @@ static QList<char> SortingHelper(QList<char> mask, QList<char> list)
     return sorted_list;
 }
 
-QList<char> Network::ModeHelper_GetSortedChannelPrefixes(QList<char> unsorted_list)
+QList<char> Network::ModeHelper_GetSortedChannelPrefixes(const QList<char> &unsorted_list)
 {
     return SortingHelper(this->channelUserPrefixes, unsorted_list);
 }
 
-QList<char> Network::ModeHelper_GetSortedCUModes(QList<char> unsorted_list)
+QList<char> Network::ModeHelper_GetSortedCUModes(const QList<char> &unsorted_list)
 {
     return SortingHelper(this->CUModes, unsorted_list);
 }
@@ -610,7 +611,7 @@ static QVariant serializeList(QList<char> data)
     return QVariant(result);
 }
 
-void Network::LoadHash(QHash<QString, QVariant> hash)
+void Network::LoadHash(const QHash<QString, QVariant> &hash)
 {
     libirc::Network::LoadHash(hash);
     UNSERIALIZE_STRING(awayMessage);
@@ -694,7 +695,7 @@ QHash<QString, QVariant> Network::ToHash()
     return hash;
 }
 
-void Network::OnSslHandshakeFailure(QList<QSslError> errors)
+void Network::OnSslHandshakeFailure(const QList<QSslError> &errors)
 {
     bool temp = false;
     emit this->Event_SSLFailure(errors, &temp);
@@ -714,7 +715,7 @@ Channel *Network::GetChannel(QString channel_name)
             return channel;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 QList<Channel *> Network::GetChannels()
@@ -732,9 +733,9 @@ QList<char> Network::GetCUModes()
     return this->CUModes;
 }
 
-bool Network::ContainsChannel(QString channel_name)
+bool Network::ContainsChannel(const QString &channel_name)
 {
-    return this->GetChannel(channel_name) != NULL;
+    return this->GetChannel(channel_name) != nullptr;
 }
 
 long long Network::GetLag()
@@ -819,7 +820,7 @@ void Network::processIncomingRawData(QByteArray data)
         return;
     }
     bool self_command = false;
-    if (parser.GetSourceUserInfo() != NULL)
+    if (parser.GetSourceUserInfo() != nullptr)
         self_command = parser.GetSourceUserInfo()->GetNick().toLower() == this->GetNick().toLower();
     // This is a fixup for our own hostname as seen by the server, it may actually change runtime
     // based on cloak mechanisms used by a server, so when it happens we need to update it
@@ -1213,9 +1214,9 @@ void Network::processWho(Parser *parser)
     //             <channel> <user> <host>                             <server>       <nick>     <H|G>[*][@|+] :<hopcount> <real name>
     QStringList parameters = parser->GetParameters();
     bool is_away;
-    Channel *channel = NULL;
+    Channel *channel = nullptr;
     QString gecos;
-    User *user = NULL;
+    User *user = nullptr;
     if (parameters.count() < 7)
         goto finish;
     if (!parameters[1].startsWith(this->channelPrefix))
@@ -1231,7 +1232,7 @@ void Network::processWho(Parser *parser)
     gecos = parser->GetText();
     if (gecos.contains(" "))
     {
-        user->Hops = gecos.mid(0, gecos.indexOf(" ")).toInt();
+        user->Hops = gecos.midRef(0, gecos.indexOf(" ")).toInt();
         gecos = gecos.mid(gecos.indexOf(" ") + 1);
     }
     user->SetRealname(gecos);
@@ -1416,7 +1417,7 @@ void Network::processMode(Parser *parser)
         // Get a channel first
         QStringList parameters = parser->GetParameters();
         Channel *channel = this->GetChannel(parameters[0]);
-        if (channel == NULL)
+        if (channel == nullptr)
         {
             emit this->Event_Broken(parser, "No channel");
             return;
@@ -1443,7 +1444,7 @@ void Network::processMode(Parser *parser)
             {
                 // User mode was changed
                 User *user = channel->GetUser(sm.Parameter);
-                if (user == NULL)
+                if (user == nullptr)
                 {
                     emit this->Event_Broken(parser, "Invalid user");
                     continue;
@@ -1540,7 +1541,7 @@ void Network::processMTime(Parser *parser)
 
 void Network::processJoin(Parser *parser, bool self_command)
 {
-    Channel *channel_p = NULL;
+    Channel *channel_p = nullptr;
     if (parser->GetParameters().count() < 1 && parser->GetText().isEmpty())
     {
         emit this->Event_Broken(parser, "Malformed JOIN");
@@ -1815,13 +1816,13 @@ void Network::deleteTimers()
     {
         this->timerPingSend->stop();
         this->timerPingSend->deleteLater();
-        this->timerPingSend = NULL;
+        this->timerPingSend = nullptr;
     }
     if (this->timerPingTimeout)
     {
         this->timerPingTimeout->stop();
         this->timerPingTimeout->deleteLater();
-        this->timerPingTimeout = NULL;
+        this->timerPingTimeout = nullptr;
     }
     this->capTimeout.stop();
     this->senderTimer.stop();
@@ -1832,15 +1833,15 @@ void Network::initialize()
     this->bytesSent = 0;
     this->bytesRcvd = 0;
     this->_loggedIn = false;
-    this->socket = NULL;
+    this->socket = nullptr;
     this->resetCap();
     this->_enableCap = true;
     this->_capGraceTime = 20;
     this->localUser.SetIdent("libirc");
     this->localUser.SetRealname("https://github.com/grumpy-irc/libirc");
     this->pingTimeout = 60;
-    this->timerPingTimeout = NULL;
-    this->timerPingSend = NULL;
+    this->timerPingTimeout = nullptr;
+    this->timerPingSend = nullptr;
     this->scheduling = true;
     this->pingRate = 20000;
     this->defaultQuit = "GrumpyChat libirc: https://github.com/grumpy-irc/libirc";
@@ -1926,7 +1927,7 @@ void Network::processAutoCap()
     }
 }
 
-void Network::scheduleDelivery(QByteArray data, libircclient::Priority priority)
+void Network::scheduleDelivery(const QByteArray &data, libircclient::Priority priority)
 {
     if (priority == Priority_RealTime)
     {
@@ -1978,7 +1979,7 @@ void Network::OnSend()
         //this->pseudoSleep(this->MSDelayOnEmpty);
         return;
     }
-    QString line(packet);
+    //QString line(packet);
     this->bytesSent += packet.size();
     this->socket->write(packet);
     this->socket->flush();
@@ -1994,15 +1995,15 @@ QByteArray Network::getDataToSend()
 {
     QByteArray item;
     this->mutex.lock();
-    if (this->hprFIFO.size())
+    if (!this->hprFIFO.empty())
     {
         item = this->hprFIFO.first();
         this->hprFIFO.removeFirst();
-    } else if (this->mprFIFO.size())
+    } else if (!this->mprFIFO.empty())
     {
         item = this->mprFIFO.first();
         this->mprFIFO.removeFirst();
-    } else if (this->lprFIFO.size())
+    } else if (!this->lprFIFO.empty())
     {
         item = this->lprFIFO.first();
         this->lprFIFO.removeFirst();

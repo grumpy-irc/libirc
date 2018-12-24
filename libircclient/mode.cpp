@@ -16,57 +16,32 @@
 
 using namespace libircclient;
 
-Mode::Mode()
-{
-
-}
-
-Mode::Mode(QHash<QString, QVariant> hash)
+Mode::Mode(const QHash<QString, QVariant> &hash)
 {
     this->LoadHash(hash);
 }
 
-UMode::UMode()
-{
-
-}
-
-UMode::UMode(QHash<QString, QVariant> hash)
+UMode::UMode(const QHash<QString, QVariant> &hash)
 {
     this->LoadHash(hash);
 }
 
-CMode::CMode()
-{
-
-}
-
-CMode::CMode(QHash<QString, QVariant> hash)
+CMode::CMode(const QHash<QString, QVariant> &hash)
 {
     this->LoadHash(hash);
 }
 
-CMode::CMode(QString mode_string)
+ChannelPMode::ChannelPMode(const QString &mode) : libirc::SingleMode(mode)
 {
 
 }
 
-ChannelPMode::ChannelPMode(QString mode) : libirc::SingleMode(mode)
-{
-
-}
-
-ChannelPMode::ChannelPMode(QHash<QString, QVariant> mode) : libirc::SingleMode(mode)
+ChannelPMode::ChannelPMode(const QHash<QString, QVariant> &mode) : libirc::SingleMode(mode)
 {
     this->LoadHash(mode);
 }
 
-ChannelPMode::~ChannelPMode()
-{
-
-}
-
-void ChannelPMode::LoadHash(QHash<QString, QVariant> hash)
+void ChannelPMode::LoadHash(const QHash<QString, QVariant> &hash)
 {
     SingleMode::LoadHash(hash);
     UNSERIALIZE_DATETIME(SetOn);

@@ -31,7 +31,7 @@ Parser::Parser(QString incoming_text)
     incoming_text.replace("\n", "");
     this->text = incoming_text;
     this->_valid = false;
-    this->user = NULL;
+    this->user = nullptr;
     // the incoming text must be prefixed with colon, otherwise it's not from a server and we don't relay client messages
     if (!incoming_text.startsWith(":"))
     {

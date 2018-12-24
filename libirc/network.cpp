@@ -14,12 +14,12 @@
 
 using namespace libirc;
 
-Network::Network(QString Name)
+Network::Network(const QString &Name)
 {
     this->networkName = Name;
 }
 
-void Network::LoadHash(QHash<QString, QVariant> hash)
+void Network::LoadHash(const QHash<QString, QVariant> &hash)
 {
     UNSERIALIZE_STRING(networkName);
 }

@@ -22,8 +22,8 @@ namespace libircclient
     {
         public:
             User();
-            User(QHash<QString, QVariant> hash);
-            User(QString user);
+            User(const QHash<QString, QVariant> &hash);
+            User(const QString &user);
             User(User *user);
             QString GetPrefixedNick();
             char GetHighestCUMode();
@@ -33,8 +33,8 @@ namespace libircclient
             QString AwayMs;
             bool IsAway;
             int Hops;
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
 
 
         private:

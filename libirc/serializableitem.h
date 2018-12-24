@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #ifndef SERIALIZABLEITEM_H
 #define SERIALIZABLEITEM_H
@@ -39,16 +39,17 @@ namespace libirc
     class LIBIRCSHARED_EXPORT SerializableItem
     {
         public:
-            static QList<QString> DeserializeList_QString(QVariant list);
-            static QList<int> DeserializeList_int(QVariant list);
-            static QList<char> DeserializeList_char(QVariant list);
-            static QList<QVariant> CCharListToVariantList(QList<char> list);
+            static QList<QString> DeserializeList_QString(const QVariant &list);
+            static QList<int> DeserializeList_int(const QVariant &list);
+            static QList<char> DeserializeList_char(const QVariant &list);
+            static QList<QVariant> CCharListToVariantList(const QList<char> &list);
             static const unsigned long long LIBIRC_UNKNOWN_RPC_ID;
 
             SerializableItem();
             virtual ~SerializableItem();
             virtual QHash<QString, QVariant> ToHash();
             virtual void LoadHash(QHash<QString, QVariant> hash);
+            virtual void LoadHash(const QHash<QString, QVariant> &hash);
             virtual void RPC(int function, QList<QVariant> parameters);
             virtual bool SupportsRPC() { return false; }
             virtual unsigned long long __rpc_GetID();

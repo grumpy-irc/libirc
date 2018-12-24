@@ -8,14 +8,14 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "mode.h"
 #include <QDebug>
 
 using namespace libirc;
 
-QList<SingleMode> SingleMode::ToModeList(QString mode_string, QList<QString> parameters, QList<char> parameter_modes)
+QList<SingleMode> SingleMode::ToModeList(const QString &mode_string, QList<QString> parameters, const QList<char> &parameter_modes)
 {
     QList<SingleMode> modes;
     int position = 0;
@@ -46,22 +46,12 @@ QList<SingleMode> SingleMode::ToModeList(QString mode_string, QList<QString> par
     return modes;
 }
 
-Mode::Mode()
-{
-
-}
-
-Mode::Mode(QString mode_string)
+Mode::Mode(const QString &mode_string)
 {
     this->SetMode(mode_string);
 }
 
-Mode::~Mode()
-{
-
-}
-
-void Mode::SetMode(QString mode_string, bool reset)
+void Mode::SetMode(const QString &mode_string, bool reset)
 {
     int position = 0;
     bool including = true;
@@ -160,7 +150,7 @@ QString Mode::ToString()
     return mode;
 }
 
-void Mode::LoadHash(QHash<QString, QVariant> hash)
+void Mode::LoadHash(const QHash<QString, QVariant> &hash)
 {
     if (hash.contains("excluded_modes"))
     {
@@ -217,14 +207,12 @@ SingleMode::SingleMode(QString mode)
     }
 }
 
-SingleMode::SingleMode(QHash<QString, QVariant> hash)
+SingleMode::SingleMode(const QHash<QString, QVariant> &hash)
 {
+    this->including = false;
+    this->valid = false;
+    this->mode = 0;
     this->LoadHash(hash);
-}
-
-SingleMode::~SingleMode()
-{
-
 }
 
 bool SingleMode::IsIncluding()
@@ -255,7 +243,7 @@ char SingleMode::Get() const
     return this->mode;
 }
 
-void SingleMode::LoadHash(QHash<QString, QVariant> hash)
+void SingleMode::LoadHash(const QHash<QString, QVariant> &hash)
 {
     UNSERIALIZE_CCHAR(mode);
     UNSERIALIZE_BOOL(including);

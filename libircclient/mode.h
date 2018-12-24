@@ -25,35 +25,35 @@ namespace libircclient
 	class LIBIRCCLIENTSHARED_EXPORT Mode : public libirc::Mode
     {
         public:
-            Mode();
-            Mode(QHash<QString, QVariant> hash);
-            Mode(QString mode) : libirc::Mode(mode) {}
+            Mode()=default;
+            Mode(const QHash<QString, QVariant> &hash);
+            Mode(const QString &mode) : libirc::Mode(mode) {}
     };
 
     class LIBIRCCLIENTSHARED_EXPORT UMode : public Mode
     {
         public:
-            UMode();
-            UMode(QHash<QString, QVariant> hash);
-            UMode(QString mode_string) : Mode(mode_string) {}
+            UMode()=default;
+            UMode(const QHash<QString, QVariant> &hash);
+            UMode(const QString &mode_string) : Mode(mode_string) {}
     };
 
     class LIBIRCCLIENTSHARED_EXPORT CMode : public Mode
     {
         public:
-            CMode();
-            CMode(QHash<QString, QVariant> hash);
-            CMode(QString mode_string);
+            CMode()=default;
+            CMode(const QHash<QString, QVariant> &hash);
+            CMode(const QString &mode_string) : Mode(mode_string) {};
     };
 
     class LIBIRCCLIENTSHARED_EXPORT ChannelPMode : public libirc::SingleMode
     {
         public:
-            ChannelPMode(QString mode);
-            ChannelPMode(QHash<QString, QVariant> mode);
-            virtual ~ChannelPMode();
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            ChannelPMode(const QString &mode);
+            ChannelPMode(const QHash<QString, QVariant> &mode);
+            ~ChannelPMode() override=default;
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
             char Symbol;
             QDateTime SetOn;
             User SetBy;

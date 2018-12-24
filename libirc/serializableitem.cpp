@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "serializableitem.h"
 #include <limits>
@@ -20,7 +20,7 @@ unsigned long long SerializableItem::__rpc_currentID = 0;
 QMutex SerializableItem::__rpc_lock;
 QHash<unsigned long long, SerializableItem*> SerializableItem::__rpc_cache;
 
-QList<int> SerializableItem::DeserializeList_int(QVariant list)
+QList<int> SerializableItem::DeserializeList_int(const QVariant &list)
 {
     QList<int> tmp;
     foreach(QVariant x, list.toList())
@@ -29,7 +29,7 @@ QList<int> SerializableItem::DeserializeList_int(QVariant list)
     return tmp;
 }
 
-QList<QString> SerializableItem::DeserializeList_QString(QVariant list)
+QList<QString> SerializableItem::DeserializeList_QString(const QVariant &list)
 {
     QList<QString> tmp;
     foreach(QVariant x, list.toList())
@@ -38,7 +38,7 @@ QList<QString> SerializableItem::DeserializeList_QString(QVariant list)
     return tmp;
 }
 
-QList<char> SerializableItem::DeserializeList_char(QVariant list)
+QList<char> SerializableItem::DeserializeList_char(const QVariant &list)
 {
     QList<char> tmp;
     foreach(QVariant x, list.toList())
@@ -47,7 +47,7 @@ QList<char> SerializableItem::DeserializeList_char(QVariant list)
     return tmp;
 }
 
-QList<QVariant> SerializableItem::CCharListToVariantList(QList<char> list)
+QList<QVariant> SerializableItem::CCharListToVariantList(const QList<char> &list)
 {
     QList<QVariant> tmp;
     foreach(char item, list)
@@ -85,6 +85,16 @@ QHash<QString, QVariant> SerializableItem::ToHash()
 }
 
 void SerializableItem::LoadHash(QHash<QString, QVariant> hash)
+{
+    if (!hash.contains("__rpc_id"))
+        return;
+    UNSERIALIZE_ULONGLONG(__rpc_id);
+    __rpc_lock.lock();
+    __rpc_cache.insert(__rpc_id, this);
+    __rpc_lock.unlock();
+}
+
+void SerializableItem::LoadHash(const QHash<QString, QVariant> &hash)
 {
     if (!hash.contains("__rpc_id"))
         return;

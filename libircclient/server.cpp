@@ -14,17 +14,12 @@
 
 using namespace libircclient;
 
-Server::Server()
+Server::Server(const QHash<QString, QVariant> &hash) : libirc::Server(hash)
 {
 
 }
 
-Server::Server(QHash<QString, QVariant> hash) : libirc::Server(hash)
-{
-
-}
-
-void Server::LoadHash(QHash<QString, QVariant> hash)
+void Server::LoadHash(const QHash<QString, QVariant> &hash)
 {
     libirc::Server::LoadHash(hash);
 }

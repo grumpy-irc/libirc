@@ -22,10 +22,10 @@ namespace libircclient
 	class LIBIRCCLIENTSHARED_EXPORT Server : public libirc::Server
     {
         public:
-            Server();
-            Server(QHash<QString, QVariant> hash);
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            Server()=default;
+            Server(const QHash<QString, QVariant> &hash);
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
     };
 }
 

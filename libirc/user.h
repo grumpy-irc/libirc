@@ -20,25 +20,25 @@ namespace libirc
     class LIBIRCSHARED_EXPORT User : public SerializableItem
     {
         public:
-            User();
+            User()=default;
             User(User *user);
-            User(QString source);
-            virtual ~User() {}
+            User(const QString &source);
+            ~User() override = default;
             virtual QString GetHost() const;
             virtual void SetHost(const QString &host);
             virtual QString GetNick() const;
             virtual void SetNick(const QString &nick);
             virtual QString GetIdent() const;
-            virtual void SetIdent(QString ident);
+            virtual void SetIdent(const QString &ident);
             virtual QString ToString() const;
-            virtual void SetRealname(QString user);
+            virtual void SetRealname(const QString &user);
             virtual QString GetRealname() const;
             //! Returns whether User object is null, this can be verified for functions that
             //! return a copy of object instead of pointer (pass by value), where it's not
             //! possible to return NULL literally.
             bool IsNull();
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
 
         protected:
             QString _host;

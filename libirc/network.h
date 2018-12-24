@@ -21,10 +21,10 @@ namespace libirc
     {
 		Q_OBJECT
         public:
-            Network(QString Name);
-			virtual ~Network() {}
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            Network(const QString &Name);
+             ~Network() override = default;
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
             QString GetNetworkName();
 		protected:
             QString networkName;

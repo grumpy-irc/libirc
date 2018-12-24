@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "channel.h"
 #include "user.h"
@@ -16,13 +16,13 @@
 
 using namespace libircclient;
 
-Channel::Channel(QHash<QString, QVariant> hash) : libirc::Channel("")
+Channel::Channel(const QHash<QString, QVariant> &hash) : libirc::Channel("")
 {
-    this->_net = NULL;
+    this->_net = nullptr;
     this->LoadHash(hash);
 }
 
-Channel::Channel(QString name, Network *network) : libirc::Channel(name)
+Channel::Channel(const QString &name, Network *network) : libirc::Channel(name)
 {
     this->_net = network;
     this->_localModeDateTime = QDateTime::currentDateTime();
@@ -81,7 +81,7 @@ void Channel::RemoveUser(QString user)
     this->_users.remove(user);
 }
 
-void Channel::ChangeNick(QString old_nick, QString new_nick)
+void Channel::ChangeNick(const QString &old_nick, const QString &new_nick)
 {
     User *user = this->GetUser(old_nick);
     if (!user)
@@ -93,7 +93,7 @@ void Channel::ChangeNick(QString old_nick, QString new_nick)
     this->_users.insert(new_nick.toLower(), user);
 }
 
-void Channel::ChangeHost(QString nick, QString new_host, QString new_ident)
+void Channel::ChangeHost(const QString &nick, const QString &new_host, const QString &new_ident)
 {
     User *user = this->GetUser(nick);
     if (!user)
@@ -102,12 +102,12 @@ void Channel::ChangeHost(QString nick, QString new_host, QString new_ident)
     user->SetIdent(new_ident);
 }
 
-bool Channel::ContainsUser(QString user)
+bool Channel::ContainsUser(const QString &user)
 {
     return this->_users.contains(user.toLower());
 }
 
-void Channel::LoadHash(QHash<QString, QVariant> hash)
+void Channel::LoadHash(const QHash<QString, QVariant> &hash)
 {
     libirc::Channel::LoadHash(hash);
     UNSERIALIZE_DATETIME(_localModeDateTime);
@@ -189,7 +189,7 @@ User *Channel::GetUser(QString user)
     if (this->_users.contains(user))
         return this->_users[user];
 
-    return NULL;
+    return nullptr;
 }
 
 QDateTime Channel::GetMTime()

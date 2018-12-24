@@ -8,14 +8,14 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015 - 2018
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "serveraddress.h"
 #include "irc_standards.h"
 
 using namespace libirc;
 
-ServerAddress::ServerAddress(QString url)
+ServerAddress::ServerAddress(const QString &url)
 {
     this->_host = "";
     this->_original = url;
@@ -65,13 +65,13 @@ ServerAddress::ServerAddress(QString url)
         } else
         {
             this->_host = temp.mid(0, temp.indexOf(":"));
-            this->_port = temp.mid(temp.indexOf(":") + 1).toUInt();
+            this->_port = temp.midRef(temp.indexOf(":") + 1).toUInt();
         }
     }
     this->_valid = true;
 }
 
-ServerAddress::ServerAddress(QString Host, bool SSL, unsigned int Port, QString Nick, QString Password)
+ServerAddress::ServerAddress(const QString &Host, bool SSL, unsigned int Port, const QString &Nick, const QString &Password)
 {
     this->_host = Host;
     this->_ssl = SSL;
@@ -82,15 +82,13 @@ ServerAddress::ServerAddress(QString Host, bool SSL, unsigned int Port, QString 
     this->_nick = Nick;
 }
 
-ServerAddress::ServerAddress(QHash<QString, QVariant> hash)
+ServerAddress::ServerAddress(const QHash<QString, QVariant> &hash)
 {
     this->_valid = false;
+    this->_port = IRC_STANDARD_PORT;
+    this->_ssl = false;
+    this->_ipv6 = false;
     this->LoadHash(hash);
-}
-
-ServerAddress::~ServerAddress()
-{
-
 }
 
 bool ServerAddress::IsValid()
@@ -113,13 +111,13 @@ unsigned int ServerAddress::GetPort()
     return this->_port;
 }
 
-void ServerAddress::SetHost(QString host)
+void ServerAddress::SetHost(const QString &host)
 {
     this->_host = host;
     this->_valid = true;
 }
 
-void ServerAddress::SetPassword(QString pw)
+void ServerAddress::SetPassword(const QString &pw)
 {
     this->_password = pw;
 }
@@ -134,7 +132,7 @@ void ServerAddress::SetSSL(bool ssl)
     this->_ssl = ssl;
 }
 
-void ServerAddress::SetRealname(QString name)
+void ServerAddress::SetRealname(const QString &name)
 {
     this->_realname = name;
 }
@@ -144,7 +142,7 @@ QString ServerAddress::GetRealname()
     return this->_realname;
 }
 
-void ServerAddress::LoadHash(QHash<QString, QVariant> hash)
+void ServerAddress::LoadHash(const QHash<QString, QVariant> &hash)
 {
     UNSERIALIZE_UINT(_port);
     UNSERIALIZE_STRING(_password);
@@ -179,7 +177,7 @@ QString ServerAddress::GetOriginal()
     return this->_original;
 }
 
-void ServerAddress::SetNick(QString nick)
+void ServerAddress::SetNick(const QString &nick)
 {
     this->_nick = nick;
 }
@@ -199,7 +197,7 @@ QString ServerAddress::GetSuffix()
     return this->_suffix;
 }
 
-void ServerAddress::SetSuffix(QString suffix)
+void ServerAddress::SetSuffix(const QString &suffix)
 {
     this->_suffix = suffix;
 }

@@ -14,11 +14,6 @@
 
 using namespace libirc;
 
-User::User()
-{
-
-}
-
 User::User(User *user)
 {
     this->_host = user->_host;
@@ -27,7 +22,7 @@ User::User(User *user)
     this->_username = user->_username;
 }
 
-User::User(QString source)
+User::User(const QString &source)
 {
     QString temp = source;
     if (source.contains("!"))
@@ -62,7 +57,7 @@ QString User::GetIdent() const
     return this->_ident;
 }
 
-void User::SetIdent(QString ident)
+void User::SetIdent(const QString &ident)
 {
     this->_ident = ident;
 }
@@ -87,7 +82,7 @@ QString libirc::User::ToString() const
     return this->_nick + "!" + this->_ident + "@" + this->_host;
 }
 
-void User::SetRealname(QString user)
+void User::SetRealname(const QString &user)
 {
     this->_username = user;
 }
@@ -102,7 +97,7 @@ bool User::IsNull()
     return this->_nick.isNull();
 }
 
-void User::LoadHash(QHash<QString, QVariant> hash)
+void User::LoadHash(const QHash<QString, QVariant> &hash)
 {
     UNSERIALIZE_STRING(_username);
     UNSERIALIZE_STRING(_host);

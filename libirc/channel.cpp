@@ -8,20 +8,15 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "channel.h"
 
 using namespace libirc;
 
-Channel::Channel(QString name)
+Channel::Channel(const QString &name)
 {
     this->_name = name;
-}
-
-Channel::~Channel()
-{
-
 }
 
 QString Channel::GetName() const
@@ -34,7 +29,7 @@ QString Channel::GetTopic() const
     return this->_topic;
 }
 
-void Channel::SetTopicTime(QDateTime time)
+void Channel::SetTopicTime(const QDateTime &time)
 {
     this->_topicTime = time;
 }
@@ -49,12 +44,12 @@ QString Channel::GetTopicUser() const
     return this->_topicUser;
 }
 
-void Channel::SetTopicUser(QString user)
+void Channel::SetTopicUser(const QString &user)
 {
     this->_topicUser = user;
 }
 
-void Channel::LoadHash(QHash<QString, QVariant> hash)
+void Channel::LoadHash(const QHash<QString, QVariant> &hash)
 {
     UNSERIALIZE_STRING(_topic);
     UNSERIALIZE_STRING(_name);
@@ -72,12 +67,12 @@ QHash<QString, QVariant> Channel::ToHash()
     return hash;
 }
 
-void Channel::SetName(QString name)
+void Channel::SetName(const QString &name)
 {
     this->_name = name;
 }
 
-void Channel::SetTopic(QString topic)
+void Channel::SetTopic(const QString &topic)
 {
     this->_topic = topic;
 }

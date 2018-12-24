@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "user.h"
 
@@ -20,14 +20,14 @@ User::User()
     this->IsAway = false;
 }
 
-User::User(QHash<QString, QVariant> hash)
+User::User(const QHash<QString, QVariant> &hash)
 {
     this->Hops = 0;
     this->IsAway = false;
     this->LoadHash(hash);
 }
 
-User::User(QString user) : libirc::User(user)
+User::User(const QString &user) : libirc::User(user)
 {
     this->Hops = 0;
     this->IsAway = false;
@@ -59,7 +59,7 @@ char User::GetHighestCUMode()
     return this->CUModes[0];
 }
 
-void User::LoadHash(QHash<QString, QVariant> hash)
+void User::LoadHash(const QHash<QString, QVariant> &hash)
 {
     libirc::User::LoadHash(hash);
     UNSERIALIZE_CHARLIST(ChannelPrefixes);

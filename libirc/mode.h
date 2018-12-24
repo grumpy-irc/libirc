@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #ifndef LIBMODE_H
 #define LIBMODE_H
@@ -23,17 +23,17 @@ namespace libirc
     class LIBIRCSHARED_EXPORT SingleMode : public SerializableItem
     {
         public:
-            static QList<SingleMode> ToModeList(QString mode_string, QList<QString> parameters, QList<char> parameter_modes);
+            static QList<SingleMode> ToModeList(const QString &mode_string, QList<QString> parameters, const QList<char> &parameter_modes);
 
             SingleMode(QString mode);
-            SingleMode(QHash<QString, QVariant> hash);
-            virtual ~SingleMode();
+            SingleMode(const QHash<QString, QVariant> &hash);
+             ~SingleMode() override=default;
             bool IsIncluding();
             bool IsValid();
             QString ToString() const;
             char Get() const;
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
             QString Parameter;
 
         protected:
@@ -45,15 +45,15 @@ namespace libirc
     class LIBIRCSHARED_EXPORT Mode : public SerializableItem
     {
         public:
-            Mode();
-            Mode(QString mode_string);
-            virtual ~Mode();
+            Mode()=default;
+            Mode(const QString &mode_string);
+             ~Mode() override=default;
             /*!
              * \brief SetMode Take a string for a mode (like +xt) and try to apply it over the existing mode
              * \param mode_string String that represent some IRC mode
              * \param reset If true the modes after MODE_EXCLUDE sign will be reset, instead of append to exluding modes
              */
-            void SetMode(QString mode_string, bool reset = false);
+            void SetMode(const QString &mode_string, bool reset = false);
             bool Includes(char mode);
             bool Excludes(char mode);
             bool IsEmpty();
@@ -64,8 +64,8 @@ namespace libirc
             QList<char> GetExcluding();
             QList<char> GetIncluding();
             QString ToString();
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
             QString Parameter;
 
         protected:

@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #ifndef LIBIRCSERVER_H
 #define LIBIRCSERVER_H
@@ -20,16 +20,16 @@ namespace libirc
     class LIBIRCSHARED_EXPORT Server : public SerializableItem
     {
         public:
-            Server(QHash<QString, QVariant> hash);
+            Server(const QHash<QString, QVariant> &hash);
             // Default ct
             Server();
-            virtual ~Server() {}
+             ~Server() override = default;
             QString GetName() const;
-            void SetVersion(QString version);
-            void SetName(QString name);
+            void SetVersion(const QString &version);
+            void SetName(const QString &name);
             QString GetVersion() const;
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
 
         protected:
             QString _name;

@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #ifndef LIBIRCCHANNEL_H
 #define LIBIRCCHANNEL_H
@@ -21,18 +21,18 @@ namespace libirc
     class LIBIRCSHARED_EXPORT Channel : public SerializableItem
     {
         public:
-            Channel(QString name);
-            virtual ~Channel();
+            Channel(const QString &name);
+             ~Channel() override=default;
             virtual QString GetName() const;
-            virtual void SetName(QString name);
-            virtual void SetTopic(QString topic);
+            virtual void SetName(const QString &name);
+            virtual void SetTopic(const QString &topic);
             virtual QString GetTopic() const;
-            virtual void SetTopicTime(QDateTime time);
+            virtual void SetTopicTime(const QDateTime &time);
             virtual QDateTime GetTopicTime() const;
             virtual QString GetTopicUser() const;
-            virtual void SetTopicUser(QString user);
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            virtual void SetTopicUser(const QString &user);
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
 
         protected:
             QString _name;

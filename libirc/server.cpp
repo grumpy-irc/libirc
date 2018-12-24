@@ -8,15 +8,17 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "server.h"
+#include "irc_standards.h"
 
 using namespace libirc;
 
 Server::Server()
 {
     this->_ssl = false;
+    this->_port = IRC_STANDARD_PORT;
     this->_version = "unknown version";
 }
 
@@ -25,7 +27,7 @@ QString Server::GetVersion() const
     return this->_version;
 }
 
-void Server::LoadHash(QHash<QString, QVariant> hash)
+void Server::LoadHash(const QHash<QString, QVariant> &hash)
 {
     UNSERIALIZE_BOOL(_ssl);
     UNSERIALIZE_STRING(_version);
@@ -48,19 +50,20 @@ QString Server::GetName() const
     return this->_name;
 }
 
-void Server::SetName(QString name)
+void Server::SetName(const QString &name)
 {
     this->_name = name;
 }
 
-void Server::SetVersion(QString version)
+void Server::SetVersion(const QString &version)
 {
     this->_version = version;
 }
 
-libirc::Server::Server(QHash<QString, QVariant> hash)
+libirc::Server::Server(const QHash<QString, QVariant> &hash)
 {
     this->_ssl = false;
+    this->_port = IRC_STANDARD_PORT;
     this->_version = "unknown version";
     this->LoadHash(hash);
 }

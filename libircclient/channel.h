@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #ifndef CHANNEL_H
 #define CHANNEL_H
@@ -32,11 +32,11 @@ namespace libircclient
     class LIBIRCCLIENTSHARED_EXPORT Channel : public libirc::Channel
     {
         public:
-            Channel(QHash<QString, QVariant> hash);
-            Channel(QString name, Network *network = NULL);
+            Channel(const QHash<QString, QVariant> &hash);
+            Channel(const QString &name, Network *network = nullptr);
             Channel(Channel *channel);
             Channel(const Channel &channel);
-            ~Channel();
+            ~Channel() override;
             /*!
              * \brief InsertUser Use this to insert a new user to channel, if user already exists it's updated according to information for new user
              * \param user Pointer to user object, this function creates a copy, so the object passed here can be temporary
@@ -44,12 +44,12 @@ namespace libircclient
              */
             User *InsertUser(User *user);
             void RemoveUser(QString user);
-            void ChangeNick(QString old_nick, QString new_nick);
+            void ChangeNick(const QString &old_nick, const QString &new_nick);
             //! Changes a hostname or ident of user in channel
-            void ChangeHost(QString nick, QString new_host, QString new_ident);
-            bool ContainsUser(QString user);
-            void LoadHash(QHash<QString, QVariant> hash);
-            QHash<QString, QVariant> ToHash();
+            void ChangeHost(const QString &nick, const QString &new_host, const QString &new_ident);
+            bool ContainsUser(const QString &user);
+            void LoadHash(const QHash<QString, QVariant> &hash) override;
+            QHash<QString, QVariant> ToHash() override;
             void SendMessage(QString text);
             void SetNetwork(Network *network);
             void ClearUsers();
