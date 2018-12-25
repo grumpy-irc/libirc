@@ -695,7 +695,8 @@ QHash<QString, QVariant> Network::ToHash()
     return hash;
 }
 
-void Network::OnSslHandshakeFailure(const QList<QSslError> &errors)
+// This is a slot so don't change the signature to const QList<QSslError> &errors
+void Network::OnSslHandshakeFailure(QList<QSslError> errors)
 {
     bool temp = false;
     emit this->Event_SSLFailure(errors, &temp);

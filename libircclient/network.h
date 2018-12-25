@@ -293,7 +293,7 @@ namespace libircclient
             void Event_CAP_RequestedCapNotSupported(QString name);
 
         protected slots:
-            virtual void OnSslHandshakeFailure(const QList<QSslError> &errors);
+            virtual void OnSslHandshakeFailure(QList<QSslError> errors);
             virtual void OnError(QAbstractSocket::SocketError er);
             virtual void OnReceive();
             virtual void OnDisconnect();
