@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include "parser.h"
 #include <QStringList>
@@ -29,23 +29,43 @@ Parser::Parser(QString incoming_text)
     // remove all garbage from incoming text
     incoming_text.replace("\r", "");
     incoming_text.replace("\n", "");
-    this->text = incoming_text;
+    this->original_text = incoming_text;
     this->_valid = false;
     this->user = nullptr;
     // the incoming text must be prefixed with colon, otherwise it's not from a server and we don't relay client messages
     if (!incoming_text.startsWith(":"))
     {
+        // https://ircv3.net/specs/extensions/server-time-3.2.html
+        if (incoming_text.startsWith("@time=") && incoming_text.contains(" "))
+        {
+            QString time_string = incoming_text.mid(6);
+            time_string = time_string.mid(0, time_string.indexOf(" "));
+            // Cut the incoming text at first space
+            // @time=2011-10-19T16:40:51.620Z :Angel!angel@example.org PRIVMSG Wiz :Hello
+            //                               ^ here
+            incoming_text = incoming_text.mid(incoming_text.indexOf(" ") + 1);
+            // Process the timestamp
+            this->timestamp = QDateTime::fromString(time_string, "yyyy-MM-ddTHH:mm:ss.zzzZ");
+            if (!this->timestamp.isValid())
+                this->timestamp = QDateTime::currentDateTime();
+        } else
+        {
+            this->timestamp = QDateTime::currentDateTime();
+        }
         // this is an exception though
         if (incoming_text.startsWith("PING :"))
         {
+            this->text = incoming_text;
             this->_numeric = IRC_NUMERIC_RAW_PING;
             this->parameterLine = incoming_text.mid(6);
             this->parameters = this->parameterLine.split(" ");
             this->_valid = true;
             return;
         }
-        return;
+        if (!incoming_text.startsWith(":"))
+            return;
     }
+    this->text = incoming_text;
     QString temp = incoming_text.mid(1);
     // get the source
     if (!temp.contains(" "))
@@ -154,6 +174,11 @@ QString Parser::GetRaw()
     return this->text;
 }
 
+QString Parser::GetOriginalRaw()
+{
+    return this->original_text;
+}
+
 QString Parser::GetText()
 {
     return this->message_text;
@@ -162,6 +187,11 @@ QString Parser::GetText()
 QList<QString> Parser::GetParameters()
 {
     return this->parameters;
+}
+
+QDateTime Parser::GetTimestamp()
+{
+    return this->timestamp;
 }
 
 User *Parser::GetSourceUserInfo()

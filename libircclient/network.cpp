@@ -1888,7 +1888,7 @@ void Network::resetCap()
     this->_capabilitiesRequested.clear();
     this->_capabilitiesSubscribed.clear();
     this->_capabilitiesSupported.clear();
-    this->_capabilitiesRequested << "away-notify" << "extended-join" << "multi-prefix" << "chghost";
+    this->_capabilitiesRequested << "away-notify" << "extended-join" << "multi-prefix" << "chghost" << "server-time";
 }
 
 void Network::processAutoCap()

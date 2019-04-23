@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015 - 2018
+// Copyright (c) Petr Bena 2015 - 2019
 
 
 #ifndef PARSER_H
@@ -16,6 +16,7 @@
 
 #include <QString>
 #include <QList>
+#include <QDateTime>
 #include "libircclient_global.h"
 #include "user.h"
 #include "../libirc/irc_numerics.h"
@@ -32,21 +33,28 @@ namespace libircclient
             User *GetSourceUserInfo();
             QString GetSourceInfo();
             QString GetParameterLine();
+            //! Returns RAW data as received from server, with some alterations to remove some CAP extras (such as server-time)
+            //! this RAW text follows IRC RFC preceeding IRCv3
             QString GetRaw();
+            //! Returns true RAW data as received from server with no alterations, with IRCv3 caps this text doesn't follow standard convention
+            QString GetOriginalRaw();
             QString GetText();
             QList<QString> GetParameters();
+            QDateTime GetTimestamp();
 
         private:
             void obtainNumeric();
             User *user;
             QString source;
             QString text;
+            QString original_text;
             QString message_text;
             bool _valid;
             int _numeric;
             QList<QString> parameters;
             QString command;
             QString parameterLine;
+            QDateTime timestamp;
 
     };
 }
