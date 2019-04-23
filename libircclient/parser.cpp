@@ -46,12 +46,9 @@ Parser::Parser(QString incoming_text)
             incoming_text = incoming_text.mid(incoming_text.indexOf(" ") + 1);
             // Process the timestamp
             this->timestamp = QDateTime::fromString(time_string, "yyyy-MM-ddTHH:mm:ss.zzzZ");
-            if (!this->timestamp.isValid())
-                this->timestamp = QDateTime::currentDateTime();
-        } else
-        {
-            this->timestamp = QDateTime::currentDateTime();
         }
+        if (!this->timestamp.isValid())
+            this->timestamp = QDateTime::currentDateTime();
         // this is an exception though
         if (incoming_text.startsWith("PING :"))
         {
@@ -64,6 +61,10 @@ Parser::Parser(QString incoming_text)
         }
         if (!incoming_text.startsWith(":"))
             return;
+    } else
+    {
+        if (!this->timestamp.isValid())
+            this->timestamp = QDateTime::currentDateTime();
     }
     this->text = incoming_text;
     QString temp = incoming_text.mid(1);
