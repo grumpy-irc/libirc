@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015 - 2018
+// Copyright (c) Petr Bena 2015 - 2019
 
 #ifndef NETWORK_H
 #define NETWORK_H
@@ -113,6 +113,15 @@ namespace libircclient
             virtual bool SupportsIRCv3() const;
             virtual void EnableIRCv3Support();
             virtual void DisableIRCv3Support();
+            //! Requests IRCv3 capability, this needs to be called before connection is initiated
+            virtual void RequestCapability(const QString &capability);
+            //! Remove a capability from list of requested caps, meaning we will not ask for it after connecting to server
+            virtual void DisableCapability(const QString &capability);
+            //! Returns true in case this capability is on a list of caps we want to enabled after connection to network
+            virtual bool CapabilityRequested(const QString &capability);
+            virtual bool CapabilityEnabled(const QString &capability);
+            //! Works only after connection is established - will return true in case network supports this capability
+            virtual bool CapabilitySupported(const QString &capability);
             virtual QList<QString> GetSupportedCaps();
             virtual QList<QString> GetSubscribedCaps();
             virtual bool ContainsChannel(const QString &channel_name);

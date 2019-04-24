@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015 - 2018
+// Copyright (c) Petr Bena 2015 - 2019
 
 #include <QtNetwork>
 #include <QAbstractSocket>
@@ -309,6 +309,33 @@ void Network::EnableIRCv3Support()
 void Network::DisableIRCv3Support()
 {
     this->_enableCap = false;
+}
+
+void Network::RequestCapability(const QString &capability)
+{
+    if (!this->_capabilitiesRequested.contains(capability))
+        this->_capabilitiesRequested.append(capability);
+}
+
+void Network::DisableCapability(const QString &capability)
+{
+    if (this->_capabilitiesRequested.contains(capability))
+        this->_capabilitiesRequested.removeAll(capability);
+}
+
+bool Network::CapabilityRequested(const QString &capability)
+{
+    return this->_capabilitiesRequested.contains(capability);
+}
+
+bool Network::CapabilityEnabled(const QString &capability)
+{
+    return this->_capabilitiesSubscribed.contains(capability);
+}
+
+bool Network::CapabilitySupported(const QString &capability)
+{
+    return this->_capabilitiesSupported.contains(capability);
 }
 
 QList<QString> Network::GetSupportedCaps()
