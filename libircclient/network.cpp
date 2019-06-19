@@ -569,6 +569,16 @@ QList<char> Network::GetCRModes()
     return this->CRModes;
 }
 
+QList<char> Network::GetSTATUSMSGModes()
+{
+    return this->STATUSMSG_Modes;
+}
+
+void Network::SetSTATUSMSGModes(const QList<char> &data)
+{
+    this->STATUSMSG_Modes = data;
+}
+
 void Network::SetCUModes(const QList<char> &data)
 {
     this->CUModes = data;
@@ -655,6 +665,7 @@ void Network::LoadHash(const QHash<QString, QVariant> &hash)
     UNSERIALIZE_CHARLIST(CUModes);
     UNSERIALIZE_CHARLIST(CPModes);
     UNSERIALIZE_CHARLIST(CRModes);
+    UNSERIALIZE_CHARLIST(STATUSMSG_Modes);
     UNSERIALIZE_BOOL(_enableCap);
     UNSERIALIZE_CHARLIST(channelUserPrefixes);
     UNSERIALIZE_STRING(password);
@@ -704,6 +715,7 @@ QHash<QString, QVariant> Network::ToHash()
     hash.insert("CModes", serializeList(this->CModes));
     hash.insert("CPModes", serializeList(this->CPModes));
     hash.insert("CUModes", serializeList(this->CUModes));
+    hash.insert("STATUSMSG_Modes", serializeList(this->STATUSMSG_Modes));
     hash.insert("channelUserPrefixes", serializeList(this->channelUserPrefixes));
     hash.insert("CRModes", serializeList(this->CRModes));
     hash.insert("localUserMode", this->localUserMode.ToHash());
@@ -1214,11 +1226,13 @@ void Network::processInfo(Parser *parser)
             broken_prefix:
                 qDebug() << "IRC PARSER: broken prefix: " + parser->GetRaw();
                 break;
-        }
-        else if (info.startsWith("NETWORK="))
+        } else if (info.startsWith("NETWORK="))
         {
             this->networkName = info.mid(8);
             continue;
+        } else if (info.startsWith("STATUSMSG="))
+        {
+            this->STATUSMSG_Modes = CLFromStr(info.mid(10));
         } else if (info.startsWith("CHANMODES="))
         {
             QString input = info.mid(10);
@@ -1885,6 +1899,7 @@ void Network::initialize()
     this->channelUserPrefixes << '~' << '&' << '@' << '%' << '+';
     this->CUModes << 'q' << 'a' << 'o' << 'h' << 'v';
     this->CModes << 'i' << 'm';
+    this->STATUSMSG_Modes << '@' << '+';
     connect(&this->capTimeout, SIGNAL(timeout()), this, SLOT(OnCapSupportTimeout()));
     connect(&this->senderTimer, SIGNAL(timeout()), this, SLOT(OnSend()));
     this->ChannelModeHelp = NetworkModeHelp::GetChannelModeHelp("unknown");

@@ -167,6 +167,8 @@ namespace libircclient
             virtual void SetCRModes(const QList<char> &data);
             virtual QList<char> GetCCModes();
             virtual QList<char> GetCRModes();
+            virtual QList<char> GetSTATUSMSGModes();
+            virtual void SetSTATUSMSGModes(const QList<char> &data);
             virtual void SetCUModes(const QList<char> &data);
             virtual QList<char> GetCUModes();
             virtual void SetCCModes(const QList<char> &data);
@@ -400,6 +402,8 @@ namespace libircclient
             QList<char> CUModes;
             //! Channel numeric modes (+l)
             QList<char> CCModes;
+            //! https://tools.ietf.org/html/draft-hardy-irc-isupport-00#section-4.18
+            QList<char> STATUSMSG_Modes;
             QString originalNick;
             UMode localUserMode;
             QString alternateNick;
