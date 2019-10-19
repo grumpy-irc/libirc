@@ -50,7 +50,7 @@ namespace libirc
             virtual QHash<QString, QVariant> ToHash();
             virtual void LoadHash(QHash<QString, QVariant> hash);
             virtual void LoadHash(const QHash<QString, QVariant> &hash);
-            virtual void RPC(int function, QList<QVariant> parameters);
+            virtual void RPC(int function, const QList<QVariant> &parameters);
             virtual bool SupportsRPC() { return false; }
             virtual unsigned long long __rpc_GetID();
         protected:

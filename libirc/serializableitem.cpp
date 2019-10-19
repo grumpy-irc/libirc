@@ -25,7 +25,7 @@ QList<int> SerializableItem::DeserializeList_int(const QVariant &list)
     QList<int> tmp;
     foreach(QVariant x, list.toList())
         tmp.append(x.toInt());
-    // here we go
+
     return tmp;
 }
 
@@ -34,7 +34,7 @@ QList<QString> SerializableItem::DeserializeList_QString(const QVariant &list)
     QList<QString> tmp;
     foreach(QVariant x, list.toList())
         tmp.append(x.toString());
-    // here we go
+
     return tmp;
 }
 
@@ -43,7 +43,7 @@ QList<char> SerializableItem::DeserializeList_char(const QVariant &list)
     QList<char> tmp;
     foreach(QVariant x, list.toList())
         tmp.append(x.toChar().toLatin1());
-    // here we go
+
     return tmp;
 }
 
@@ -104,7 +104,7 @@ void SerializableItem::LoadHash(const QHash<QString, QVariant> &hash)
     __rpc_lock.unlock();
 }
 
-void SerializableItem::RPC(int function, QList<QVariant> parameters)
+void SerializableItem::RPC(int function, const QList<QVariant> &parameters)
 {
     Q_UNUSED(function);
     Q_UNUSED(parameters);
