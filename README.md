@@ -17,3 +17,18 @@ Because GrumpyChat requires ability to transfer C++ objects via network protocol
 * QHash<QString, QVariant> ToHash()
 
 These two functions allow to turn whole C++ object into a QHash, which can be later either stored to disk, or serialized and sent over network. The hash can be user to instantiate these classes, either create new instance of class and then call LoadHash, or simply pass the hash into constructor of the class.
+
+# Compiling libirc
+If you have CMake and Qt on your system, you can compile libirc this way:
+```bash
+mkdir release
+cd release
+cmake ..
+make
+
+# If compiling with Qt5 use this switch
+cmake .. -DQT5_BUILD=true
+
+# NOTE: if you don't have Qt system-wide you can specify its install path using this
+cmake .. -DCMAKE_PREFIX_PATH:PATH=~/Qt/5.15.2/clang_64/ -DQT5_BUILD=true
+```
