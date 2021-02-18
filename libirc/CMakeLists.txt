@@ -1,4 +1,5 @@
 PROJECT(irc)
+include(GNUInstallDirs)
 
 if(QT5_BUILD)
   find_package(Qt5Core REQUIRED)
@@ -38,5 +39,5 @@ endif()
 
 TARGET_LINK_LIBRARIES(irc ${QT_LIBRARIES})
 if (NOT WIN32)
-    INSTALL(TARGETS irc LIBRARY DESTINATION lib)
+    INSTALL(TARGETS irc LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
