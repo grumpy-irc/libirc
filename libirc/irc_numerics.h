@@ -53,6 +53,7 @@
 #define IRC_NUMERIC_SAVENICK           43 // Sent to the client when their nickname was forced to change due to a collision
 #define IRC_NUMERIC_TRACELINK          200
 #define IRC_NUMERIC_STATS              210
+#define IRC_NUMERIC_RPL_TRYAGAIN       263 // When a server drops a command without processing it, it MUST use this reply. Also known as RPL_LOAD_THROTTLED and RPL_LOAD2HI, I'm presuming they do the same thing.
 #define IRC_NUMERIC_NONE               300 // Dummy reply, supposedly only used for debugging/testing new features, however has appeared in production daemons.
 #define IRC_NUMERIC_AWAY               301
 #define IRC_NUMERIC_UNAWAY             305 // Reply from AWAY when no longer marked as away
