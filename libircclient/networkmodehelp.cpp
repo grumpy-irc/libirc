@@ -41,6 +41,30 @@ QHash<char, QString> ircd_seven(QHash<char, QString> result)
     return result;
 }
 
+QHash<char, QString> solanum(QHash<char, QString> result)
+{
+    result.insert('n', "No external messages.  Only channel members may talk in the channel.");
+    result['t'] = "Ops Topic.  Only opped (+o) users may set the topic.";
+    result.insert('s', "Secret.  Channel will not be shown in /whois and /list etc.");
+    result.insert('p', "Private.  Disables /knock to the channel.");
+    result['m'] = "Moderated.  Only opped/voiced users may talk in channel.";
+    result['i'] = "Invite only.  Users need to be /invite'd or match a +I to join the channel.";
+    result.insert('r', "Registered users only.  Only users identified to services may join.");
+    result.insert('c', "No color.  All color codes in messages are stripped.");
+    result.insert('g', "Free invite.  Everyone may invite users.  Significantly weakens +i control.");
+    result.insert('z', "Op moderated.  Messages blocked by +m, +b and +q are instead sent to ops.");
+    result.insert('L', "Large ban list.  Increase maximum number of +beIq entries. Only settable by opers.");
+    result.insert('P', "Permanent.  Channel does not disappear when empty.  Only settable by opers.");
+    result.insert('F', "Free target.  Anyone may set forwards to this (otherwise ops are necessary).");
+    result.insert('Q', "Disable forward.  Users cannot be forwarded to the channel (however, new forwards can still be set subject to +F).");
+    result.insert('C', "Disable CTCP. All CTCP messages to the channel, except ACTION, are disallowed.");
+    result.insert('O', "IRC Operator only channel");
+    result.insert('A', "IRC server administrator only channel");
+    result.insert('T', "No NOTICEs allowed in the channel");
+    result.insert('S', "Only users connected via SSL/TLS may join the channel while this mode is set. Users already in the channel are not affected.");
+    return result;
+}
+
 QHash<char, QString> unrealircd4(QHash<char, QString> result)
 {
     result.insert('c' ,"Block messages containing mIRC color codes [o]");
@@ -124,6 +148,9 @@ QHash<char, QString> NetworkModeHelp::GetChannelModeHelp(QString ircd)
     } else if (ircd.startsWith("ircd-seven-1"))
     {
         result = ircd_seven(result);
+    } else if (ircd.startsWith("solanum-"))
+    {
+        result = solanum(result);
     }
 
     return result;
