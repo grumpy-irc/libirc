@@ -65,6 +65,19 @@ QHash<char, QString> solanum(QHash<char, QString> result)
     return result;
 }
 
+QHash<char, QString> hybrid7(QHash<char, QString> result)
+{
+    result.insert('c' ,"'No color' - No color messages allowed");
+    result['m'] = "Moderated channel (only +vhoaq users may speak) [h]";
+    result['n'] = "'No external messages' - This will prevent any user who isn't in the channel from sending messages to the channel";
+    result.insert('p', "'Paranoia' - Controls whether halfops may invite  users into a channel or whether they may kick other members of a channel");
+    result.insert('R', "'Registered only' - Client may join only when registered and identified to NickServ");
+    result.insert('M', "'Speak only if registered' - Client may speak only when registered and identified");
+    result.insert('S', "'SSL only' - Client may join only when using SSL Connection");
+    result.insert('z', "'Op moderated'. Messages of clients not voiced or op'd go to channel operators");
+    return result;
+}
+
 QHash<char, QString> unrealircd4(QHash<char, QString> result)
 {
     result.insert('c' ,"Block messages containing mIRC color codes [o]");
@@ -151,6 +164,9 @@ QHash<char, QString> NetworkModeHelp::GetChannelModeHelp(QString ircd)
     } else if (ircd.startsWith("solanum-"))
     {
         result = solanum(result);
+    } else if (ircd.startsWith("hybrid-7"))
+    {
+        result = hybrid7(result);
     }
 
     return result;
