@@ -36,6 +36,25 @@ ServerAddress::ServerAddress(const QString &url)
         temp = temp.mid(7);
         this->_ssl = true;
     }
+    // get the prefix (user~ident:password) - this is non-standard extension of irc address for grumpy
+    if (temp.contains("@"))
+    {
+        // cut the prefix out of rest of string
+        QString nick = temp.mid(0, temp.indexOf("@"));
+        temp = temp.mid(temp.indexOf("@") + 1);
+        if (nick.contains(":"))
+        {
+            // cut password out
+            this->_password = nick.mid(nick.indexOf(":") + 1);
+            nick = nick.mid(0, nick.indexOf(":"));
+        }
+        if (nick.contains("~"))
+        {
+            this->_ident = nick.mid(nick.indexOf("~") + 1);
+            nick = nick.mid(0, nick.indexOf("~"));
+        }
+        this->_nick = nick;
+    }
     // get the suffix
     if (temp.contains("/"))
     {
@@ -71,11 +90,12 @@ ServerAddress::ServerAddress(const QString &url)
     this->_valid = true;
 }
 
-ServerAddress::ServerAddress(const QString &Host, bool SSL, unsigned int Port, const QString &Nick, const QString &Password)
+ServerAddress::ServerAddress(const QString &Host, bool SSL, unsigned int Port, const QString &Nick, const QString &Password, const QString &Ident)
 {
     this->_host = Host;
     this->_ssl = SSL;
     this->_valid = true;
+    this->_ident = Ident;
     this->_port = Port;
     this->_password = Password;
     this->_ipv6 = false;
@@ -148,6 +168,7 @@ void ServerAddress::LoadHash(const QHash<QString, QVariant> &hash)
     UNSERIALIZE_STRING(_password);
     UNSERIALIZE_STRING(_nick);
     UNSERIALIZE_STRING(_host);
+    UNSERIALIZE_STRING(_ident);
     UNSERIALIZE_STRING(_suffix);
     UNSERIALIZE_BOOL(_ssl);
     UNSERIALIZE_BOOL(_valid);
@@ -167,6 +188,7 @@ QHash<QString, QVariant> ServerAddress::ToHash()
     SERIALIZE(_ssl);
     SERIALIZE(_valid);
     SERIALIZE(_ipv6);
+    SERIALIZE(_ident);
     SERIALIZE(_original);
     SERIALIZE(_realname);
     return hash;
@@ -177,9 +199,19 @@ QString ServerAddress::GetOriginal()
     return this->_original;
 }
 
+QString ServerAddress::GetIdent()
+{
+    return this->_ident;
+}
+
 void ServerAddress::SetNick(const QString &nick)
 {
     this->_nick = nick;
+}
+
+void ServerAddress::SetIdent(const QString &ident)
+{
+    this->_ident = ident;
 }
 
 QString ServerAddress::GetNick()

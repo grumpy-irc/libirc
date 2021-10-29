@@ -34,6 +34,10 @@ Network::Network(libirc::ServerAddress &server, const QString &name, const Encod
         this->localUser.SetNick(server.GetNick());
     if (!server.GetRealname().isEmpty())
         this->localUser.SetRealname(server.GetRealname());
+    if (!server.GetIdent().isEmpty())
+        this->localUser.SetIdent(server.GetIdent());
+    if (!server.GetPassword().isEmpty())
+        this->SetPassword(server.GetPassword());
     this->usingSSL = server.UsingSSL();
     this->port = server.GetPort();
     this->channelsToJoin.clear();

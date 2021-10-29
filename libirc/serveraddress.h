@@ -23,14 +23,16 @@ namespace libirc
     {
         public:
             ServerAddress(const QString &url);
-            ServerAddress(const QString &Host, bool SSL, unsigned int Port, const QString &Nick = "", const QString &Password = "");
+            ServerAddress(const QString &Host, bool SSL, unsigned int Port, const QString &Nick = "", const QString &Password = "", const QString &Ident = "");
             ServerAddress(const QHash<QString, QVariant> &hash);
             ~ServerAddress() override=default;
             bool IsValid();
             bool UsingSSL();
             QString GetHost();
             QString GetOriginal();
+            QString GetIdent();
             void SetNick(const QString &nick);
+            void SetIdent (const QString &ident);
             QString GetNick();
             QString GetPassword();
             //! Usually a list of channels to join after connect
@@ -50,6 +52,7 @@ namespace libirc
             unsigned int _port;
             QString _password;
             QString _nick;
+            QString _ident;
             QString _host;
             QString _realname;
             QString _suffix;
