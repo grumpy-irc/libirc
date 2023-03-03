@@ -77,7 +77,7 @@ void Network::Connect()
     this->scheduling = true;
     this->_loggedIn = false;
     //delete this->network_thread;
-    delete this->socket;
+    //delete this->socket;
 
     //this->network_thread = new NetworkThread(this);
     if (!this->IsSSL())
