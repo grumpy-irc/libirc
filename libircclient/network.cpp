@@ -613,7 +613,7 @@ static QList<char> SortingHelper(QList<char> mask, QList<char> list)
     }
     // Now that we have all modes in a hash table, we can just easily sort them
     QList<int> unsorted_ints = hash.keys();
-    qSort(unsorted_ints);
+    std::sort(unsorted_ints.begin(), unsorted_ints.end());
     QList<char> sorted_list;
     foreach (int mode, unsorted_ints)
         sorted_list.append(mask[mode]);
