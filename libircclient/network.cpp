@@ -1893,6 +1893,7 @@ void Network::initialize()
     this->defaultQuit = "GrumpyChat libirc: https://github.com/grumpy-irc/libirc";
     this->channelPrefix = '#';
     this->autoRejoin = false;
+    this->autoIdentify = true;
     this->identifyString = "PRIVMSG NickServ identify $nickname $password";
     this->alternateNickNumber = 0;
     this->server = new Server();
