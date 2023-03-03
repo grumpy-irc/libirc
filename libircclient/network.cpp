@@ -1086,6 +1086,10 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_WELCOME:
             emit this->Event_Welcome(&parser);
             this->loggedIn = true;
+            if (autoIdentify)
+            {
+                Identify();
+            }
             break;
         case IRC_NUMERIC_EXCEPTION:
             this->processPMode(&parser, 'e');
