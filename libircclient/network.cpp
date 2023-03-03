@@ -1819,7 +1819,7 @@ void Network::standardLogin()
     if (this->_loggedIn)
         return;
     this->_loggedIn = true;
-    this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
+    this->TransferRaw("USER " + this->localUser.GetIdent() + " * * :" + this->localUser.GetRealname());
     this->TransferRaw("NICK " + this->localUser.GetNick());
     this->lastPing = QDateTime::currentDateTime();
     this->timerPingSend = new QTimer(this);
