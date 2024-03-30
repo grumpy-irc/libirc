@@ -65,7 +65,7 @@ ServerAddress::ServerAddress(const QString &url)
         } else
         {
             this->_host = temp.mid(0, temp.indexOf(":"));
-            this->_port = temp.midRef(temp.indexOf(":") + 1).toUInt();
+            this->_port = temp.mid(temp.indexOf(":") + 1).toUInt();
         }
     }
     this->_valid = true;
