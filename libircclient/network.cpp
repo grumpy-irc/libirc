@@ -613,7 +613,7 @@ static QList<char> SortingHelper(QList<char> mask, QList<char> list)
     }
     // Now that we have all modes in a hash table, we can just easily sort them
     QList<int> unsorted_ints = hash.keys();
-    qSort(unsorted_ints);
+    std::sort(unsorted_ints.begin(), unsorted_ints.end());
     QList<char> sorted_list;
     foreach (int mode, unsorted_ints)
         sorted_list.append(mask[mode]);
@@ -847,11 +847,13 @@ void Network::processIncomingRawData(QByteArray data)
         case EncodingUTF8:
             l = QString::fromUtf8(data.data());
             break;
+#ifndef QT6_BUILD
         case EncodingUTF16:
         {
             l = QTextCodec::codecForName("UTF-16")->toUnicode(data);
         }
             break;
+#endif
         default:
             l = QString(data);
             break;
@@ -1278,7 +1280,7 @@ void Network::processWho(Parser *parser)
     gecos = parser->GetText();
     if (gecos.contains(" "))
     {
-        user->Hops = gecos.midRef(0, gecos.indexOf(" ")).toInt();
+        user->Hops = gecos.mid(0, gecos.indexOf(" ")).toInt();
         gecos = gecos.mid(gecos.indexOf(" ") + 1);
     }
     user->SetRealname(gecos);
@@ -1411,7 +1413,11 @@ void Network::processTopicWhoTime(Parser *parser)
         return;
     }
     channel->SetTopicUser(parameters[2]);
+#ifdef QT6_BUILD
+    channel->SetTopicTime(QDateTime::fromSecsSinceEpoch(parameters[3].toUInt()));
+#else
     channel->SetTopicTime(QDateTime::fromTime_t(parameters[3].toUInt()));
+#endif
     emit this->Event_TOPICWhoTime(parser, channel);
 }
 
@@ -1436,7 +1442,11 @@ void Network::processPMode(Parser *parser, char mode)
     ChannelPMode temp(string);
     temp.SetBy = User(parameters[3]);
     temp.Parameter = parameters[2];
+#ifdef QT6_BUILD
+    temp.SetOn = QDateTime::fromSecsSinceEpoch(parameters[4].toUInt());
+#else
     temp.SetOn = QDateTime::fromTime_t(parameters[4].toUInt());
+#endif
     if (channel->SetPMode(temp))
         emit this->Event_CPMInserted(parser, temp, channel);
     emit this->Event_PMode(parser, mode);
@@ -1581,7 +1591,11 @@ void Network::processMTime(Parser *parser)
         emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
+#ifdef QT6_BUILD
+    channel->SetMTime(QDateTime::fromSecsSinceEpoch(parameters[2].toUInt()));
+#else
     channel->SetMTime(QDateTime::fromTime_t(parameters[2].toUInt()));
+#endif
     emit this->Event_CreationTime(parser);
 }
 
@@ -1776,7 +1790,11 @@ void Network::processWhoisIdle(Parser &parser)
     }
 
     idle_time = parameters[2].toUInt();
+#ifdef QT6_BUILD
+    signon_time = QDateTime::fromSecsSinceEpoch(parameters[3].toUInt());
+#else
     signon_time = QDateTime::fromTime_t(parameters[3].toUInt());
+#endif
 
     emit this->Event_WhoisIdle(&parser, idle_time, signon_time);
 }

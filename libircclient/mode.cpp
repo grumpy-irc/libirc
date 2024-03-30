@@ -62,7 +62,7 @@ bool libircclient::ChannelPMode::EqualTo(const ChannelPMode& m) const
     return m.mode == this->mode && m.Parameter == this->Parameter;
 }
 
-uint libircclient::qHash(const ChannelPMode & mode, uint seed)
+/*uint libircclient::qHash(const ChannelPMode& mode, uint seed)
 {
     // this overflow on Qt4 for some reasons
     //
@@ -71,4 +71,4 @@ uint libircclient::qHash(const ChannelPMode & mode, uint seed)
     if (mode.Parameter.isEmpty())
         return qHash(QString(mode.Get())) * mode.Get();
     return qHash(mode.Parameter, seed) ^ mode.Get();
-}
+}*/
