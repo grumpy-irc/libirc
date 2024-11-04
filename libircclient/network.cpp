@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015 - 2019
+// Copyright (c) Petr Bena 2015 - 2024
 
 #include <QtNetwork>
 #include <QAbstractSocket>
@@ -883,12 +883,14 @@ void Network::processIncomingRawData(QByteArray data)
             break;
         case IRC_NUMERIC_MYINFO:
             // Process the information about network
-            if (parser.GetParameters().count() < 4)
-                break;
-            this->server->SetName(parser.GetParameters()[1]);
-            this->server->SetVersion(parser.GetParameters()[2]);
-            this->ChannelModeHelp = NetworkModeHelp::GetChannelModeHelp(this->server->GetVersion());
-            this->UserModeHelp = NetworkModeHelp::GetUserModeHelp(this->server->GetVersion());
+            // Example (unreal ircd): :irc2.tm-irc.org 004 GrumpyUser irc2.tm-irc.org UnrealIRCd-4.0.17 iowrsxzdHtIDZRqpWGTSB lvhopsmntikraqbeIzMQNRTOVKDdGLPZSCcf
+            if (parser.GetParameters().count() > 1)
+            {
+                this->server->SetName(parser.GetParameters()[1]);
+                this->server->SetVersion(parser.GetParameters()[2]);
+                this->ChannelModeHelp = NetworkModeHelp::GetChannelModeHelp(this->server->GetVersion());
+                this->UserModeHelp = NetworkModeHelp::GetUserModeHelp(this->server->GetVersion());
+            }
             this->autoJoin();
             emit this->Event_MyInfo(&parser);
             break;
