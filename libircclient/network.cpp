@@ -77,7 +77,7 @@ void Network::Connect()
     this->scheduling = true;
     this->_loggedIn = false;
     //delete this->network_thread;
-    delete this->socket;
+    //delete this->socket;
 
     //this->network_thread = new NetworkThread(this);
     if (!this->IsSSL())
@@ -1090,6 +1090,10 @@ void Network::processIncomingRawData(QByteArray data)
         case IRC_NUMERIC_WELCOME:
             emit this->Event_Welcome(&parser);
             this->loggedIn = true;
+            if (autoIdentify)
+            {
+                Identify();
+            }
             break;
         case IRC_NUMERIC_EXCEPTION:
             this->processPMode(&parser, 'e');
@@ -1835,7 +1839,7 @@ void Network::standardLogin()
     if (this->_loggedIn)
         return;
     this->_loggedIn = true;
-    this->TransferRaw("USER " + this->localUser.GetIdent() + " 8 * :" + this->localUser.GetRealname());
+    this->TransferRaw("USER " + this->localUser.GetIdent() + " * * :" + this->localUser.GetRealname());
     this->TransferRaw("NICK " + this->localUser.GetNick());
     this->lastPing = QDateTime::currentDateTime();
     this->timerPingSend = new QTimer(this);
@@ -1913,6 +1917,7 @@ void Network::initialize()
     this->defaultQuit = "GrumpyChat libirc: https://github.com/grumpy-irc/libirc";
     this->channelPrefix = '#';
     this->autoRejoin = false;
+    this->autoIdentify = true;
     this->identifyString = "PRIVMSG NickServ identify $nickname $password";
     this->alternateNickNumber = 0;
     this->server = new Server();
