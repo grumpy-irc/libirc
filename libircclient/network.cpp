@@ -8,7 +8,7 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU Lesser General Public License for more details.
 
-// Copyright (c) Petr Bena 2015 - 2024
+// Copyright (c) Petr Bena 2015 - 2025
 
 #include <QtNetwork>
 #include <QAbstractSocket>
@@ -21,6 +21,11 @@
 #include "generic.h"
 #include "../libirc/serveraddress.h"
 #include "../libirc/error_code.h"
+#include <algorithm> // Add this include for std::sort
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QStringDecoder>
+#define fromTime_t fromSecsSinceEpoch
+#endif
 
 using namespace libircclient;
 
@@ -847,13 +852,16 @@ void Network::processIncomingRawData(QByteArray data)
         case EncodingUTF8:
             l = QString::fromUtf8(data.data());
             break;
-#ifndef QT6_BUILD
         case EncodingUTF16:
         {
+            #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            QStringDecoder decoder(QStringDecoder::Encoding::Utf16);
+            l = decoder.decode(data);
+            #else
             l = QTextCodec::codecForName("UTF-16")->toUnicode(data);
+            #endif
         }
             break;
-#endif
         default:
             l = QString(data);
             break;
@@ -1282,7 +1290,13 @@ void Network::processWho(Parser *parser)
     gecos = parser->GetText();
     if (gecos.contains(" "))
     {
-        user->Hops = gecos.mid(0, gecos.indexOf(" ")).toInt();
+#ifdef QT_VERSION
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            user->Hops = gecos.mid(0, gecos.indexOf(" ")).toInt();
+#else
+            user->Hops = gecos.midRef(0, gecos.indexOf(" ")).toInt();
+#endif
+#endif
         gecos = gecos.mid(gecos.indexOf(" ") + 1);
     }
     user->SetRealname(gecos);
@@ -1415,11 +1429,7 @@ void Network::processTopicWhoTime(Parser *parser)
         return;
     }
     channel->SetTopicUser(parameters[2]);
-#ifdef QT6_BUILD
-    channel->SetTopicTime(QDateTime::fromSecsSinceEpoch(parameters[3].toUInt()));
-#else
     channel->SetTopicTime(QDateTime::fromTime_t(parameters[3].toUInt()));
-#endif
     emit this->Event_TOPICWhoTime(parser, channel);
 }
 
@@ -1444,11 +1454,7 @@ void Network::processPMode(Parser *parser, char mode)
     ChannelPMode temp(string);
     temp.SetBy = User(parameters[3]);
     temp.Parameter = parameters[2];
-#ifdef QT6_BUILD
-    temp.SetOn = QDateTime::fromSecsSinceEpoch(parameters[4].toUInt());
-#else
     temp.SetOn = QDateTime::fromTime_t(parameters[4].toUInt());
-#endif
     if (channel->SetPMode(temp))
         emit this->Event_CPMInserted(parser, temp, channel);
     emit this->Event_PMode(parser, mode);
@@ -1593,11 +1599,7 @@ void Network::processMTime(Parser *parser)
         emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
-#ifdef QT6_BUILD
-    channel->SetMTime(QDateTime::fromSecsSinceEpoch(parameters[2].toUInt()));
-#else
     channel->SetMTime(QDateTime::fromTime_t(parameters[2].toUInt()));
-#endif
     emit this->Event_CreationTime(parser);
 }
 
@@ -1792,11 +1794,7 @@ void Network::processWhoisIdle(Parser &parser)
     }
 
     idle_time = parameters[2].toUInt();
-#ifdef QT6_BUILD
-    signon_time = QDateTime::fromSecsSinceEpoch(parameters[3].toUInt());
-#else
     signon_time = QDateTime::fromTime_t(parameters[3].toUInt());
-#endif
 
     emit this->Event_WhoisIdle(&parser, idle_time, signon_time);
 }

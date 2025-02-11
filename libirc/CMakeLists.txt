@@ -1,7 +1,9 @@
 PROJECT(irc)
 include(GNUInstallDirs)
 
-if (QT6_BUILD)
+option(QT6_BUILD "Build with Qt6" false)
+
+if(QT6_BUILD)
   find_package(Qt6Core REQUIRED)
   find_package(Qt6Network REQUIRED)
   set(QT_INCLUDES ${Qt6Gui_INCLUDE_DIRS} ${Qt6Network_INCLUDE_DIRS})
@@ -21,7 +23,7 @@ file (GLOB hd "*.h")
 file (GLOB src "*.cpp")
 file (GLOB resources "*.qrc")
 
-if (QT6_BUILD)
+if(QT6_BUILD)
     QT6_WRAP_CPP(irc_HEADERS_MOC ${irc_HEADERS})
     QT6_ADD_RESOURCES(irc_RESOURCES_RCC ${resources})
 elseif(QT5_BUILD)
@@ -32,7 +34,7 @@ else()
     QT4_ADD_RESOURCES(irc_RESOURCES_RCC ${resources})
 endif()
 
-if (NOT QT5_BUILD AND NOT QT6_BUILD)
+if (NOT QT5_BUILD)
   INCLUDE(${QT_USE_FILE})
 endif()
 
