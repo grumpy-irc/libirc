@@ -35,7 +35,7 @@ else()
     QT4_ADD_RESOURCES(ircclient_RESOURCES_RCC ${resources})
 endif()
 
-if (NOT QT5_BUILD)
+if (NOT QT5_BUILD AND NOT QT6_BUILD)
   INCLUDE(${QT_USE_FILE})
 endif()
 
