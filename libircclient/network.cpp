@@ -90,7 +90,11 @@ void Network::Connect()
     else
         this->socket = new QSslSocket();
 
+#ifdef QT6_BUILD
+    connect(this->socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)), this, SLOT(OnError(QAbstractSocket::SocketError)));
+#else
     connect(this->socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(OnError(QAbstractSocket::SocketError)));
+#endif
     connect(this->socket, SIGNAL(readyRead()), this, SLOT(OnReceive()));
     connect(this->socket, SIGNAL(disconnected()), this, SLOT(OnDisconnect()));
 
