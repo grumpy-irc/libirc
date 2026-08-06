@@ -54,7 +54,6 @@ QString libircclient::Generic::ErrorCode2String(QAbstractSocket::SocketError typ
             return "Proxy not found";
         case QAbstractSocket::ProxyProtocolError:
             return "Proxy protocol failure";
-#if QT_VERSION >= 0x050000
         case QAbstractSocket::SslInvalidUserDataError:
             return "Ssl invalid user data err";
         case QAbstractSocket::OperationError:
@@ -63,7 +62,6 @@ QString libircclient::Generic::ErrorCode2String(QAbstractSocket::SocketError typ
             return "Ssl internal failure";
         case QAbstractSocket::TemporaryError:
             return "Temporary failure";
-#endif
         case QAbstractSocket::UnknownSocketError:
             return "Unknown socket error";
     }
