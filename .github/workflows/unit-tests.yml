@@ -1,0 +1,60 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  parser-tests:
+    name: Debian 13 Qt ${{ matrix.qt }}
+    runs-on: ubuntu-latest
+    container: debian:13
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - qt: 5
+            qt5-build: true
+            qt6-build: false
+            qt-packages: qtbase5-dev
+          - qt: 6
+            qt5-build: false
+            qt6-build: true
+            qt-packages: qt6-base-dev
+
+    steps:
+      - name: Install base tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates \
+            git
+
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            ninja-build \
+            ${{ matrix.qt-packages }}
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -G Ninja
+          -DLIBIRC_UNIT_TESTS=true
+          -DQT5_BUILD=${{ matrix.qt5-build }}
+          -DQT6_BUILD=${{ matrix.qt6-build }}
+          -DCMAKE_BUILD_TYPE=Release
+          -Wno-dev
+
+      - name: Build
+        run: cmake --build build --parallel 2
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
