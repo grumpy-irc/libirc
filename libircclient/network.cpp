@@ -687,7 +687,7 @@ void Network::LoadHash(const QHash<QString, QVariant> &hash)
         this->server = new Server(hash["server"].toHash());
     if (hash.contains("users"))
     {
-        foreach (QVariant user, hash["user"].toList())
+        foreach (QVariant user, hash["users"].toList())
             this->users.append(new User(user.toHash()));
     }
     if (hash.contains("channels"))
