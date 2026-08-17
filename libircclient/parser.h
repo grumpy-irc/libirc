@@ -17,6 +17,7 @@
 #include <QString>
 #include <QList>
 #include <QDateTime>
+#include <QHash>
 #include "libircclient_global.h"
 #include "user.h"
 #include "../libirc/irc_numerics.h"
@@ -41,8 +42,11 @@ namespace libircclient
             QString GetText();
             QList<QString> GetParameters();
             QDateTime GetTimestamp();
+            QHash<QString, QString> GetTags();
+            QString GetTag(const QString &tag);
 
         private:
+            void parseTags(QString tag_string);
             void obtainNumeric();
             User *user;
             QString source;
@@ -52,6 +56,7 @@ namespace libircclient
             bool _valid;
             int _numeric;
             QList<QString> parameters;
+            QHash<QString, QString> tags;
             QString command;
             QString parameterLine;
             QDateTime timestamp;

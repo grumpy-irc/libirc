@@ -1,0 +1,45 @@
+out|CAP LS
+out|USER tester 8 * :Test User
+out|NICK TestUser
+in|:irc.example.net NOTICE * :*** Looking up your hostname...
+in|:irc.example.net NOTICE * :*** Found your hostname (cached)
+in|:irc.example.net CAP * LS :unrealircd.org/link-security unrealircd.org/plaintext-policy unrealircd.org/history-storage away-notify invite-notify extended-join userhost-in-names multi-prefix cap-notify setname tls chghost account-notify message-tags batch server-time account-tag echo-message labeled-response draft/chathistory extended-monitor standard-replies draft/no-implicit-names unrealircd.org/json-log
+out|CAP REQ :away-notify extended-join multi-prefix chghost server-time
+in|PING :6071ADAB
+out|PONG :6071ADAB
+in|:irc.example.net CAP TestUser ACK :away-notify extended-join multi-prefix chghost server-time
+out|CAP END
+in|:irc.example.net 001 TestUser :Welcome to the example IRC Network TestUser!tester@example-host.invalid
+in|:irc.example.net 002 TestUser :Your host is irc.example.net, running version UnrealIRCd-6.1.9.1
+in|:irc.example.net 003 TestUser :This server was created Thu Feb 6 2025 at 12:52:06 UTC
+in|:irc.example.net 004 TestUser irc.example.net UnrealIRCd-6.1.9.1 diopqrstwxzBDGHIRSTWZ beIacdfhiklmnopqrstvzCDFGHKLMNOPQRSTVZ
+out|JOIN #testchannel
+in|:irc.example.net 005 TestUser ACCOUNTEXTBAN=account,a AWAYLEN=307 BOT=B CASEMAPPING=ascii CHANLIMIT=#:400 CHANMODES=beI,fkL,lFH,cdimnprstzCDGKMNOPQRSTVZ CHANNELLEN=32 CHANTYPES=# CHATHISTORY=50 CLIENTTAGDENY=*,-draft/typing,-typing,-draft/channel-context,-draft/reply DEAF=d ELIST=MNUCT :are supported by this server
+in|:irc.example.net 005 TestUser EXCEPTS EXTBAN=~,acfijmnpqrtACFGOST INVEX KICKLEN=307 KNOCK MAP MAXLIST=b:60,e:60,I:60 MAXNICKLEN=30 MINNICKLEN=0 MODES=12 MONITOR=128 MSGREFTYPES=msgid,timestamp :are supported by this server
+in|:irc.example.net 005 TestUser NAMELEN=50 NAMESX NETWORK=example NICKLEN=30 PREFIX=(qaohv)~&@%+ QUITLEN=307 SAFELIST SILENCE=15 STATUSMSG=~&@%+ TARGMAX=DCCALLOW:,ISON:,JOIN:,KICK:4,KILL:,LIST:,NAMES:1,NOTICE:1,PART:,PRIVMSG:4,SAJOIN:,SAPART:,TAGMSG:1,USERHOST:,USERIP:,WATCH:,WHOIS:1,WHOWAS:1 TOPICLEN=360 UHNAMES :are supported by this server
+in|:irc.example.net 005 TestUser USERIP WALLCHOPS WATCH=128 WATCHOPTS=A WHOX :are supported by this server
+in|:irc.example.net 396 TestUser hidden-host.example.net :is now your displayed host
+in|:irc.example.net NOTICE TestUser :*** You are connected to irc.example.net with TLSv1.3-TLS_CHACHA20_POLY1305_SHA256
+in|:irc.example.net 251 TestUser :There are 1 users and 12 invisible on 2 servers
+in|:irc.example.net 252 TestUser 7 :operator(s) online
+in|:irc.example.net 254 TestUser 7 :channels formed
+in|:irc.example.net 255 TestUser :I have 6 clients and 1 servers
+in|:irc.example.net 265 TestUser 6 15 :Current local users 6, max 15
+in|:irc.example.net 266 TestUser 13 22 :Current global users 13, max 22
+in|:irc.example.net 375 TestUser :- irc.example.net Message of the Day -
+in|:irc.example.net 372 TestUser :- 6/2/2025 13:55
+in|:irc.example.net 372 TestUser :- This is a free network, you are welcome to chat about anything you want.
+in|:irc.example.net 372 TestUser :-
+in|:irc.example.net 372 TestUser :- * If you need help join #support and ask there.
+in|:irc.example.net 372 TestUser :- * Bots are welcome on this network.
+in|:irc.example.net 376 TestUser :End of /MOTD command.
+in|:TestUser MODE TestUser :+iwxz
+in|@time=2026-08-08T17:05:47.771Z :TestUser!tester@hidden-host.example.net JOIN #testchannel * :Test User
+out|MODE #testchannel
+out|MODE #testchannel +b
+in|@time=2026-08-08T17:05:47.771Z :irc.example.net MODE #testchannel +nt
+in|:irc.example.net 353 TestUser = #testchannel :@TestUser
+in|:irc.example.net 366 TestUser #testchannel :End of /NAMES list.
+in|:irc.example.net 324 TestUser #testchannel +nt
+in|:irc.example.net 329 TestUser #testchannel 1786208747
+in|:irc.example.net 368 TestUser #testchannel :End of Channel Ban List

@@ -24,6 +24,50 @@ static QStringList Trim(QStringList list)
     return result;
 }
 
+static QString unescapeTagValue(const QString &value)
+{
+    QString result;
+    bool escaping = false;
+    foreach (QChar ch, value)
+    {
+        if (escaping)
+        {
+            if (ch == ':')
+                result += ';';
+            else if (ch == 's')
+                result += ' ';
+            else if (ch == 'r')
+                result += '\r';
+            else if (ch == 'n')
+                result += '\n';
+            else
+                result += ch;
+            escaping = false;
+        }
+        else if (ch == '\\')
+        {
+            escaping = true;
+        }
+        else
+        {
+            result += ch;
+        }
+    }
+    if (escaping)
+        result += '\\';
+    return result;
+}
+
+static QDateTime parseServerTime(const QString &time_string)
+{
+    QDateTime timestamp = QDateTime::fromString(time_string, Qt::ISODateWithMs);
+    if (!timestamp.isValid())
+        timestamp = QDateTime::fromString(time_string, Qt::ISODate);
+    if (!timestamp.isValid())
+        timestamp = QDateTime::fromString(time_string, "yyyy-MM-ddTHH:mm:ss.zzzZ");
+    return timestamp;
+}
+
 Parser::Parser(QString incoming_text)
 {
     // remove all garbage from incoming text
@@ -32,21 +76,19 @@ Parser::Parser(QString incoming_text)
     this->original_text = incoming_text;
     this->_valid = false;
     this->user = nullptr;
+    if (incoming_text.startsWith("@"))
+    {
+        if (!incoming_text.contains(" "))
+            return;
+        QString tag_string = incoming_text.mid(1, incoming_text.indexOf(" ") - 1);
+        incoming_text = incoming_text.mid(incoming_text.indexOf(" ") + 1);
+        this->parseTags(tag_string);
+        if (this->tags.contains("time"))
+            this->timestamp = parseServerTime(this->tags["time"]);
+    }
     // the incoming text must be prefixed with colon, otherwise it's not from a server and we don't relay client messages
     if (!incoming_text.startsWith(":"))
     {
-        // https://ircv3.net/specs/extensions/server-time-3.2.html
-        if (incoming_text.startsWith("@time=") && incoming_text.contains(" "))
-        {
-            QString time_string = incoming_text.mid(6);
-            time_string = time_string.mid(0, time_string.indexOf(" "));
-            // Cut the incoming text at first space
-            // @time=2011-10-19T16:40:51.620Z :Angel!angel@example.org PRIVMSG Wiz :Hello
-            //                               ^ here
-            incoming_text = incoming_text.mid(incoming_text.indexOf(" ") + 1);
-            // Process the timestamp
-            this->timestamp = QDateTime::fromString(time_string, "yyyy-MM-ddTHH:mm:ss.zzzZ");
-        }
         if (!this->timestamp.isValid())
             this->timestamp = QDateTime::currentDateTime();
         // this is an exception though
@@ -98,6 +140,23 @@ Parser::Parser(QString incoming_text)
         this->user = new User(this->source);
     else
         this->user = new User(this->source + "!@");
+}
+
+void Parser::parseTags(QString tag_string)
+{
+    foreach (QString tag, tag_string.split(";"))
+    {
+        if (tag.isEmpty())
+            continue;
+        QString key = tag;
+        QString value;
+        if (tag.contains("="))
+        {
+            key = tag.mid(0, tag.indexOf("="));
+            value = unescapeTagValue(tag.mid(tag.indexOf("=") + 1));
+        }
+        this->tags.insert(key, value);
+    }
 }
 
 Parser::~Parser()
@@ -195,6 +254,16 @@ QDateTime Parser::GetTimestamp()
     return this->timestamp;
 }
 
+QHash<QString, QString> Parser::GetTags()
+{
+    return this->tags;
+}
+
+QString Parser::GetTag(const QString &tag)
+{
+    return this->tags.value(tag);
+}
+
 User *Parser::GetSourceUserInfo()
 {
     return this->user;
@@ -204,4 +273,3 @@ QString Parser::GetSourceInfo()
 {
     return this->source;
 }
-

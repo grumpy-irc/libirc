@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/fixtures">
+        <file>fixtures/tm_irc_login.txt</file>
+    </qresource>
+</RCC>
