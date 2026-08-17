@@ -899,7 +899,8 @@ void Network::processIncomingRawData(QByteArray data)
             if (parser.GetParameters().count() > 1)
             {
                 this->server->SetName(parser.GetParameters()[1]);
-                this->server->SetVersion(parser.GetParameters()[2]);
+                if (parser.GetParameters().count() > 2)
+                    this->server->SetVersion(parser.GetParameters()[2]);
                 this->ChannelModeHelp = NetworkModeHelp::GetChannelModeHelp(this->server->GetVersion());
                 this->UserModeHelp = NetworkModeHelp::GetUserModeHelp(this->server->GetVersion());
             }
@@ -1432,8 +1433,11 @@ void Network::processTopicWhoTime(Parser *parser)
         emit this->Event_Broken(parser, "Channel struct not in memory");
         return;
     }
-    channel->SetTopicUser(parameters[2]);
-    channel->SetTopicTime(QDateTime::fromTime_t(parameters[3].toUInt()));
+    if (parameters.count() >= 4)
+    {
+        channel->SetTopicUser(parameters[2]);
+        channel->SetTopicTime(QDateTime::fromTime_t(parameters[3].toUInt()));
+    }
     emit this->Event_TOPICWhoTime(parser, channel);
 }
 

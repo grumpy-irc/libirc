@@ -3,6 +3,7 @@
 #include <QSet>
 #include "../libircclient/parser.h"
 #include "../libirc/irc_numerics.h"
+#include "../libirc/serveraddress.h"
 
 class ParserTest : public QObject
 {
@@ -16,6 +17,7 @@ class ParserTest : public QObject
         void testCaseIrcv3EscapedTagValues();
         void testCaseIrcv3InvalidTagOnlyLine();
         void testCaseServerCommunicationFixture();
+        void testCaseServerAddressPreservesCaseSensitiveParts();
 };
 
 void ParserTest::testCasePrivmsg()
@@ -267,6 +269,20 @@ void ParserTest::testCaseServerCommunicationFixture()
     QCOMPARE(acked_caps, QSet<QString>() << "away-notify" << "extended-join" << "multi-prefix" << "chghost" << "server-time");
     QCOMPARE(numeric_counts.value(IRC_NUMERIC_MOTD), 5);
     QCOMPARE(numeric_counts.value(IRC_NUMERIC_ISUPPORT), 4);
+}
+
+void ParserTest::testCaseServerAddressPreservesCaseSensitiveParts()
+{
+    libirc::ServerAddress address("IRCS://CaseNick~CaseIdent:CasePASS@IRC.EXAMPLE.NET:6697/#MixedCase,ChanKey");
+
+    QVERIFY(address.IsValid());
+    QVERIFY(address.UsingSSL());
+    QCOMPARE(address.GetHost(), QString("irc.example.net"));
+    QCOMPARE(address.GetPort(), 6697u);
+    QCOMPARE(address.GetNick(), QString("CaseNick"));
+    QCOMPARE(address.GetIdent(), QString("CaseIdent"));
+    QCOMPARE(address.GetPassword(), QString("CasePASS"));
+    QCOMPARE(address.GetSuffix(), QString("#MixedCase,ChanKey"));
 }
 
 QTEST_APPLESS_MAIN(ParserTest)

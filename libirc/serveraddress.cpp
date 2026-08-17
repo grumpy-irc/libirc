@@ -23,14 +23,13 @@ ServerAddress::ServerAddress(const QString &url)
     this->_ssl = false;
     this->_ipv6 = false;
     this->_valid = false;
-    QString temp = url.toLower();
-    temp = temp.trimmed();
+    QString temp = url.trimmed();
     if (temp.contains(" "))
         return;
-    if (temp.startsWith("irc://"))
+    if (temp.startsWith("irc://", Qt::CaseInsensitive))
     {
         temp = temp.mid(6);
-    } else if (temp.startsWith("ircs://"))
+    } else if (temp.startsWith("ircs://", Qt::CaseInsensitive))
     {
         this->_port = IRC_STANDARD_PORT_SSL;
         temp = temp.mid(7);
@@ -68,7 +67,7 @@ ServerAddress::ServerAddress(const QString &url)
         temp = temp.mid(1);
         if (!temp.contains("]"))
             return;
-        this->_host = temp.mid(0, temp.indexOf("]"));
+        this->_host = temp.mid(0, temp.indexOf("]")).toLower();
         temp = temp.mid(temp.indexOf("]") + 1);
         if (temp.contains(":"))
         {
@@ -80,10 +79,10 @@ ServerAddress::ServerAddress(const QString &url)
         if (!temp.contains(":"))
         {
             // we are done here
-            this->_host = temp;
+            this->_host = temp.toLower();
         } else
         {
-            this->_host = temp.mid(0, temp.indexOf(":"));
+            this->_host = temp.mid(0, temp.indexOf(":")).toLower();
             this->_port = temp.mid(temp.indexOf(":") + 1).toUInt();
         }
     }
@@ -238,4 +237,3 @@ bool ServerAddress::IsIPv6()
 {
     return this->_ipv6;
 }
-
